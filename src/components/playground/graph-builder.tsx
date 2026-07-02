@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
@@ -61,54 +62,52 @@ const nextLetter = (existing: Node[]): string => {
   return `N${existing.length}`;
 };
 
-export function GraphBuilder() {
+/** Build a fresh random weighted graph as React Flow nodes + edges. */
+function buildSeed(): { nodes: Node[]; edges: Edge[] } {
+  const g = randomGraph(2, createRNG(randomSeed()), { weighted: true });
+  const n = g.nodes.length;
+  const nodes: Node[] = g.nodes.map((node, i) => {
+    const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+    return {
+      id: `n${idCounter++}`,
+      type: "circle",
+      position: { x: 300 + 200 * Math.cos(angle), y: 210 + 160 * Math.sin(angle) },
+      data: { label: node.id },
+    };
+  });
+  const labelToId = new Map(nodes.map((nd) => [(nd.data as { label: string }).label, nd.id]));
+  const edges: Edge[] = g.edges.map((e, i) => ({
+    id: `e${idCounter}-${i}`,
+    source: labelToId.get(e.from)!,
+    target: labelToId.get(e.to)!,
+    label: String(e.weight ?? 1),
+    data: { weight: e.weight ?? 1 },
+    animated: false,
+  }));
+  return { nodes, edges };
+}
+
+function GraphBuilderInner() {
   const router = useRouter();
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  // seed synchronously so the canvas is populated on first paint (robust to Fast Refresh)
+  const [seed] = React.useState(buildSeed);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(seed.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(seed.edges);
   const [directed, setDirected] = React.useState(false);
   const [weighted, setWeighted] = React.useState(false);
-  const [slug, setSlug] = React.useState("");
-  const [startNode, setStartNode] = React.useState("");
 
   const available = React.useMemo(
     () => ALGORITHMS.filter((m) => m.category === "graphs" && GRAPH_ALGOS[m.slug]),
     [],
   );
-
-  React.useEffect(() => {
-    if (!slug && available.length) setSlug(available[0].slug);
-  }, [available, slug]);
-
-  // seed a starter graph on first mount
-  React.useEffect(() => {
-    seedRandom();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [slug, setSlug] = React.useState(() => available[0]?.slug ?? "");
+  const [startNode, setStartNode] = React.useState(seed.nodes[0]?.id ?? "");
 
   const seedRandom = () => {
-    const g = randomGraph(2, createRNG(randomSeed()), { weighted: true });
-    const n = g.nodes.length;
-    const newNodes: Node[] = g.nodes.map((node, i) => {
-      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-      return {
-        id: `n${idCounter++}`,
-        type: "circle",
-        position: { x: 300 + 200 * Math.cos(angle), y: 210 + 160 * Math.sin(angle) },
-        data: { label: node.id },
-      };
-    });
-    const labelToId = new Map(newNodes.map((nd) => [(nd.data as { label: string }).label, nd.id]));
-    const newEdges: Edge[] = g.edges.map((e, i) => ({
-      id: `e${i}`,
-      source: labelToId.get(e.from)!,
-      target: labelToId.get(e.to)!,
-      label: String(e.weight ?? 1),
-      data: { weight: e.weight ?? 1 },
-      animated: false,
-    }));
-    setNodes(newNodes);
-    setEdges(newEdges);
-    setStartNode(newNodes[0]?.id ?? "");
+    const fresh = buildSeed();
+    setNodes(fresh.nodes);
+    setEdges(fresh.edges);
+    setStartNode(fresh.nodes[0]?.id ?? "");
   };
 
   const onConnect = React.useCallback(
@@ -303,5 +302,13 @@ export function GraphBuilder() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function GraphBuilder() {
+  return (
+    <ReactFlowProvider>
+      <GraphBuilderInner />
+    </ReactFlowProvider>
   );
 }
