@@ -52,18 +52,31 @@ interface SavedState {
  * random/manual input, undo/redo, save/load, JSON + PNG/SVG export,
  * zoom/pan/fullscreen, keyboard shortcuts, pseudocode + stats side panel.
  */
-export function VisualizerShell({ module }: { module: AlgorithmModule }) {
+export function VisualizerShell({
+  module,
+  initialFields,
+}: {
+  module: AlgorithmModule;
+  /** optional pre-filled manual input (deep links, playground hand-off) */
+  initialFields?: Record<string, string>;
+}) {
   const { settings } = useSettings();
   const [level, setLevel] = React.useState<Level>(settings.defaultLevel);
   const [inputOpen, setInputOpen] = React.useState(false);
 
   // ---- input history (undo/redo over dataset edits) ----
-  const initialInput = React.useMemo(
-    () => module.defaultInput(settings.defaultLevel, createRNG(randomSeed())),
+  const initialInput = React.useMemo(() => {
+    if (initialFields) {
+      try {
+        return module.parseInput(initialFields);
+      } catch {
+        // fall through to a random dataset on malformed deep links
+      }
+    }
+    return module.defaultInput(settings.defaultLevel, createRNG(randomSeed()));
     // module identity is stable per page; defaultLevel only seeds the first input
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [module],
-  );
+  }, [module, initialFields]);
   const [history, setHistory] = React.useState<unknown[]>([initialInput]);
   const [hIndex, setHIndex] = React.useState(0);
   const input = history[hIndex];

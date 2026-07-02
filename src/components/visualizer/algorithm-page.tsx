@@ -34,12 +34,20 @@ import { QuizPanel } from "./quiz-panel";
 export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
   const [module, setModule] = React.useState<AlgorithmModule | null>(null);
   const [failed, setFailed] = React.useState(false);
+  const [initialFields, setInitialFields] = React.useState<Record<string, string> | undefined>();
   const { isFavorite, toggle } = useFavorites();
   const { record } = useHistory();
   const category = CATEGORY_MAP[meta.category];
 
   React.useEffect(() => {
     let alive = true;
+    // deep-link support: /visualizer/<slug>?input=<url-encoded JSON fields>
+    try {
+      const q = new URLSearchParams(window.location.search).get("input");
+      if (q) setInitialFields(JSON.parse(q) as Record<string, string>);
+    } catch {
+      // malformed deep link — ignore
+    }
     loadAlgorithm(meta.slug)
       .then((m) => {
         if (!alive) return;
@@ -95,7 +103,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
       {/* visualizer */}
       {module ? (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <VisualizerShell module={module} />
+          <VisualizerShell module={module} initialFields={initialFields} />
         </motion.div>
       ) : (
         <Card className="grid h-[560px] place-items-center">
