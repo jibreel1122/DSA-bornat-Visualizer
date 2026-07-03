@@ -33,6 +33,7 @@ import { CommandPalette } from "./command-palette";
 const TOP_LINKS = [
   { href: "/algorithms", label: "Algorithms" },
   { href: "/data-structures", label: "Data Structures" },
+  { href: "/neural-network", label: "Neural Net" },
   { href: "/practice", label: "Practice" },
   { href: "/playground", label: "Playground" },
   { href: "/docs", label: "Docs" },
