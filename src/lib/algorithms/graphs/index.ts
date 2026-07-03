@@ -56,6 +56,33 @@ export const metas: AlgorithmMeta[] = [
     summary: "Orders the vertices of a DAG so every edge points forward, by repeatedly removing in-degree-zero nodes.",
     renderer: "graph",
   },
+  {
+    slug: "bellman-ford",
+    title: "Bellman-Ford Shortest Path",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "shortest path", "negative weights", "dynamic programming"],
+    summary: "Finds shortest paths from a source even with negative edges by relaxing all edges V−1 times, and detects negative cycles.",
+    renderer: "graph",
+  },
+  {
+    slug: "floyd-warshall",
+    title: "Floyd-Warshall (All-Pairs)",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "all-pairs shortest path", "dynamic programming", "matrix"],
+    summary: "Computes shortest paths between every pair of vertices by progressively allowing more intermediate vertices.",
+    renderer: "table",
+  },
+  {
+    slug: "union-find",
+    title: "Union-Find (Disjoint Set Union)",
+    category: "graphs",
+    difficulty: "Intermediate",
+    tags: ["disjoint set", "union by rank", "path compression", "connectivity"],
+    summary: "Maintains a partition of elements into disjoint sets with near-constant-time union and find via rank and path compression.",
+    renderer: "graph",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -65,4 +92,7 @@ export const loaders: Record<string, ModuleLoader> = {
   prim: () => import("./prim"),
   kruskal: () => import("./kruskal"),
   "topological-sort": () => import("./topological-sort"),
+  "bellman-ford": () => import("./bellman-ford"),
+  "floyd-warshall": () => import("./floyd-warshall"),
+  "union-find": () => import("./union-find"),
 };
