@@ -1,0 +1,323 @@
+import type { AlgorithmModule, CallStackFrame, CallStackItem, Step } from "@/lib/engine/types";
+
+type Input = { expr: string };
+
+const PAIRS: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+const OPEN = new Set(["(", "[", "{"]);
+
+function generate(input: Input): Step<CallStackFrame>[] {
+  const s = input.expr.replace(/\s+/g, "");
+  const steps: Step<CallStackFrame>[] = [];
+  let pushes = 0;
+  let pops = 0;
+
+  const stack: { id: string; ch: string; pos: number }[] = [];
+  let idc = 0;
+
+  const frame = (
+    highlightTop: "active" | "swap" | "found" | undefined,
+    pos: number,
+    description: string,
+    codeLine: number,
+    failed = false,
+  ): void => {
+    const items: CallStackItem[] = stack.map((e, i) => ({
+      id: e.id,
+      label: e.ch,
+      detail: `from index ${e.pos}`,
+      state: failed ? "discarded" : i === stack.length - 1 ? highlightTop : undefined,
+    }));
+    const marker = s
+      .split("")
+      .map((c, i) => (i === pos ? `[${c}]` : c))
+      .join("");
+    steps.push({
+      frame: {
+        stack: items,
+        aux: [{ label: "expression", values: marker.split("") }],
+        note: `scanning "${s}"  ·  cursor at index ${pos < 0 ? "—" : pos}`,
+      },
+      description,
+      codeLine,
+      counters: { pushes, pops },
+    });
+  };
+
+  frame(undefined, -1, `Check if brackets are balanced. Push every opening bracket; match each closing bracket with the stack top.`, 0);
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (OPEN.has(ch)) {
+      stack.push({ id: `b${idc++}`, ch, pos: i });
+      pushes++;
+      frame("active", i, `'${ch}' is an opening bracket → push it onto the stack.`, 2);
+    } else if (ch in PAIRS) {
+      if (stack.length === 0) {
+        frame(undefined, i, `'${ch}' has no matching opener — the stack is empty. ✗ Not balanced.`, 5, true);
+        return steps;
+      }
+      const top = stack[stack.length - 1];
+      if (top.ch === PAIRS[ch]) {
+        frame("found", i, `'${ch}' matches the top '${top.ch}' → pop it. Good.`, 4);
+        stack.pop();
+        pops++;
+        frame(undefined, i, `Popped '${top.ch}'. Continue scanning.`, 4);
+      } else {
+        frame("swap", i, `'${ch}' expects '${PAIRS[ch]}' but the top is '${top.ch}' — mismatch. ✗ Not balanced.`, 6, true);
+        return steps;
+      }
+    } else {
+      frame(undefined, i, `'${ch}' is not a bracket — ignore it.`, 1);
+    }
+  }
+
+  if (stack.length === 0) {
+    frame(undefined, s.length - 1, `End of string and the stack is empty → every bracket matched. ✓ Balanced!`, 8);
+  } else {
+    frame("swap", s.length - 1, `End of string but ${stack.length} opening bracket(s) remain unmatched. ✗ Not balanced.`, 8, true);
+  }
+  return steps;
+}
+
+function randomInput(level: number, rng: { int: (a: number, b: number) => number; pick: <T>(a: readonly T[]) => T }): Input {
+  const balanced = [
+    "()",
+    "()[]{}",
+    "([{}])",
+    "{[()]}",
+    "(([]){})",
+    "[({})]{}",
+  ];
+  const unbalanced = ["(]", "([)]", "(((", "{[}]", "())", "[(])"];
+  const useBalanced = level % 2 === 1;
+  const bank = useBalanced ? balanced : unbalanced;
+  const idx = Math.min(level - 1, bank.length - 1);
+  return { expr: bank[idx] };
+}
+
+const mod: AlgorithmModule<CallStackFrame, Input> = {
+  slug: "balanced-parentheses",
+  title: "Balanced Parentheses",
+  category: "stacks-queues",
+  difficulty: "Beginner",
+  tags: ["stack", "matching", "validation", "brackets"],
+  summary: "Uses a stack to verify that every opening bracket has a correctly ordered matching closing bracket.",
+  renderer: "callstack",
+  pseudocode: [
+    "procedure isBalanced(s)",
+    "  stack = empty",
+    "  for ch in s:",
+    "    if ch is opening: push(ch)",
+    "    else if ch is closing:",
+    "      if stack empty or top != match(ch): return false",
+    "      pop()",
+    "  return stack is empty",
+  ],
+  code: {
+    pseudocode: `stack = []
+for ch in s:
+  if ch in "([{": push(ch)
+  elif ch in ")]}":
+    if stack empty or top != match(ch): return false
+    pop()
+return stack.isEmpty()`,
+    c: `bool isBalanced(const char* s) {
+    char st[1000]; int top = 0;
+    for (; *s; s++) {
+        if (*s=='('||*s=='['||*s=='{') st[top++] = *s;
+        else if (*s==')'||*s==']'||*s=='}') {
+            if (top==0) return false;
+            char o = st[--top];
+            if ((*s==')'&&o!='(')||(*s==']'&&o!='[')||(*s=='}'&&o!='{'))
+                return false;
+        }
+    }
+    return top == 0;
+}`,
+    cpp: `bool isBalanced(const string& s) {
+    stack<char> st;
+    unordered_map<char,char> m{{')','('},{']','['},{'}','{'}};
+    for (char c : s) {
+        if (c=='('||c=='['||c=='{') st.push(c);
+        else if (m.count(c)) {
+            if (st.empty() || st.top()!=m[c]) return false;
+            st.pop();
+        }
+    }
+    return st.empty();
+}`,
+    java: `boolean isBalanced(String s) {
+    Deque<Character> st = new ArrayDeque<>();
+    Map<Character,Character> m = Map.of(')','(',']','[','}','{');
+    for (char c : s.toCharArray()) {
+        if (c=='('||c=='['||c=='{') st.push(c);
+        else if (m.containsKey(c)) {
+            if (st.isEmpty() || st.pop()!=m.get(c)) return false;
+        }
+    }
+    return st.isEmpty();
+}`,
+    python: `def is_balanced(s):
+    stack = []
+    match = {')': '(', ']': '[', '}': '{'}
+    for ch in s:
+        if ch in '([{':
+            stack.append(ch)
+        elif ch in match:
+            if not stack or stack.pop() != match[ch]:
+                return False
+    return not stack`,
+    javascript: `function isBalanced(s) {
+  const stack = [];
+  const match = { ")": "(", "]": "[", "}": "{" };
+  for (const ch of s) {
+    if (ch === "(" || ch === "[" || ch === "{") stack.push(ch);
+    else if (match[ch]) {
+      if (stack.pop() !== match[ch]) return false;
+    }
+  }
+  return stack.length === 0;
+}`,
+    typescript: `function isBalanced(s: string): boolean {
+  const stack: string[] = [];
+  const match: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+  for (const ch of s) {
+    if (ch === "(" || ch === "[" || ch === "{") stack.push(ch);
+    else if (match[ch]) {
+      if (stack.pop() !== match[ch]) return false;
+    }
+  }
+  return stack.length === 0;
+}`,
+    csharp: `bool IsBalanced(string s) {
+    var st = new Stack<char>();
+    var m = new Dictionary<char,char>{{')','('},{']','['},{'}','{'}};
+    foreach (char c in s) {
+        if (c=='('||c=='['||c=='{') st.Push(c);
+        else if (m.ContainsKey(c)) {
+            if (st.Count==0 || st.Pop()!=m[c]) return false;
+        }
+    }
+    return st.Count == 0;
+}`,
+    go: `func isBalanced(s string) bool {
+	st := []rune{}
+	m := map[rune]rune{')':'(', ']':'[', '}':'{'}
+	for _, c := range s {
+		if c=='('||c=='['||c=='{' {
+			st = append(st, c)
+		} else if o, ok := m[c]; ok {
+			if len(st)==0 || st[len(st)-1]!=o { return false }
+			st = st[:len(st)-1]
+		}
+	}
+	return len(st) == 0
+}`,
+    rust: `fn is_balanced(s: &str) -> bool {
+    let mut st = Vec::new();
+    for c in s.chars() {
+        match c {
+            '(' | '[' | '{' => st.push(c),
+            ')' => if st.pop() != Some('(') { return false },
+            ']' => if st.pop() != Some('[') { return false },
+            '}' => if st.pop() != Some('{') { return false },
+            _ => {}
+        }
+    }
+    st.is_empty()
+}`,
+    kotlin: `fun isBalanced(s: String): Boolean {
+    val st = ArrayDeque<Char>()
+    val m = mapOf(')' to '(', ']' to '[', '}' to '{')
+    for (c in s) {
+        if (c=='('||c=='['||c=='{') st.addLast(c)
+        else if (m.containsKey(c)) {
+            if (st.isEmpty() || st.removeLast()!=m[c]) return false
+        }
+    }
+    return st.isEmpty()
+}`,
+    swift: `func isBalanced(_ s: String) -> Bool {
+    var st: [Character] = []
+    let m: [Character: Character] = [")": "(", "]": "[", "}": "{"]
+    for c in s {
+        if c=="(" || c=="[" || c=="{" { st.append(c) }
+        else if let o = m[c] {
+            if st.popLast() != o { return false }
+        }
+    }
+    return st.isEmpty
+}`,
+  },
+  content: {
+    overview: `Checking whether brackets are balanced is the textbook application of a stack. An expression like "{[()]}" is balanced because every opening bracket has a matching closing bracket of the same type, closed in the correct (last-opened-first-closed) order. "([)]" is not balanced — the brackets overlap rather than nest.
+
+A stack captures exactly the "last opened, first closed" discipline (LIFO). Scan the string left to right: push every opening bracket, and when you hit a closing bracket, it must match the most recently pushed opener — the current top of the stack. If it matches, pop; if it doesn't (or the stack is empty), the string is unbalanced. After the scan, the stack must be empty; any leftover openers mean some brackets were never closed.`,
+    howItWorks: [
+      "Create an empty stack and scan the string one character at a time.",
+      "When you see an opening bracket ( [ {, push it onto the stack.",
+      "When you see a closing bracket, check the stack: it must be non-empty and its top must be the matching opener.",
+      "If the top matches, pop it; otherwise the string is immediately unbalanced.",
+      "After scanning, the string is balanced only if the stack is empty.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n)", worst: "O(n)" },
+      space: "O(n)",
+      notes: "A single scan does O(1) work per character. The stack can grow to O(n) in the worst case (all opening brackets), giving O(n) space.",
+    },
+    applications: [
+      "compiler and interpreter syntax checking",
+      "validating expressions, JSON, XML/HTML tags",
+      "editor bracket-matching and linting",
+      "evaluating and converting arithmetic expressions",
+    ],
+    advantages: [
+      "Simple linear-time, single-pass algorithm",
+      "Naturally models nested structure with LIFO",
+      "Fails fast on the first mismatch",
+      "Extends easily to multiple bracket types",
+    ],
+    disadvantages: [
+      "Needs O(n) auxiliary space for the stack",
+      "Only validates structure, not semantic correctness",
+      "Requires care to handle non-bracket characters",
+    ],
+    commonMistakes: [
+      "Forgetting to check for an empty stack before popping on a closing bracket.",
+      "Not verifying the stack is empty at the end (leftover openers).",
+      "Matching only counts of brackets, ignoring type and order (fails on '([)]').",
+      "Using a queue instead of a stack, losing the LIFO nesting.",
+    ],
+    interviewQuestions: [
+      "Why does this problem require a stack rather than a counter?",
+      "How would you extend it to handle three bracket types simultaneously?",
+      "How do you report the position of the first mismatch?",
+      "Can you check balance with O(1) space if there is only one bracket type?",
+      "How does this relate to evaluating expressions with a stack?",
+    ],
+    summary:
+      "Balanced-parentheses checking pushes opening brackets and matches each closing bracket against the stack top, confirming the stack is empty at the end. It runs in O(n) time and O(n) space and is the canonical demonstration of a stack's LIFO behavior.",
+    quiz: [
+      { question: "Which data structure validates nested brackets?", options: ["Queue", "Stack", "Heap", "Hash map"], answer: 1, explanation: "A stack's LIFO order matches the last-opened-first-closed rule." },
+      { question: "On seeing a closing bracket, you compare it with…", options: ["The bottom of the stack", "The top of the stack", "The next character", "A counter"], answer: 1, explanation: "It must match the most recently pushed opener at the top." },
+      { question: "The string '([)]' is…", options: ["Balanced", "Not balanced (brackets overlap)", "Empty", "Undefined"], answer: 1, explanation: "The brackets interleave instead of nesting, so it fails." },
+      { question: "After scanning, a balanced string leaves the stack…", options: ["Full", "Empty", "With one element", "Reversed"], answer: 1, explanation: "Every opener must have been matched and popped." },
+      { question: "The time complexity is…", options: ["O(1)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "Each character is processed once with constant work." },
+    ],
+  },
+  inputFields: [
+    { key: "expr", label: "Bracket expression", placeholder: "{[()]}", help: "Use ( ) [ ] { }. Up to 30 characters." },
+  ],
+  defaultInput: (level, rng) => randomInput(level, rng),
+  parseInput: (fields) => {
+    const expr = (fields.expr ?? "").replace(/\s+/g, "");
+    if (!expr) throw new Error("Enter a bracket expression.");
+    if (expr.length > 30) throw new Error("Keep it to 30 characters or fewer.");
+    if (!/^[()\[\]{}]+$/.test(expr)) throw new Error("Only the brackets ( ) [ ] { } are allowed.");
+    return { expr };
+  },
+  serializeInput: (input) => ({ expr: input.expr }),
+  generate,
+};
+
+export default mod;
