@@ -15,7 +15,7 @@ export function HashView({ frame }: { frame: HashFrame }) {
             {frame.buckets.map((b) => (
               <div key={b.index} className="flex items-center gap-2">
                 <div
-                  className="grid size-8 shrink-0 place-items-center rounded-md font-mono text-xs font-semibold transition-colors duration-300"
+                  className="grid size-8 shrink-0 place-items-center rounded-md font-mono text-xs font-semibold transition-colors duration-200"
                   style={{
                     background: !b.state || b.state === "default" ? "var(--muted)" : vizFill(b.state),
                     color: !b.state || b.state === "default" ? "var(--foreground)" : "white",
@@ -35,7 +35,7 @@ export function HashView({ frame }: { frame: HashFrame }) {
                       >
                         {i > 0 && <span className="text-muted-foreground">→</span>}
                         <span
-                          className="rounded-md px-2 py-1 font-mono text-xs font-medium text-white transition-colors duration-300"
+                          className="rounded-md px-2 py-1 font-mono text-xs font-medium text-white transition-colors duration-200"
                           style={{ background: vizFill(item.state ?? "active") }}
                         >
                           {item.key}
@@ -57,7 +57,7 @@ export function HashView({ frame }: { frame: HashFrame }) {
               return (
                 <div key={b.index} className="flex flex-col items-center gap-1">
                   <div
-                    className="grid size-11 place-items-center rounded-lg font-mono text-xs font-semibold transition-colors duration-300"
+                    className="grid size-11 place-items-center rounded-lg font-mono text-xs font-semibold transition-colors duration-200"
                     style={{
                       background: item
                         ? vizFill(item.state ?? "active")

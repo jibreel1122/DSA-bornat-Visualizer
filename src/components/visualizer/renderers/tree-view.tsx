@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import type { TreeFrame, TreeNodeF } from "@/lib/engine/types";
-import { AuxRows, FrameNote, vizFill } from "../viz-utils";
+import { AuxRows, FrameNote, isEmphasized, vizFill } from "../viz-utils";
 
 const X_GAP = 56;
 const Y_GAP = 74;
@@ -106,6 +106,7 @@ export function TreeView({ frame }: { frame: TreeFrame }) {
               {[...pos.keys()].map((id) => {
                 const node = frame.nodes[id];
                 const p = pos.get(id)!;
+                const emphasized = isEmphasized(frame.states?.[node.id]);
                 return (
                   <motion.g
                     key={id}
@@ -114,12 +115,14 @@ export function TreeView({ frame }: { frame: TreeFrame }) {
                     exit={{ opacity: 0, scale: 0.5 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
-                    <circle
+                    <motion.circle
                       r={R}
                       style={{ fill: fillOf(node) }}
-                      className="transition-colors duration-300"
+                      className="transition-colors duration-200"
                       stroke={node.color ? "var(--border)" : "none"}
                       strokeWidth={node.color ? 1.5 : 0}
+                      animate={{ scale: emphasized ? 1.18 : 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
                     />
                     <text
                       textAnchor="middle"

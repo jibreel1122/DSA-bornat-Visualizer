@@ -14,7 +14,7 @@ export function StringView({ frame }: { frame: StringFrame }) {
     const isDefault = !state || state === "default";
     return (
       <div
-        className="grid place-items-center rounded-md font-mono text-sm font-semibold transition-colors duration-300"
+        className="grid place-items-center rounded-md font-mono text-sm font-semibold transition-colors duration-200"
         style={{
           width: CELL,
           height: CELL,

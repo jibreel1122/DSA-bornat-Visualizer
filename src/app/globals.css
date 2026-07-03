@@ -204,6 +204,16 @@ body {
   outline-offset: 2px;
 }
 
+/* Fullscreen visualizer: fill the screen instead of the UA default centered box */
+:fullscreen {
+  width: 100%;
+  height: 100%;
+  background: var(--background);
+}
+::backdrop {
+  background: var(--background);
+}
+
 /* Keyframes */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

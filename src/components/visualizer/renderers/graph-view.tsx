@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import type { GraphFrame } from "@/lib/engine/types";
 import { circularLayout } from "@/lib/engine/random";
-import { AuxRows, FrameNote, vizFill } from "../viz-utils";
+import { AuxRows, FrameNote, isEmphasized, vizFill } from "../viz-utils";
 
 const W = 760;
 const H = 440;
@@ -115,7 +115,7 @@ export function GraphView({ frame }: { frame: GraphFrame }) {
                   strokeWidth={highlighted ? 3 : 1.5}
                   strokeOpacity={state === "discarded" ? 0.5 : 0.85}
                   markerEnd={frame.directed ? (highlighted ? "url(#g-arrow-hl)" : "url(#g-arrow)") : undefined}
-                  className="transition-all duration-300"
+                  className="transition-all duration-200"
                 />
                 {frame.weighted && e.weight !== undefined && (
                   <g>
@@ -162,12 +162,14 @@ export function GraphView({ frame }: { frame: GraphFrame }) {
                 }}
                 className="cursor-grab active:cursor-grabbing"
               >
-                <circle
+                <motion.circle
                   r={R}
                   style={{ fill: vizFill(frame.nodeStates?.[n.id]) }}
-                  className="transition-colors duration-300"
+                  className="transition-colors duration-200"
                   stroke="var(--background)"
                   strokeWidth={2}
+                  animate={{ scale: isEmphasized(frame.nodeStates?.[n.id]) ? 1.18 : 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 />
                 <text textAnchor="middle" dy={4.5} className="pointer-events-none fill-white font-mono text-[12px] font-bold">
                   {n.label}

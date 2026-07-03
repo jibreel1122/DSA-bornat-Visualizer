@@ -101,7 +101,7 @@ export function ListView({ frame }: { frame: ListFrame }) {
                   height={NODE_H}
                   rx={10}
                   style={{ fill: vizFill(frame.states?.[node.id]) }}
-                  className="transition-colors duration-300"
+                  className="transition-colors duration-200"
                 />
                 <text
                   x={NODE_W / 2}

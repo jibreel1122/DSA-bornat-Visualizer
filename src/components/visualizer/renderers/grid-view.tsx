@@ -1,7 +1,7 @@
 "use client";
 
 import type { GridFrame } from "@/lib/engine/types";
-import { AuxRows, FrameNote, vizFill } from "../viz-utils";
+import { AuxRows, FrameNote, isEmphasized, vizFill } from "../viz-utils";
 
 /** Matrix renderer for mazes, boards (N-Queens, Sudoku), and sieves. */
 export function GridView({ frame }: { frame: GridFrame }) {
@@ -20,12 +20,16 @@ export function GridView({ frame }: { frame: GridFrame }) {
               return (
                 <div
                   key={`${r}-${col}`}
-                  className="grid place-items-center rounded-md font-mono text-xs font-semibold transition-colors duration-300"
+                  className="grid origin-center place-items-center rounded-md font-mono text-xs font-semibold transition-all duration-200"
                   style={{
                     width: cell,
                     height: cell,
                     background: isDefault ? "var(--muted)" : vizFill(c.state),
                     color: isDefault ? "var(--foreground)" : "white",
+                    transform: isEmphasized(c.state) ? "scale(1.1)" : "scale(1)",
+                    boxShadow: isEmphasized(c.state)
+                      ? `0 0 0 2px color-mix(in oklch, ${vizFill(c.state)} 60%, transparent)`
+                      : "none",
                   }}
                 >
                   {c.value ?? ""}

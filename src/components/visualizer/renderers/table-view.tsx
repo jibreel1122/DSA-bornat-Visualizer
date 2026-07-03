@@ -33,7 +33,7 @@ export function TableView({ frame }: { frame: TableFrame }) {
                   return (
                     <td
                       key={i}
-                      className={`rounded-md text-center font-mono transition-colors duration-300 ${cellCls}`}
+                      className={`rounded-md text-center font-mono transition-colors duration-200 ${cellCls}`}
                       style={{
                         background: isDefault ? "var(--muted)" : vizFill(c.state),
                         color: isDefault

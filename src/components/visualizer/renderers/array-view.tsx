@@ -1,7 +1,7 @@
 "use client";
 
 import type { ArrayFrame } from "@/lib/engine/types";
-import { AuxRows, FrameNote, vizFill } from "../viz-utils";
+import { AuxRows, FrameNote, isEmphasized, vizFill } from "../viz-utils";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,11 +40,15 @@ export function ArrayView({ frame }: { frame: ArrayFrame }) {
                 </span>
               )}
               <div
-                className="w-full rounded-t-md transition-all duration-300 ease-out"
+                className="w-full origin-bottom rounded-t-md transition-all duration-200 ease-out"
                 style={{
                   height: `${8 + (Math.abs(v) / max) * 78}%`,
                   background: vizFill(state),
                   opacity: inRange ? 1 : 0.45,
+                  transform: isEmphasized(state) ? "scale(1.06)" : "scale(1)",
+                  boxShadow: isEmphasized(state)
+                    ? `0 0 0 2px color-mix(in oklch, ${vizFill(state)} 60%, transparent)`
+                    : "none",
                 }}
                 title={`a[${i}] = ${v}`}
               />

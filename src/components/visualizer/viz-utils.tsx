@@ -11,6 +11,11 @@ export function isDarkFill(state?: CellState): boolean {
   return state !== "discarded";
 }
 
+/** States worth a visible "pop" — the moment an algorithm is actively looking at or acting on a cell. */
+export function isEmphasized(state?: CellState): boolean {
+  return state === "active" || state === "compare" || state === "swap" || state === "found" || state === "pivot";
+}
+
 export const STATE_LEGEND: { state: CellState; label: string }[] = [
   { state: "active", label: "Active" },
   { state: "compare", label: "Comparing" },
@@ -37,7 +42,7 @@ export function AuxRows({ rows, className }: { rows?: AuxRow[]; className?: stri
             row.values.map((v, j) => (
               <span
                 key={j}
-                className="grid min-w-7 place-items-center rounded-md px-1.5 py-1 font-mono text-xs text-white transition-colors duration-300"
+                className="grid min-w-7 place-items-center rounded-md px-1.5 py-1 font-mono text-xs text-white transition-colors duration-200"
                 style={{ background: vizFill(row.states?.[j]) }}
               >
                 {v}

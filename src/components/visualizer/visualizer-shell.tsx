@@ -326,6 +326,14 @@ export function VisualizerShell({
     toast.success("Exported SVG.");
   };
 
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  React.useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === rootRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
   const fullscreen = () => {
     const el = rootRef.current;
     if (!el) return;
@@ -381,14 +389,28 @@ export function VisualizerShell({
   const canRedo = hIndex < history.length - 1;
 
   return (
-    <div ref={rootRef} className="flex flex-col gap-3 bg-background">
-      <Card className="overflow-hidden p-0">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div
+      ref={rootRef}
+      className={cn(
+        "flex flex-col gap-3 bg-background",
+        isFullscreen && "h-screen w-full overflow-y-auto p-3",
+      )}
+    >
+      <Card className={cn("overflow-hidden p-0", isFullscreen && "flex flex-1 flex-col")}>
+        <div
+          className={cn(
+            "grid lg:grid-cols-[minmax(0,1fr)_300px]",
+            isFullscreen && "flex-1 lg:grid",
+          )}
+        >
           {/* canvas */}
           <div
             ref={canvasRef}
             data-viz-canvas
-            className="relative h-[380px] bg-background/60 sm:h-[440px] lg:border-r lg:border-border"
+            className={cn(
+              "relative bg-background/60 lg:border-r lg:border-border",
+              isFullscreen ? "h-[60vh] lg:h-full" : "h-[380px] sm:h-[440px]",
+            )}
           >
             <ZoomPan ref={zoomRef} onFullscreen={fullscreen}>
               {step ? (
@@ -402,7 +424,12 @@ export function VisualizerShell({
           </div>
 
           {/* side panel */}
-          <aside className="flex max-h-[440px] flex-col border-t border-border lg:border-t-0">
+          <aside
+            className={cn(
+              "flex flex-col border-t border-border lg:border-t-0",
+              isFullscreen ? "lg:max-h-none" : "max-h-[440px]",
+            )}
+          >
             <Tabs defaultValue="pseudocode" className="flex min-h-0 flex-1 flex-col">
               <TabsList className="m-2 grid grid-cols-2">
                 <TabsTrigger value="pseudocode">Pseudocode</TabsTrigger>
