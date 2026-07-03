@@ -29,10 +29,40 @@ export const metas: AlgorithmMeta[] = [
     summary: "Finds shortest paths from a source in a non-negative weighted graph by always settling the closest frontier node.",
     renderer: "graph",
   },
+  {
+    slug: "prim",
+    title: "Prim's MST",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["minimum spanning tree", "greedy", "priority queue", "weighted"],
+    summary: "Grows a minimum spanning tree from a start node by repeatedly adding the cheapest edge to a new vertex.",
+    renderer: "graph",
+  },
+  {
+    slug: "kruskal",
+    title: "Kruskal's MST",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["minimum spanning tree", "greedy", "union-find", "weighted"],
+    summary: "Sorts all edges by weight and adds each one that doesn't create a cycle, using union-find to detect cycles.",
+    renderer: "graph",
+  },
+  {
+    slug: "topological-sort",
+    title: "Topological Sort (Kahn's)",
+    category: "graphs",
+    difficulty: "Intermediate",
+    tags: ["DAG", "ordering", "in-degree", "dependencies"],
+    summary: "Orders the vertices of a DAG so every edge points forward, by repeatedly removing in-degree-zero nodes.",
+    renderer: "graph",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
   bfs: () => import("./bfs"),
   dfs: () => import("./dfs"),
   dijkstra: () => import("./dijkstra"),
+  prim: () => import("./prim"),
+  kruskal: () => import("./kruskal"),
+  "topological-sort": () => import("./topological-sort"),
 };
