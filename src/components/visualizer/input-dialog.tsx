@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import type { InputField } from "@/lib/engine/types";
+import { ChipListInput, isListValue } from "./chip-list-input";
 
 /** Schema-driven manual-input dialog: fields come from the algorithm module. */
 export function InputDialog({
@@ -55,24 +56,35 @@ export function InputDialog({
             }
           }}
         >
-          {fields.map((f) => (
-            <div key={f.key} className="grid gap-1.5">
-              <Label htmlFor={`field-${f.key}`}>{f.label}</Label>
-              <Input
-                id={`field-${f.key}`}
-                value={values[f.key] ?? ""}
-                placeholder={f.placeholder}
-                onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-                autoComplete="off"
-              />
-              {f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}
-            </div>
-          ))}
+          {fields.map((f) => {
+            const raw = values[f.key] ?? "";
+            const asList = isListValue(raw);
+            return (
+              <div key={f.key} className="grid gap-1.5">
+                <Label htmlFor={`field-${f.key}`}>{f.label}</Label>
+                {asList ? (
+                  <ChipListInput
+                    value={raw}
+                    onChange={(next) => setValues((v) => ({ ...v, [f.key]: next }))}
+                  />
+                ) : (
+                  <Input
+                    id={`field-${f.key}`}
+                    value={raw}
+                    placeholder={f.placeholder}
+                    onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                    autoComplete="off"
+                  />
+                )}
+                {f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}
+              </div>
+            );
+          })}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Apply</Button>
+            <Button type="submit">Generate</Button>
           </DialogFooter>
         </form>
       </DialogContent>

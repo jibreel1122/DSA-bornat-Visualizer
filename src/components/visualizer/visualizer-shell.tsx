@@ -10,16 +10,21 @@ import {
   ChevronLeft,
   ChevronRight,
   Dices,
+  Eraser,
   FileDown,
   FileUp,
   FolderOpen,
   Gauge,
   ImageDown,
+  ListMinus,
+  ListPlus,
   Pause,
   Play,
   Redo2,
   RotateCcw,
   Save,
+  Search,
+  Shuffle,
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
@@ -39,12 +44,16 @@ import { RendererSwitch } from "./renderers";
 import { ZoomPan, type ZoomPanHandle } from "./zoom-pan";
 import { StatsPanel } from "./stats-panel";
 import { InputDialog } from "./input-dialog";
+import { isListValue } from "./chip-list-input";
+import { ValuePromptButton } from "./value-prompt-button";
 
 interface SavedState {
   slug: string;
   fields: Record<string, string>;
   cursor: number;
 }
+
+const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 
 /**
  * Universal interactive visualization shell. Provides the full control
@@ -63,6 +72,16 @@ export function VisualizerShell({
   const { settings } = useSettings();
   const [level, setLevel] = React.useState<Level>(settings.defaultLevel);
   const [inputOpen, setInputOpen] = React.useState(false);
+  const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
+
+  const searchFieldKey = React.useMemo(
+    () => module.inputFields.find((f) => SEARCH_FIELD_KEYS.includes(f.key))?.key,
+    [module],
+  );
+  const hasValuesField = React.useMemo(
+    () => module.inputFields.some((f) => f.key === "values"),
+    [module],
+  );
 
   // ---- input history (undo/redo over dataset edits) ----
   const initialInput = React.useMemo(() => {
@@ -130,6 +149,98 @@ export function VisualizerShell({
   const applyFields = (fields: Record<string, string>) => {
     const parsed = module.parseInput(fields); // throws friendly errors
     pushInput(parsed);
+  };
+
+  const shuffleInput = () => {
+    const fields = module.serializeInput(input);
+    const next = { ...fields };
+    let touched = false;
+    for (const k of Object.keys(next)) {
+      if (!isListValue(next[k])) continue;
+      const tokens = next[k].split(",").map((t) => t.trim()).filter(Boolean);
+      for (let i = tokens.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tokens[i], tokens[j]] = [tokens[j], tokens[i]];
+      }
+      next[k] = tokens.join(", ");
+      touched = true;
+    }
+    if (!touched) {
+      toast.info("Nothing to shuffle here.");
+      return;
+    }
+    try {
+      pushInput(module.parseInput(next));
+      toast.success("Shuffled.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not shuffle.");
+    }
+  };
+
+  const clearInput = () => {
+    const fields = module.serializeInput(input);
+    const next = { ...fields };
+    let touched = false;
+    for (const k of Object.keys(next)) {
+      if (isListValue(next[k])) {
+        next[k] = "";
+        touched = true;
+      }
+    }
+    if (!touched) {
+      toast.info("Nothing to clear here — try Custom input.");
+      return;
+    }
+    try {
+      pushInput(module.parseInput(next));
+      toast.success("Cleared.");
+    } catch {
+      setDialogPreset(next);
+      setInputOpen(true);
+      toast.info("Enter new values to continue.");
+    }
+  };
+
+  const insertValue = (raw: string) => {
+    const fields = module.serializeInput(input);
+    const current = fields.values ?? "";
+    const next = { ...fields, values: current ? `${current}, ${raw}` : raw };
+    try {
+      pushInput(module.parseInput(next));
+      toast.success(`Inserted ${raw}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not insert.");
+    }
+  };
+
+  const removeValue = (raw: string) => {
+    const fields = module.serializeInput(input);
+    const tokens = (fields.values ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+    const idx = tokens.findIndex((t) => t === raw.trim());
+    if (idx === -1) {
+      toast.info(`"${raw}" is not in the current values.`);
+      return;
+    }
+    tokens.splice(idx, 1);
+    const next = { ...fields, values: tokens.join(", ") };
+    try {
+      pushInput(module.parseInput(next));
+      toast.success(`Removed ${raw}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not remove.");
+    }
+  };
+
+  const searchValue = (raw: string) => {
+    if (!searchFieldKey) return;
+    const fields = module.serializeInput(input);
+    const next = { ...fields, [searchFieldKey]: raw };
+    try {
+      pushInput(module.parseInput(next));
+      toast.success(`Searching for ${raw}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not search.");
+    }
   };
 
   const exportJson = () => {
@@ -412,9 +523,49 @@ export function VisualizerShell({
           <Button variant="secondary" size="sm" onClick={() => randomize()}>
             <Dices /> Random
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setInputOpen(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setDialogPreset(null);
+              setInputOpen(true);
+            }}
+          >
             <SlidersHorizontal /> Custom input
           </Button>
+          <IconBtn label="Shuffle values" onClick={shuffleInput}>
+            <Shuffle />
+          </IconBtn>
+          <IconBtn label="Clear values" onClick={clearInput}>
+            <Eraser />
+          </IconBtn>
+          {hasValuesField && (
+            <ValuePromptButton
+              icon={<ListPlus />}
+              label="Insert a value"
+              placeholder="e.g. 42"
+              confirmLabel="Insert"
+              onSubmit={insertValue}
+            />
+          )}
+          {hasValuesField && (
+            <ValuePromptButton
+              icon={<ListMinus />}
+              label="Remove a value"
+              placeholder="e.g. 42"
+              confirmLabel="Remove"
+              onSubmit={removeValue}
+            />
+          )}
+          {searchFieldKey && (
+            <ValuePromptButton
+              icon={<Search />}
+              label="Search for a value"
+              placeholder="e.g. 42"
+              confirmLabel="Search"
+              onSubmit={searchValue}
+            />
+          )}
 
           <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
 
@@ -450,9 +601,12 @@ export function VisualizerShell({
 
       <InputDialog
         open={inputOpen}
-        onOpenChange={setInputOpen}
+        onOpenChange={(o) => {
+          setInputOpen(o);
+          if (!o) setDialogPreset(null);
+        }}
         fields={module.inputFields}
-        initial={module.serializeInput(input)}
+        initial={dialogPreset ?? module.serializeInput(input)}
         onSubmit={applyFields}
       />
     </div>
