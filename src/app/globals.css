@@ -112,9 +112,9 @@
   --muted-foreground: oklch(0.82 0.02 264);
 }
 
-/* Large text mode */
+/* Large text mode (accessibility) — a clear step above the base size */
 .large-text {
-  font-size: 112.5%;
+  font-size: 122.5%;
 }
 
 /* Reduced motion (in-app toggle) */
@@ -141,6 +141,13 @@
 
 html {
   scroll-behavior: smooth;
+  /* Slightly larger base type for readability across the whole app (1rem = 17px). */
+  font-size: 106.25%;
+}
+@media (min-width: 1280px) {
+  html {
+    font-size: 109.375%;
+  }
 }
 
 body {
