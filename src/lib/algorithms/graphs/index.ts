@@ -83,6 +83,33 @@ export const metas: AlgorithmMeta[] = [
     summary: "Maintains a partition of elements into disjoint sets with near-constant-time union and find via rank and path compression.",
     renderer: "graph",
   },
+  {
+    slug: "tarjan-scc",
+    title: "Tarjan's Strongly Connected Components",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "SCC", "DFS", "lowlink"],
+    summary: "Finds all strongly connected components of a directed graph in a single DFS using discovery indices and lowlink values.",
+    renderer: "graph",
+  },
+  {
+    slug: "kosaraju-scc",
+    title: "Kosaraju's Strongly Connected Components",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "SCC", "DFS", "transpose"],
+    summary: "Finds strongly connected components with two DFS passes: order by finish time, then DFS the transposed graph.",
+    renderer: "graph",
+  },
+  {
+    slug: "a-star",
+    title: "A* Pathfinding",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "shortest path", "heuristic", "informed search"],
+    summary: "Finds the shortest path on a grid by expanding the cell that minimizes f = g + h, guided by an admissible heuristic.",
+    renderer: "grid",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -95,4 +122,7 @@ export const loaders: Record<string, ModuleLoader> = {
   "bellman-ford": () => import("./bellman-ford"),
   "floyd-warshall": () => import("./floyd-warshall"),
   "union-find": () => import("./union-find"),
+  "tarjan-scc": () => import("./tarjan-scc"),
+  "kosaraju-scc": () => import("./kosaraju-scc"),
+  "a-star": () => import("./a-star"),
 };
