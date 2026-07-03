@@ -74,6 +74,24 @@ export const metas: AlgorithmMeta[] = [
     summary: "A compact array that answers prefix-sum queries and point updates in O(log n) using the low-bit trick i & −i.",
     renderer: "array",
   },
+  {
+    slug: "red-black-tree",
+    title: "Red-Black Tree",
+    category: "trees",
+    difficulty: "Advanced",
+    tags: ["tree", "self-balancing", "recoloring", "rotations"],
+    summary: "A self-balancing BST that uses node colors and 5 invariants to guarantee O(log n) operations with few rotations.",
+    renderer: "tree",
+  },
+  {
+    slug: "b-tree",
+    title: "B-Tree",
+    category: "trees",
+    difficulty: "Advanced",
+    tags: ["tree", "balanced", "multiway", "database index"],
+    summary: "A balanced multiway search tree where nodes hold many keys and split when full, keeping all leaves at the same depth.",
+    renderer: "tree",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -85,4 +103,6 @@ export const loaders: Record<string, ModuleLoader> = {
   "avl-tree": () => import("./avl-tree"),
   "segment-tree": () => import("./segment-tree"),
   "fenwick-tree": () => import("./fenwick-tree"),
+  "red-black-tree": () => import("./red-black-tree"),
+  "b-tree": () => import("./b-tree"),
 };
