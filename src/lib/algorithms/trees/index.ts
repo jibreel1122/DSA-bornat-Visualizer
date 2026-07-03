@@ -47,6 +47,33 @@ export const metas: AlgorithmMeta[] = [
     summary: "Stores a set of strings in a prefix tree, sharing common prefixes; supports fast insert and lookup by walking edges.",
     renderer: "tree",
   },
+  {
+    slug: "avl-tree",
+    title: "AVL Tree (Self-Balancing BST)",
+    category: "trees",
+    difficulty: "Advanced",
+    tags: ["tree", "self-balancing", "rotations", "balance factor"],
+    summary: "A height-balanced binary search tree that rotates after inserts to keep every balance factor in {−1, 0, +1}.",
+    renderer: "tree",
+  },
+  {
+    slug: "segment-tree",
+    title: "Segment Tree (Range Queries)",
+    category: "trees",
+    difficulty: "Advanced",
+    tags: ["tree", "range query", "point update", "divide and conquer"],
+    summary: "Answers range-sum queries and point updates in O(log n) by storing partial sums over a binary tree of index ranges.",
+    renderer: "tree",
+  },
+  {
+    slug: "fenwick-tree",
+    title: "Fenwick Tree (Binary Indexed Tree)",
+    category: "trees",
+    difficulty: "Advanced",
+    tags: ["BIT", "prefix sum", "bit manipulation", "range query"],
+    summary: "A compact array that answers prefix-sum queries and point updates in O(log n) using the low-bit trick i & −i.",
+    renderer: "array",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -55,4 +82,7 @@ export const loaders: Record<string, ModuleLoader> = {
   "level-order-traversal": () => import("./level-order-traversal"),
   "min-heap": () => import("./min-heap"),
   "trie": () => import("./trie"),
+  "avl-tree": () => import("./avl-tree"),
+  "segment-tree": () => import("./segment-tree"),
+  "fenwick-tree": () => import("./fenwick-tree"),
 };
