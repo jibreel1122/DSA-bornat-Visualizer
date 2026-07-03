@@ -110,6 +110,15 @@ export const metas: AlgorithmMeta[] = [
     summary: "Finds the shortest path on a grid by expanding the cell that minimizes f = g + h, guided by an admissible heuristic.",
     renderer: "grid",
   },
+  {
+    slug: "max-flow",
+    title: "Maximum Flow (Edmonds-Karp)",
+    category: "graphs",
+    difficulty: "Advanced",
+    tags: ["graph", "max-flow", "residual graph", "BFS augmenting paths"],
+    summary: "Computes the maximum flow from source to sink by repeatedly pushing flow along shortest augmenting paths found with BFS.",
+    renderer: "graph",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -125,4 +134,5 @@ export const loaders: Record<string, ModuleLoader> = {
   "tarjan-scc": () => import("./tarjan-scc"),
   "kosaraju-scc": () => import("./kosaraju-scc"),
   "a-star": () => import("./a-star"),
+  "max-flow": () => import("./max-flow"),
 };
