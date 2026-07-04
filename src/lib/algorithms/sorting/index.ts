@@ -101,6 +101,33 @@ export const metas: AlgorithmMeta[] = [
     summary: "Improves bubble sort by comparing elements a shrinking gap apart, eliminating small trailing values fast.",
     renderer: "array",
   },
+  {
+    slug: "bucket-sort",
+    title: "Bucket Sort",
+    category: "sorting",
+    difficulty: "Intermediate",
+    tags: ["non-comparison", "distribution sort", "stable", "average O(n+k)"],
+    summary: "Scatters values into range-based buckets, sorts each bucket internally, then concatenates — fast when input is uniformly distributed.",
+    renderer: "array",
+  },
+  {
+    slug: "tim-sort",
+    title: "Tim Sort (Simplified)",
+    category: "sorting",
+    difficulty: "Advanced",
+    tags: ["hybrid sort", "stable", "insertion + merge", "O(n log n)", "real-world"],
+    summary: "The hybrid behind Python's and Java's default sort: insertion-sort small runs, then merge them like merge sort — stable and fast on partially-sorted data.",
+    renderer: "array",
+  },
+  {
+    slug: "pancake-sort",
+    title: "Pancake Sort",
+    category: "sorting",
+    difficulty: "Intermediate",
+    tags: ["comparison sort", "flip-based", "O(n²)", "prefix reversal"],
+    summary: "Sorts using only 'flip the first k elements' operations — find the max, flip it to the front, then flip it to its final position.",
+    renderer: "array",
+  },
 ];
 
 export const loaders: Record<string, ModuleLoader> = {
@@ -115,4 +142,7 @@ export const loaders: Record<string, ModuleLoader> = {
   "radix-sort": () => import("./radix-sort"),
   "cocktail-shaker-sort": () => import("./cocktail-shaker-sort"),
   "comb-sort": () => import("./comb-sort"),
+  "bucket-sort": () => import("./bucket-sort"),
+  "tim-sort": () => import("./tim-sort"),
+  "pancake-sort": () => import("./pancake-sort"),
 };
