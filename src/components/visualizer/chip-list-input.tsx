@@ -23,9 +23,12 @@ function tokenize(raw: string): string[] {
 export function ChipListInput({
   value,
   onChange,
+  invalid,
 }: {
   value: string;
   onChange: (next: string) => void;
+  /** Highlights the field border when the parent dialog attributed a parse error here. */
+  invalid?: boolean;
 }) {
   const tokens = tokenize(value);
   const [editingIdx, setEditingIdx] = React.useState<number | null>(null);
@@ -62,7 +65,12 @@ export function ChipListInput({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-input bg-background/50 p-2">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-1.5 rounded-lg border bg-background/50 p-2",
+        invalid ? "border-destructive" : "border-input",
+      )}
+    >
       {tokens.map((t, i) =>
         editingIdx === i ? (
           <Input

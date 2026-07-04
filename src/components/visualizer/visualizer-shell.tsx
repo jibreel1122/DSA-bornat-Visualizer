@@ -15,6 +15,7 @@ import {
   FileUp,
   FolderOpen,
   Gauge,
+  HelpCircle,
   ImageDown,
   ListMinus,
   ListPlus,
@@ -34,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useVisualizerPlayer } from "@/lib/engine/player";
 import { createRNG, randomSeed } from "@/lib/engine/random";
@@ -54,6 +56,16 @@ interface SavedState {
 }
 
 const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
+
+const SHORTCUTS: { keys: string[]; label: string }[] = [
+  { keys: ["Space"], label: "Play / pause" },
+  { keys: ["←"], label: "Previous step" },
+  { keys: ["→"], label: "Next step" },
+  { keys: ["R"], label: "Reset to start" },
+  { keys: ["F"], label: "Toggle fullscreen" },
+  { keys: ["+"], label: "Speed up" },
+  { keys: ["-"], label: "Slow down" },
+];
 
 /**
  * Universal interactive visualization shell. Provides the full control
@@ -522,6 +534,42 @@ export function VisualizerShell({
                 {player.speed}×
               </span>
             </div>
+
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
+                      <HelpCircle />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Keyboard shortcuts</TooltipContent>
+              </Tooltip>
+              <PopoverContent align="end" className="w-64">
+                <p className="mb-2 text-sm font-semibold">Keyboard shortcuts</p>
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+                  {SHORTCUTS.map(({ keys, label }) => (
+                    <React.Fragment key={label}>
+                      <dt className="flex items-center gap-1">
+                        {keys.map((k) => (
+                          <kbd
+                            key={k}
+                            className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                          >
+                            {k}
+                          </kbd>
+                        ))}
+                      </dt>
+                      <dd className="text-muted-foreground">{label}</dd>
+                    </React.Fragment>
+                  ))}
+                </dl>
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Shortcuts are disabled while typing in a text field.
+                </p>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -635,6 +683,7 @@ export function VisualizerShell({
         fields={module.inputFields}
         initial={dialogPreset ?? module.serializeInput(input)}
         onSubmit={applyFields}
+        parseInput={module.parseInput}
       />
     </div>
   );
