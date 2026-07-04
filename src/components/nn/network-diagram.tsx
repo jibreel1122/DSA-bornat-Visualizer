@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type { ForwardPass, Network } from "@/lib/nn/network";
+import { useSettings } from "@/components/providers/settings-provider";
 
 /** Color for a weight edge: teal for positive, rose for negative, width/opacity by magnitude. */
 function weightStroke(w: number): { color: string; width: number; opacity: number } {
@@ -16,6 +17,24 @@ function neuronFill(v: number): string {
   return `color-mix(in oklch, var(--viz-active) ${Math.round(t * 100)}%, var(--muted) )`;
 }
 
+/**
+ * Tracks the OS-level `prefers-reduced-motion` media query. SVG SMIL
+ * animations (<animateMotion>) aren't CSS, so the app's `.reduced-motion`
+ * class (which only forces `animation-duration`/`transition-duration` to
+ * ~0) can't touch them — this component must gate them itself in JS.
+ */
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
 export function NetworkDiagram({
   net,
   pass,
@@ -27,6 +46,10 @@ export function NetworkDiagram({
   selectedNeuron: { layer: number; index: number } | null;
   onSelectNeuron: (n: { layer: number; index: number } | null) => void;
 }) {
+  const { settings } = useSettings();
+  const prefersReducedMotionOS = usePrefersReducedMotion();
+  const motionEnabled = !settings.reducedMotion && !prefersReducedMotionOS;
+
   const L = net.layerSizes.length;
   const maxCount = Math.max(...net.layerSizes);
 
@@ -68,12 +91,22 @@ export function NetworkDiagram({
           @media (prefers-reduced-motion: reduce) {
             .nn-node { animation: none; }
           }
+          @media (prefers-reduced-motion: reduce) {
+            /* Belt-and-suspenders: JS already skips rendering .nn-flow-dot
+               when prefers-reduced-motion or the in-app reduced-motion
+               setting is active; this covers any pre-hydration flash. */
+            .nn-flow-dot { display: none; }
+          }
         `}</style>
         {/* edges */}
         {net.weights.map((Wmat, i) =>
           Wmat.map((row, r) =>
             row.map((w, c) => {
               const s = weightStroke(w);
+              // An edge is "active" (data flowing) when it feeds into the
+              // currently selected neuron: layer i -> (i+1, r) === selectedNeuron.
+              const isActive =
+                selectedNeuron !== null && selectedNeuron.layer === i + 1 && selectedNeuron.index === r;
               return (
                 <line
                   key={`e-${i}-${r}-${c}`}
@@ -81,15 +114,38 @@ export function NetworkDiagram({
                   y1={neuronY(i, c)}
                   x2={layerX(i + 1)}
                   y2={neuronY(i + 1, r)}
-                  stroke={s.color}
-                  strokeWidth={s.width}
-                  strokeOpacity={s.opacity}
+                  stroke={isActive ? "var(--viz-active)" : s.color}
+                  strokeWidth={isActive ? s.width + 2 : s.width}
+                  strokeOpacity={isActive ? 1 : s.opacity}
                   className="transition-all duration-300"
                 />
               );
             }),
           ),
         )}
+
+        {/* data-flow dots: only the edges feeding the selected neuron, bounded by that layer's fan-in */}
+        {motionEnabled &&
+          selectedNeuron !== null &&
+          selectedNeuron.layer > 0 &&
+          net.weights[selectedNeuron.layer - 1]?.[selectedNeuron.index]?.map((_, c) => {
+            const i = selectedNeuron.layer - 1;
+            const r = selectedNeuron.index;
+            const x1 = layerX(i);
+            const y1 = neuronY(i, c);
+            const x2 = layerX(i + 1);
+            const y2 = neuronY(i + 1, r);
+            return (
+              <circle key={`flow-${i}-${r}-${c}`} r={3} fill="var(--viz-active)" className="nn-flow-dot">
+                <animateMotion
+                  path={`M${x1},${y1} L${x2},${y2}`}
+                  dur="0.8s"
+                  begin={`${c * 0.05}s`}
+                  repeatCount="indefinite"
+                />
+              </circle>
+            );
+          })}
 
         {/* layer labels */}
         {net.layerSizes.map((_, l) => (

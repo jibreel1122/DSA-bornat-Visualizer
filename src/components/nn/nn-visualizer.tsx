@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Brain, Minus, Pause, Play, Plus, RotateCcw, Shuffle, StepForward } from "lucide-react";
+import { Brain, ChevronLeft, ChevronRight, Minus, Pause, Play, Plus, RotateCcw, Shuffle, StepForward } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/catalog/page-header";
-import { Network, type ForwardPass, type Gradients } from "@/lib/nn/network";
+import { Network, type ForwardPass, type Gradients, type Sample } from "@/lib/nn/network";
 import { DATASETS, DATASET_IDS } from "@/lib/nn/datasets";
 import { ACTIVATIONS, HIDDEN_ACTIVATIONS, OUTPUT_ACTIVATIONS, type ActivationId } from "@/lib/nn/activations";
 import { useSettings } from "@/components/providers/settings-provider";
@@ -71,6 +72,9 @@ export function NNVisualizer() {
   const [playing, setPlaying] = React.useState(false);
   const [sampleIdx, setSampleIdx] = React.useState(0);
   const [selectedNeuron, setSelectedNeuron] = React.useState<{ layer: number; index: number } | null>(null);
+  const [customMode, setCustomMode] = React.useState(false);
+  const [customInputs, setCustomInputs] = React.useState<number[]>(() => dataset.samples[0].input.slice());
+  const [customTargets, setCustomTargets] = React.useState<number[]>(() => dataset.samples[0].target.slice());
 
   // Hard reset: brand-new weights, fresh history. Used for the explicit
   // "Reset weights" button and whenever the dataset changes (loss values
@@ -113,6 +117,10 @@ export function NNVisualizer() {
     if (prevDatasetId.current !== datasetId) {
       prevDatasetId.current = datasetId;
       rebuild();
+      // Dataset dimensions may differ — custom values (and selected neuron,
+      // whose layer/index may now be out of range) no longer apply.
+      setCustomMode(false);
+      setSelectedNeuron(null);
     } else {
       rebuildKeepingHistory();
     }
@@ -159,9 +167,39 @@ export function NNVisualizer() {
   }, [playing, loss]);
 
   const net = netRef.current;
-  const sample = dataset.samples[Math.min(sampleIdx, dataset.samples.length - 1)];
+  const pickedSample = dataset.samples[Math.min(sampleIdx, dataset.samples.length - 1)];
+  const sample: Sample = customMode ? { input: customInputs, target: customTargets } : pickedSample;
   const pass: ForwardPass | null = net ? net.forward(sample.input) : null;
   const grads: Gradients | null = net && pass ? net.backward(pass, sample.target) : null;
+
+  // Ordered walkthrough sequence: every non-input neuron, layer by layer,
+  // left to right — the order a forward pass actually computes them in.
+  const neuronSequence = React.useMemo(() => {
+    if (!net) return [] as { layer: number; index: number }[];
+    const seq: { layer: number; index: number }[] = [];
+    for (let l = 1; l < net.layerSizes.length; l++) {
+      for (let i = 0; i < net.layerSizes[l]; i++) seq.push({ layer: l, index: i });
+    }
+    return seq;
+  }, [net, net?.layerSizes.join(",")]);
+
+  const stepIndex = selectedNeuron
+    ? neuronSequence.findIndex((n) => n.layer === selectedNeuron.layer && n.index === selectedNeuron.index)
+    : -1;
+
+  const goToStep = (i: number) => {
+    if (neuronSequence.length === 0) return;
+    const clamped = Math.max(0, Math.min(neuronSequence.length - 1, i));
+    setSelectedNeuron(neuronSequence[clamped]);
+  };
+  const stepPrev = () => goToStep(stepIndex < 0 ? 0 : stepIndex - 1);
+  const stepNext = () => goToStep(stepIndex < 0 ? 0 : stepIndex + 1);
+
+  const enterCustomMode = () => {
+    setCustomInputs(pickedSample.input.slice());
+    setCustomTargets(pickedSample.target.slice());
+    setCustomMode(true);
+  };
 
   const MAX_NEURONS_PER_LAYER = 16;
   const MAX_HIDDEN_LAYERS = 6;
@@ -276,18 +314,61 @@ export function NNVisualizer() {
           <CardContent>
             {net && <NetworkDiagram net={net} pass={pass} selectedNeuron={selectedNeuron} onSelectNeuron={setSelectedNeuron} />}
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">Show sample:</span>
-              {dataset.samples.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSampleIdx(i)}
-                  className={`rounded-md border px-2 py-1 font-mono text-[11px] transition-colors ${
-                    i === sampleIdx ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  [{s.input.join(",")}]→{s.target.join(",")}
-                </button>
-              ))}
+              <span className="text-xs text-muted-foreground">{customMode ? "Custom input:" : "Show sample:"}</span>
+              {!customMode &&
+                dataset.samples.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSampleIdx(i)}
+                    className={`rounded-md border px-2 py-1 font-mono text-[11px] transition-colors ${
+                      i === sampleIdx ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    [{s.input.join(",")}]→{s.target.join(",")}
+                  </button>
+                ))}
+              {customMode && (
+                <>
+                  {customInputs.map((v, i) => (
+                    <label key={`x${i}`} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      x{i + 1}
+                      <Input
+                        type="number"
+                        step="any"
+                        value={v}
+                        onChange={(e) => {
+                          const n = parseFloat(e.target.value);
+                          setCustomInputs((arr) => arr.map((old, idx) => (idx === i ? (Number.isFinite(n) ? n : old) : old)));
+                        }}
+                        className="h-7 w-16 px-1.5 py-0 font-mono text-[11px]"
+                      />
+                    </label>
+                  ))}
+                  {customTargets.map((v, i) => (
+                    <label key={`t${i}`} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      target{customTargets.length > 1 ? i + 1 : ""}
+                      <Input
+                        type="number"
+                        step="any"
+                        value={v}
+                        onChange={(e) => {
+                          const n = parseFloat(e.target.value);
+                          setCustomTargets((arr) => arr.map((old, idx) => (idx === i ? (Number.isFinite(n) ? n : old) : old)));
+                        }}
+                        className="h-7 w-16 px-1.5 py-0 font-mono text-[11px]"
+                      />
+                    </label>
+                  ))}
+                </>
+              )}
+              <Button
+                variant={customMode ? "secondary" : "ghost"}
+                size="sm"
+                className="ml-1"
+                onClick={() => (customMode ? setCustomMode(false) : enterCustomMode())}
+              >
+                {customMode ? "Use sample picker" : "Custom input"}
+              </Button>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5"><span className="inline-block h-1 w-5 rounded" style={{ background: "oklch(0.7 0.15 175)" }} /> positive weight</span>
@@ -316,9 +397,24 @@ export function NNVisualizer() {
       {/* calculation inspector */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="mt-4">
-          <CardHeader className="pb-1"><CardTitle className="text-base">Calculation inspector</CardTitle></CardHeader>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-1">
+            <CardTitle className="text-base">Calculation inspector</CardTitle>
+            {neuronSequence.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="icon-sm" onClick={stepPrev} disabled={stepIndex === 0} aria-label="Previous step">
+                  <ChevronLeft />
+                </Button>
+                <span className="font-mono text-xs text-muted-foreground">
+                  Step {stepIndex < 0 ? "–" : stepIndex + 1} / {neuronSequence.length}
+                </span>
+                <Button variant="ghost" size="icon-sm" onClick={stepNext} disabled={stepIndex === neuronSequence.length - 1} aria-label="Next step">
+                  <ChevronRight />
+                </Button>
+              </div>
+            )}
+          </CardHeader>
           <CardContent>
-            {net && <CalcInspector net={net} pass={pass} grads={grads} selected={selectedNeuron} />}
+            {net && <CalcInspector net={net} pass={pass} grads={grads} selected={selectedNeuron} onEdited={bump} />}
           </CardContent>
         </Card>
       </motion.div>

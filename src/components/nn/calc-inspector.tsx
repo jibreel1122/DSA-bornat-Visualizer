@@ -1,7 +1,9 @@
 "use client";
 
+import * as React from "react";
 import type { ForwardPass, Gradients, Network } from "@/lib/nn/network";
 import { ACTIVATIONS } from "@/lib/nn/activations";
+import { Input } from "@/components/ui/input";
 
 /**
  * Shows the exact math for a selected neuron: the weighted sum term by term,
@@ -12,11 +14,14 @@ export function CalcInspector({
   pass,
   grads,
   selected,
+  onEdited,
 }: {
   net: Network;
   pass: ForwardPass | null;
   grads: Gradients | null;
   selected: { layer: number; index: number } | null;
+  /** called after a weight/bias is edited in place, so the caller can force a re-render */
+  onEdited?: () => void;
 }) {
   if (!selected || !pass) {
     return (
@@ -70,15 +75,31 @@ export function CalcInspector({
             </thead>
             <tbody className="font-mono">
               <tr className="border-t border-border/60">
-                <td className="px-2 py-1">bias</td>
-                <td className="px-2 py-1 text-right">{b.toFixed(3)}</td>
+                <td className="px-2 py-1">bias (θ)</td>
+                <td className="px-2 py-1 text-right">
+                  <EditableCell
+                    value={b}
+                    onCommit={(v) => {
+                      net.setBias(t, index, v);
+                      onEdited?.();
+                    }}
+                  />
+                </td>
                 <td className="px-2 py-1 text-right text-muted-foreground">1</td>
                 <td className="px-2 py-1 text-right">{b.toFixed(3)}</td>
               </tr>
               {W.map((w, c) => (
                 <tr key={c} className="border-t border-border/60">
                   <td className="px-2 py-1">w{c + 1}·a{c + 1}</td>
-                  <td className="px-2 py-1 text-right">{w.toFixed(3)}</td>
+                  <td className="px-2 py-1 text-right">
+                    <EditableCell
+                      value={w}
+                      onCommit={(v) => {
+                        net.setWeight(t, index, c, v);
+                        onEdited?.();
+                      }}
+                    />
+                  </td>
                   <td className="px-2 py-1 text-right">{prev[c].toFixed(3)}</td>
                   <td className="px-2 py-1 text-right">{(w * prev[c]).toFixed(3)}</td>
                 </tr>
@@ -102,6 +123,63 @@ export function CalcInspector({
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * A compact inline-editable number cell for the weighted-sum table. Shows the
+ * current value formatted like the rest of the table; on focus it switches to
+ * a raw editable number input, and commits (calling `onCommit`) on blur or Enter.
+ */
+function EditableCell({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
+  const [editing, setEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState(String(value));
+
+  React.useEffect(() => {
+    if (!editing) setDraft(String(value));
+  }, [value, editing]);
+
+  const commit = () => {
+    const v = parseFloat(draft);
+    if (Number.isFinite(v)) onCommit(v);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(String(value));
+          setEditing(true);
+        }}
+        className="w-full rounded px-1 text-right font-mono text-[11px] hover:bg-accent"
+        title="Click to edit"
+      >
+        {value.toFixed(3)}
+      </button>
+    );
+  }
+
+  return (
+    <Input
+      autoFocus
+      type="number"
+      step="any"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+        } else if (e.key === "Escape") {
+          setDraft(String(value));
+          setEditing(false);
+        }
+      }}
+      className="h-6 w-20 px-1 py-0 text-right font-mono text-[11px]"
+    />
   );
 }
 

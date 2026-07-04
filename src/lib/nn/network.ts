@@ -186,6 +186,18 @@ export class Network {
     return s / data.length;
   }
 
+  /** Directly overwrite a single weight (used by the interactive calc inspector). Ignores non-finite values. */
+  setWeight(t: number, r: number, c: number, value: number) {
+    if (!Number.isFinite(value)) return;
+    this.weights[t][r][c] = value;
+  }
+
+  /** Directly overwrite a single bias (used by the interactive calc inspector). Ignores non-finite values. */
+  setBias(t: number, r: number, value: number) {
+    if (!Number.isFinite(value)) return;
+    this.biases[t][r] = value;
+  }
+
   clone(): Network {
     const net = new Network(this.layerSizes, this.activations, this.seed);
     net.weights = this.weights.map((W) => W.map((r) => r.slice()));
