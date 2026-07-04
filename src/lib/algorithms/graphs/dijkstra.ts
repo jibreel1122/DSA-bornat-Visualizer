@@ -19,7 +19,7 @@ export function parseWeightedEdges(text: string): { nodes: string[]; edges: WEdg
     nodes.add(to);
     edges.push({ from, to, weight: Number(w) });
   }
-  if (nodes.size > 20) throw new Error("Maximum 20 nodes.");
+  if (nodes.size > 30) throw new Error("Maximum 30 nodes.");
   return { nodes: [...nodes].sort(), edges };
 }
 
@@ -350,7 +350,7 @@ Each time a node is settled, the algorithm relaxes its outgoing edges: if going 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5", help: "Format A-B:weight (non-negative). Up to 20 nodes." },
+    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5", help: "Format A-B:weight (non-negative). Up to 30 nodes." },
     { key: "start", label: "Start node", placeholder: "A" },
   ],
   defaultInput: (level, rng) => {

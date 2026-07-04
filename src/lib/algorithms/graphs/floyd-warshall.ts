@@ -286,12 +286,12 @@ The algorithm is a beautiful dynamic program over one question: "which vertices 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:3, B>C:2, A>C:8", help: "Format A>B:w; negative weights allowed (no negative cycles). Up to 8 nodes." },
+    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:3, B>C:2, A>C:8", help: "Format A>B:w; negative weights allowed (no negative cycles). Up to 12 nodes." },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {
     const { nodes, edges } = parseDirectedWeighted(fields.edges ?? "");
-    if (nodes.length > 8) throw new Error("Floyd-Warshall visualization is limited to 8 vertices.");
+    if (nodes.length > 12) throw new Error("Floyd-Warshall visualization is limited to 12 vertices.");
     return { nodes, edges };
   },
   serializeInput: (input) => ({ edges: input.edges.map((e) => `${e.from}>${e.to}:${e.weight}`).join(", ") }),

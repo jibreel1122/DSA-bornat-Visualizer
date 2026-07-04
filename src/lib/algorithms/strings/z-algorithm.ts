@@ -390,7 +390,7 @@ The linear-time trick is the Z-box [L, R): the rightmost segment found so far th
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
     if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 30) throw new Error("Keep the text at most 30 characters (the concatenation is drawn).");
+    if (text.length > 55) throw new Error("Keep the text at most 55 characters (the concatenation is drawn).");
     if (text.includes("$") || pattern.includes("$")) throw new Error("'$' is reserved as the separator character.");
     return { text, pattern };
   },

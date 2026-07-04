@@ -276,7 +276,7 @@ The algorithm builds a permutation one position at a time. At each level of recu
     ],
   },
   inputFields: [
-    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–4 distinct symbols or numbers." },
+    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–5 distinct symbols or numbers." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -285,7 +285,7 @@ The algorithm builds a permutation one position at a time. At each level of recu
       .map((p) => p.trim())
       .filter(Boolean);
     if (items.length < 2) throw new Error("Enter at least 2 elements.");
-    if (items.length > 4) throw new Error("Maximum 4 elements (4! = 24 permutations).");
+    if (items.length > 5) throw new Error("Maximum 5 elements (5! = 120 permutations) to keep the step-by-step trace bounded.");
     if (new Set(items).size !== items.length) throw new Error("Elements must be distinct.");
     return { items };
   },

@@ -340,12 +340,12 @@ Tarjan's algorithm (1972) finds all SCCs in a single depth-first search — an e
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed edges", placeholder: "A>B, B>C, C>A, C>D", help: "Format A>B. Up to 12 nodes." },
+    { key: "edges", label: "Directed edges", placeholder: "A>B, B>C, C>A, C>D", help: "Format A>B. Up to 20 nodes." },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {
     const { nodes, edges } = parseDirectedEdges(fields.edges ?? "");
-    if (nodes.length > 12) throw new Error("Tarjan visualization is limited to 12 nodes.");
+    if (nodes.length > 20) throw new Error("Tarjan visualization is limited to 20 nodes.");
     return { nodes, edges };
   },
   serializeInput: (input) => ({ edges: input.edges.map((e) => `${e.from}>${e.to}`).join(", ") }),

@@ -287,21 +287,21 @@ Performance hinges on the load factor α = n/m (keys per bucket). With a good ha
     ],
   },
   inputFields: [
-    { key: "ops", label: "Operations", placeholder: "insert 21, insert 14, insert 28, search 14, delete 21", help: "Comma-separated: insert N, search N, delete N." },
-    { key: "size", label: "Table size m", placeholder: "7", help: "3–13 (prime recommended)." },
+    { key: "ops", label: "Operations", placeholder: "insert 21, insert 14, insert 28, search 14, delete 21", help: "Comma-separated: insert N, search N, delete N (max 50)." },
+    { key: "size", label: "Table size m", placeholder: "7", help: "3–20 (prime recommended)." },
   ],
   defaultInput: (level, rng) => randomOps(level, rng),
   parseInput: (fields) => {
     const parts = (fields.ops ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length === 0) throw new Error("Enter at least one operation, e.g. insert 21.");
-    if (parts.length > 24) throw new Error("Maximum 24 operations.");
+    if (parts.length > 50) throw new Error("Maximum 50 operations.");
     const ops: Op[] = parts.map((p) => {
       const m = p.match(/^(insert|search|delete)\s+(\d+)$/i);
       if (!m) throw new Error(`"${p}" is invalid. Use: insert 21, search 14, or delete 7.`);
       return { kind: m[1].toLowerCase() as Op["kind"], key: Number(m[2]) };
     });
     const size = Number((fields.size ?? "7").trim());
-    if (!Number.isInteger(size) || size < 3 || size > 13) throw new Error("Table size must be a whole number from 3 to 13.");
+    if (!Number.isInteger(size) || size < 3 || size > 20) throw new Error("Table size must be a whole number from 3 to 20.");
     return { ops, size };
   },
   serializeInput: (input) => ({ ops: input.ops.map((o) => `${o.kind} ${o.key}`).join(", "), size: String(input.size) }),

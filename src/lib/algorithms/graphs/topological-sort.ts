@@ -18,7 +18,7 @@ export function parseDirectedEdges(text: string): { nodes: string[]; edges: { fr
     nodes.add(to);
     edges.push({ from, to });
   }
-  if (nodes.size > 20) throw new Error("Maximum 20 nodes.");
+  if (nodes.size > 30) throw new Error("Maximum 30 nodes.");
   return { nodes: [...nodes].sort(), edges };
 }
 

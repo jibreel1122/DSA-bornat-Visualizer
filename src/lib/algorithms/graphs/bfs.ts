@@ -25,7 +25,7 @@ export function parseEdgeList(text: string): { nodes: string[]; edges: { from: s
     nodes.add(to);
     edges.push({ from, to });
   }
-  if (nodes.size > 26) throw new Error("Maximum 26 nodes.");
+  if (nodes.size > 40) throw new Error("Maximum 40 nodes.");
   return { nodes: [...nodes].sort(), edges };
 }
 
@@ -453,7 +453,7 @@ Because it visits nodes in increasing distance order, BFS computes shortest path
       key: "edges",
       label: "Edges (undirected)",
       placeholder: "A-B, A-C, B-D, C-D, D-E",
-      help: "Comma-separated pairs like A-B. Up to 26 nodes.",
+      help: "Comma-separated pairs like A-B. Up to 40 nodes.",
     },
     { key: "start", label: "Start node", placeholder: "A" },
   ],

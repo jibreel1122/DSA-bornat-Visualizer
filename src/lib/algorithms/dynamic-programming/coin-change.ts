@@ -291,8 +291,8 @@ The DP builds up answers for every amount from 0 to the target. dp[a] holds the 
     ],
   },
   inputFields: [
-    { key: "coins", label: "Coin denominations", placeholder: "1, 3, 4", help: "Comma-separated positive integers (up to 6)." },
-    { key: "amount", label: "Target amount", placeholder: "6", help: "0–18." },
+    { key: "coins", label: "Coin denominations", placeholder: "1, 3, 4", help: "Comma-separated positive integers (up to 10)." },
+    { key: "amount", label: "Target amount", placeholder: "6", help: "0–40." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -306,10 +306,10 @@ The DP builds up answers for every amount from 0 to the target. dp[a] holds the 
         return v;
       });
     if (coins.length < 1) throw new Error("Enter at least one coin value.");
-    if (coins.length > 6) throw new Error("Maximum 6 coin denominations.");
+    if (coins.length > 10) throw new Error("Maximum 10 coin denominations.");
     if (new Set(coins).size !== coins.length) throw new Error("Coin denominations must be distinct.");
     const amount = Number((fields.amount ?? "").trim());
-    if (!Number.isInteger(amount) || amount < 0 || amount > 18) throw new Error("Amount must be a whole number from 0 to 18.");
+    if (!Number.isInteger(amount) || amount < 0 || amount > 40) throw new Error("Amount must be a whole number from 0 to 40.");
     return { coins, amount };
   },
   serializeInput: (input) => ({ coins: input.coins.join(", "), amount: String(input.amount) }),

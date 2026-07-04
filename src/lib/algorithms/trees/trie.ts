@@ -403,8 +403,8 @@ The power of a trie is that insertion and lookup cost O(L), where L is the lengt
     ],
   },
   inputFields: [
-    { key: "words", label: "Words to insert", placeholder: "cat, car, card, cave", help: "2–5 lowercase words (letters only)." },
-    { key: "search", label: "Word to search", placeholder: "card", help: "One lowercase word to look up." },
+    { key: "words", label: "Words to insert", placeholder: "cat, car, card, cave", help: "2–12 lowercase words (letters only, up to 12 letters each)." },
+    { key: "search", label: "Word to search", placeholder: "card", help: "One lowercase word to look up (up to 12 letters)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -413,14 +413,14 @@ The power of a trie is that insertion and lookup cost O(L), where L is the lengt
       .map((p) => p.trim().toLowerCase())
       .filter(Boolean);
     if (words.length < 2) throw new Error("Enter at least 2 words.");
-    if (words.length > 5) throw new Error("Maximum 5 words.");
+    if (words.length > 12) throw new Error("Maximum 12 words.");
     for (const w of words) {
       if (!/^[a-z]+$/.test(w)) throw new Error(`"${w}" must contain only letters a–z.`);
-      if (w.length > 6) throw new Error(`"${w}" is too long (max 6 letters).`);
+      if (w.length > 12) throw new Error(`"${w}" is too long (max 12 letters).`);
     }
     const search = (fields.search ?? "").trim().toLowerCase();
     if (!/^[a-z]+$/.test(search)) throw new Error("Search word must contain only letters a–z.");
-    if (search.length > 6) throw new Error("Search word is too long (max 6 letters).");
+    if (search.length > 12) throw new Error("Search word is too long (max 12 letters).");
     return { words, search };
   },
   serializeInput: (input) => ({ words: input.words.join(", "), search: input.search }),

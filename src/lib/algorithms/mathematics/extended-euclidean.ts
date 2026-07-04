@@ -251,8 +251,8 @@ The algorithm runs Euclid's divisions forward as usual (a = q·b + r, then recur
     ],
   },
   inputFields: [
-    { key: "a", label: "a", placeholder: "240", help: "1–10,000." },
-    { key: "b", label: "b", placeholder: "46", help: "1–10,000." },
+    { key: "a", label: "a", placeholder: "240", help: "1–1,000,000,000,000." },
+    { key: "b", label: "b", placeholder: "46", help: "1–1,000,000,000,000." },
   ],
   defaultInput: (level, rng) => {
     const pairs: [number, number][][] = [
@@ -269,8 +269,8 @@ The algorithm runs Euclid's divisions forward as usual (a = q·b + r, then recur
   parseInput: (fields) => {
     const a = Number((fields.a ?? "").trim());
     const b = Number((fields.b ?? "").trim());
-    if (!Number.isInteger(a) || a < 1 || a > 10_000) throw new Error("a must be an integer between 1 and 10,000.");
-    if (!Number.isInteger(b) || b < 1 || b > 10_000) throw new Error("b must be an integer between 1 and 10,000.");
+    if (!Number.isInteger(a) || a < 1 || a > 1_000_000_000_000) throw new Error("a must be an integer between 1 and 1,000,000,000,000.");
+    if (!Number.isInteger(b) || b < 1 || b > 1_000_000_000_000) throw new Error("b must be an integer between 1 and 1,000,000,000,000.");
     return { a, b };
   },
   serializeInput: (input) => ({ a: String(input.a), b: String(input.b) }),

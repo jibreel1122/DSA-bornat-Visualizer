@@ -311,7 +311,7 @@ Its average-case O(n + k) speed depends critically on the uniform-distribution a
       { question: "Which property of the input does bucket sort rely on for its speed?", options: ["It must be already partially sorted", "Values roughly uniformly distributed across a known range", "All values are integers", "The array must be large"], answer: 1, explanation: "Uniform distribution ensures the buckets stay balanced, which is exactly what gives the O(n + k) average case." },
     ],
   },
-  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 29, 25, 3, 49, 9, 37, 21, 43", help: "2–30 numbers." }],
+  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 29, 25, 3, 49, 9, 37, 21, 43", help: "2–60 numbers." }],
   defaultInput: (level, rng) => {
     const n = Math.min(24, 6 + level * 4);
     const values = Array.from({ length: n }, () => rng.int(1, 99));
@@ -319,7 +319,7 @@ Its average-case O(n + k) speed depends critically on the uniform-distribution a
   },
   parseInput: (fields) => {
     const values = parseNumberList(fields.values ?? "");
-    if (values.length < 2 || values.length > 30) throw new Error("Enter 2 to 30 numbers.");
+    if (values.length < 2 || values.length > 60) throw new Error("Enter 2 to 60 numbers.");
     return { values };
   },
   serializeInput: (input) => ({ values: input.values.join(", ") }),

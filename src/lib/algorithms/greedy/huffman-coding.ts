@@ -330,13 +330,13 @@ The algorithm builds a binary tree from the bottom up. Each character starts as 
     ],
   },
   inputFields: [
-    { key: "text", label: "Text to encode", placeholder: "abracadabra", help: "2–16 characters; frequencies are counted automatically." },
+    { key: "text", label: "Text to encode", placeholder: "abracadabra", help: "2–30 characters; frequencies are counted automatically." },
   ],
   defaultInput: (level) => sampleInput(level),
   parseInput: (fields) => {
     const text = (fields.text ?? "").trim();
     if (text.length < 2) throw new Error("Enter at least 2 characters.");
-    if (text.length > 16) throw new Error("Keep the text to 16 characters or fewer.");
+    if (text.length > 30) throw new Error("Keep the text to 30 characters or fewer.");
     if (new Set(text).size < 2) throw new Error("Use at least 2 distinct characters.");
     return { text };
   },

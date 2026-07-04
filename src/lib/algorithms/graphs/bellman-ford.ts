@@ -19,7 +19,7 @@ export function parseDirectedWeighted(text: string): { nodes: string[]; edges: W
     nodes.add(to);
     edges.push({ from, to, weight: Number(w) });
   }
-  if (nodes.size > 12) throw new Error("Maximum 12 nodes.");
+  if (nodes.size > 20) throw new Error("Maximum 20 nodes.");
   return { nodes: [...nodes].sort(), edges };
 }
 
@@ -350,7 +350,7 @@ The idea is repeated edge relaxation. A relaxation asks: "is going through edge 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:4, B>C:-3, C>D:4", help: "Format A>B:w; negative weights allowed. Up to 12 nodes." },
+    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:4, B>C:-3, C>D:4", help: "Format A>B:w; negative weights allowed. Up to 20 nodes." },
     { key: "start", label: "Source vertex", placeholder: "A", help: "Must be one of the vertices." },
   ],
   defaultInput: (level) => templateInput(level),

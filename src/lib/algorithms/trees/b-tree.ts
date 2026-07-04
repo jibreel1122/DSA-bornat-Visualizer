@@ -337,7 +337,7 @@ A B-tree of minimum degree t requires each non-root node to hold between t−1 a
     ],
   },
   inputFields: [
-    { key: "values", label: "Keys to insert", placeholder: "10, 20, 5, 6, 12, 30, 7, 17", help: "3–10 distinct numbers, inserted in order (watch nodes split)." },
+    { key: "values", label: "Keys to insert", placeholder: "10, 20, 5, 6, 12, 30, 7, 17", help: "3–30 distinct numbers, inserted in order (watch nodes split)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -351,7 +351,7 @@ A B-tree of minimum degree t requires each non-root node to hold between t−1 a
         return v;
       });
     if (values.length < 3) throw new Error("Enter at least 3 keys.");
-    if (values.length > 12) throw new Error("Maximum 12 keys.");
+    if (values.length > 30) throw new Error("Maximum 30 keys.");
     if (new Set(values).size !== values.length) throw new Error("Keys must be distinct.");
     return { values };
   },

@@ -3,7 +3,7 @@ import type { AlgorithmModule, CellState, GridFrame, Step } from "@/lib/engine/t
 type Input = { n: number };
 
 function generate(input: Input): Step<GridFrame>[] {
-  const n = Math.max(10, Math.min(120, input.n));
+  const n = Math.max(10, Math.min(3000, input.n));
   const cols = n <= 30 ? 6 : n <= 60 ? 10 : 12;
   const isPrime = new Array(n + 1).fill(true);
   isPrime[0] = false;
@@ -278,11 +278,11 @@ A key optimization is to start crossing out from p² rather than 2p: any smaller
       { question: "A drawback of the basic sieve is…", options: ["It misses some primes", "O(n) memory for large n", "It can't find 2", "It requires sorting"], answer: 1, explanation: "The boolean array of size n limits how large a range fits in memory." },
     ],
   },
-  inputFields: [{ key: "n", label: "Upper limit n", placeholder: "50", help: "10–120." }],
+  inputFields: [{ key: "n", label: "Upper limit n", placeholder: "50", help: "10–3,000." }],
   defaultInput: (level) => ({ n: [0, 20, 40, 60, 90, 120][level] ?? 50 }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 10 || n > 120) throw new Error("Enter a whole number from 10 to 120.");
+    if (!Number.isInteger(n) || n < 10 || n > 3000) throw new Error("Enter a whole number from 10 to 3,000.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

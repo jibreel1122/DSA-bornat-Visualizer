@@ -3,7 +3,7 @@ import type { AlgorithmModule, CallStackFrame, CallStackItem, Step } from "@/lib
 type Input = { n: number };
 
 function generate(input: Input): Step<CallStackFrame>[] {
-  const n = Math.max(0, Math.min(10, input.n));
+  const n = Math.max(0, Math.min(100, input.n));
   const steps: Step<CallStackFrame>[] = [];
   const stack: CallStackItem[] = [];
   let calls = 0;
@@ -16,19 +16,20 @@ function generate(input: Input): Step<CallStackFrame>[] {
 
   snap(`Compute ${n}! recursively: factorial(n) = n × factorial(n−1).`, 0);
 
-  const fact = (k: number): number => {
+  // BigInt keeps every product exact — n! blows past Number.MAX_SAFE_INTEGER once n > 18.
+  const fact = (k: number): bigint => {
     calls++;
     const item: CallStackItem = { id: `f${k}-${calls}`, label: `factorial(${k})`, state: "active" };
     stack.push(item);
     snap(`Call factorial(${k}). ${k <= 1 ? "This is the base case." : `Needs factorial(${k - 1}) first.`}`, 1, "active");
-    let result: number;
+    let result: bigint;
     if (k <= 1) {
-      result = 1;
+      result = BigInt(1);
       item.detail = `= 1`;
       snap(`Base case: factorial(${k}) returns 1.`, 2, "found");
     } else {
       const sub = fact(k - 1);
-      result = k * sub;
+      result = BigInt(k) * sub;
       item.detail = `${k} × ${sub} = ${result}`;
       snap(`Unwind: factorial(${k}) = ${k} × ${sub} = ${result}.`, 4, "sorted");
     }
@@ -37,7 +38,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   };
 
   const answer = fact(n);
-  output.push(answer);
+  output.push(answer.toString());
   snap(`${n}! = ${answer}. The stack is empty again.`, 5);
   return steps;
 }
@@ -159,11 +160,11 @@ Watching it run reveals two phases. The "wind-up" phase pushes a new stack frame
       { question: "An iterative factorial improves on the recursive one by…", options: ["Being asymptotically faster", "Using O(1) stack space", "Avoiding overflow", "Returning a different value"], answer: 1, explanation: "A loop avoids the O(n) call-stack frames while computing the same value in O(n) time." },
     ],
   },
-  inputFields: [{ key: "n", label: "n", placeholder: "5", help: "0–10 (values grow fast!)." }],
+  inputFields: [{ key: "n", label: "n", placeholder: "5", help: "0–100 (computed exactly with BigInt; the call stack scrolls for larger n)." }],
   defaultInput: (level) => ({ n: Math.min(10, 3 + level) }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 0 || n > 10) throw new Error("Enter a whole number from 0 to 10.");
+    if (!Number.isInteger(n) || n < 0 || n > 100) throw new Error("Enter a whole number from 0 to 100.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

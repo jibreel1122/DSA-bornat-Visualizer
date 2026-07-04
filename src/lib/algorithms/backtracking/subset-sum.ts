@@ -250,7 +250,7 @@ The backtracking solution walks the elements one by one, and for each makes a bi
     ],
   },
   inputFields: [
-    { key: "items", label: "Numbers", placeholder: "3, 34, 4, 12, 5, 2", help: "2–6 positive integers." },
+    { key: "items", label: "Numbers", placeholder: "3, 34, 4, 12, 5, 2", help: "2–9 positive integers." },
     { key: "target", label: "Target sum", placeholder: "9", help: "The sum to reach." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
@@ -265,7 +265,7 @@ The backtracking solution walks the elements one by one, and for each makes a bi
         return v;
       });
     if (items.length < 2) throw new Error("Enter at least 2 numbers.");
-    if (items.length > 6) throw new Error("Maximum 6 numbers.");
+    if (items.length > 9) throw new Error("Maximum 9 numbers.");
     const target = Number((fields.target ?? "").trim());
     if (!Number.isInteger(target) || target < 1) throw new Error("Target must be a positive whole number.");
     return { items, target };

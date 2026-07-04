@@ -287,14 +287,14 @@ The dynamic-programming solution fills a table dp[i][c] = the best value achieva
     ],
   },
   inputFields: [
-    { key: "items", label: "Items (weight:value)", placeholder: "2:3, 3:4, 4:5, 5:6", help: "Comma-separated weight:value pairs (up to 6)." },
-    { key: "capacity", label: "Capacity W", placeholder: "8", help: "1–12." },
+    { key: "items", label: "Items (weight:value)", placeholder: "2:3, 3:4, 4:5, 5:6", help: "Comma-separated weight:value pairs (up to 12)." },
+    { key: "capacity", label: "Capacity W", placeholder: "8", help: "1–25." },
   ],
   defaultInput: (level, rng) => randomItems(level, rng),
   parseInput: (fields) => {
     const parts = (fields.items ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length < 1) throw new Error("Enter at least one item as weight:value, e.g. 2:3.");
-    if (parts.length > 6) throw new Error("Maximum 6 items.");
+    if (parts.length > 12) throw new Error("Maximum 12 items.");
     const items: Item[] = parts.map((p) => {
       const m = p.match(/^(\d+)\s*[:x]\s*(\d+)$/);
       if (!m) throw new Error(`"${p}" is invalid. Use weight:value like 3:4.`);
@@ -304,7 +304,7 @@ The dynamic-programming solution fills a table dp[i][c] = the best value achieva
       return { w, v };
     });
     const capacity = Number((fields.capacity ?? "").trim());
-    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 12) throw new Error("Capacity must be a whole number from 1 to 12.");
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 25) throw new Error("Capacity must be a whole number from 1 to 25.");
     return { items, capacity };
   },
   serializeInput: (input) => ({ items: input.items.map((it) => `${it.w}:${it.v}`).join(", "), capacity: String(input.capacity) }),

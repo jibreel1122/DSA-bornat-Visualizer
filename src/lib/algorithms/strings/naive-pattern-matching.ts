@@ -251,7 +251,7 @@ It requires no preprocessing and is easy to implement, but it can re-examine the
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
     if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 40) throw new Error("Keep the text at most 40 characters.");
+    if (text.length > 90) throw new Error("Keep the text at most 90 characters.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

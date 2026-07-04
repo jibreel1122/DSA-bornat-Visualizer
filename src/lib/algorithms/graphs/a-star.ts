@@ -404,7 +404,7 @@ At each step A* expands the open-set node with the smallest f-value — the one 
     ],
   },
   inputFields: [
-    { key: "grid", label: "Grid (rows of 0/1)", placeholder: "1111 / 1011 / 1101 / 1111", help: "Rows separated by / or newline; 1 = open, 0 = wall. Start = top-left, goal = bottom-right. Up to 7×7." },
+    { key: "grid", label: "Grid (rows of 0/1)", placeholder: "1111 / 1011 / 1101 / 1111", help: "Rows separated by / or newline; 1 = open, 0 = wall. Start = top-left, goal = bottom-right. Up to 12×12." },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {
@@ -413,11 +413,11 @@ At each step A* expands the open-set node with the smallest f-value — the one 
       .map((r) => r.trim())
       .filter(Boolean);
     if (rows.length < 2) throw new Error("Enter at least 2 rows.");
-    if (rows.length > 7) throw new Error("Maximum 7 rows.");
+    if (rows.length > 12) throw new Error("Maximum 12 rows.");
     const cols = rows[0].length;
     const grid = rows.map((r) => {
       if (r.length !== cols) throw new Error("All rows must have the same length.");
-      if (r.length > 7) throw new Error("Maximum 7 columns.");
+      if (r.length > 12) throw new Error("Maximum 12 columns.");
       return r.split("").map((ch) => {
         if (ch !== "0" && ch !== "1") throw new Error("Use only 0 (wall) and 1 (open).");
         return Number(ch);

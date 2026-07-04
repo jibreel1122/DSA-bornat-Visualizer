@@ -208,7 +208,7 @@ Its three core operations — push (add to top), pop (remove from top), and peek
   parseInput: (fields) => {
     const parts = (fields.ops ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length === 0) throw new Error("Enter at least one operation, e.g. push 5.");
-    if (parts.length > 24) throw new Error("Maximum 24 operations.");
+    if (parts.length > 50) throw new Error("Maximum 50 operations.");
     const ops: Op[] = parts.map((p) => {
       const push = p.match(/^push\s+(-?\d+)$/i);
       if (push) return { kind: "push", value: Number(push[1]) };

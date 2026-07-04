@@ -288,7 +288,7 @@ The O(n²) dynamic program defines dp[i] as the length of the longest increasing
     ],
   },
   inputFields: [
-    { key: "values", label: "Array", placeholder: "10, 9, 2, 5, 3, 7, 101, 18", help: "Comma-separated integers, up to 18." },
+    { key: "values", label: "Array", placeholder: "10, 9, 2, 5, 3, 7, 101, 18", help: "Comma-separated integers, up to 30." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -302,7 +302,7 @@ The O(n²) dynamic program defines dp[i] as the length of the longest increasing
         return v;
       });
     if (values.length < 1) throw new Error("Enter at least one number.");
-    if (values.length > 18) throw new Error("Maximum 18 numbers.");
+    if (values.length > 30) throw new Error("Maximum 30 numbers.");
     return { values };
   },
   serializeInput: (input) => ({ values: input.values.join(", ") }),

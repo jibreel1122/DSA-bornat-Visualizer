@@ -20,7 +20,7 @@ export function parseCapacityEdges(text: string): { nodes: string[]; edges: CEdg
     nodes.add(to);
     edges.push({ from, to, cap: Number(c) });
   }
-  if (nodes.size > 12) throw new Error("Maximum 12 nodes.");
+  if (nodes.size > 20) throw new Error("Maximum 20 nodes.");
   return { nodes: [...nodes].sort(), edges };
 }
 
@@ -452,7 +452,7 @@ The Ford-Fulkerson method computes max flow by repeatedly finding an augmenting 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed capacity edges", placeholder: "S>A:10, S>C:10, A>T:8", help: "Format S>A:cap (positive). Up to 12 nodes." },
+    { key: "edges", label: "Directed capacity edges", placeholder: "S>A:10, S>C:10, A>T:8", help: "Format S>A:cap (positive). Up to 20 nodes." },
     { key: "source", label: "Source", placeholder: "S", help: "Flow origin vertex." },
     { key: "sink", label: "Sink", placeholder: "T", help: "Flow destination vertex." },
   ],

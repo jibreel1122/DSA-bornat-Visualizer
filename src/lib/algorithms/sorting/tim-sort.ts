@@ -362,7 +362,7 @@ The full algorithm detects naturally occurring ascending or descending runs in t
       { question: "Timsort is used as the default sort in…", options: ["C's qsort only", "Python's sort and Java's Arrays.sort for objects", "Assembly language", "It isn't used in practice"], answer: 1, explanation: "It's the production sort behind Python's list.sort()/sorted() and Java's object array sorting." },
     ],
   },
-  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 5, 21, 7, 23, 19, 3, 2, 8, 14, 1", help: "4–24 numbers." }],
+  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 5, 21, 7, 23, 19, 3, 2, 8, 14, 1", help: "4–50 numbers." }],
   defaultInput: (level, rng) => {
     const n = Math.min(20, 8 + level * 3);
     const values = Array.from({ length: n }, () => rng.int(1, 99));
@@ -370,7 +370,7 @@ The full algorithm detects naturally occurring ascending or descending runs in t
   },
   parseInput: (fields) => {
     const values = parseNumberList(fields.values ?? "");
-    if (values.length < 4 || values.length > 24) throw new Error("Enter 4 to 24 numbers.");
+    if (values.length < 4 || values.length > 50) throw new Error("Enter 4 to 50 numbers.");
     return { values };
   },
   serializeInput: (input) => ({ values: input.values.join(", ") }),

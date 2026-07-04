@@ -396,7 +396,7 @@ The five rules are: (1) every node is red or black; (2) the root is black; (3) a
     ],
   },
   inputFields: [
-    { key: "values", label: "Values to insert", placeholder: "10, 20, 30, 40, 50", help: "2–7 distinct numbers, inserted in order." },
+    { key: "values", label: "Values to insert", placeholder: "10, 20, 30, 40, 50", help: "2–20 distinct numbers, inserted in order." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -410,7 +410,7 @@ The five rules are: (1) every node is red or black; (2) the root is black; (3) a
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 7) throw new Error("Maximum 7 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     if (new Set(values).size !== values.length) throw new Error("Values must be distinct.");
     return { values };
   },

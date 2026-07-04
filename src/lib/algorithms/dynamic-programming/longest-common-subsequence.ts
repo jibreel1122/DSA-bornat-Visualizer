@@ -297,15 +297,15 @@ The dynamic-programming solution builds a table dp[i][j] = the LCS length of the
     ],
   },
   inputFields: [
-    { key: "a", label: "String A", placeholder: "ABCBDAB", help: "Up to 12 characters." },
-    { key: "b", label: "String B", placeholder: "BDCAB", help: "Up to 12 characters." },
+    { key: "a", label: "String A", placeholder: "ABCBDAB", help: "Up to 18 characters." },
+    { key: "b", label: "String B", placeholder: "BDCAB", help: "Up to 18 characters." },
   ],
   defaultInput: (level, rng) => randomStrings(level, rng),
   parseInput: (fields) => {
     const a = (fields.a ?? "").trim();
     const b = (fields.b ?? "").trim();
     if (!a || !b) throw new Error("Enter both strings.");
-    if (a.length > 12 || b.length > 12) throw new Error("Each string must be at most 12 characters.");
+    if (a.length > 18 || b.length > 18) throw new Error("Each string must be at most 18 characters.");
     return { a, b };
   },
   serializeInput: (input) => ({ a: input.a, b: input.b }),

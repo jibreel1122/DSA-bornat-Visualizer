@@ -254,7 +254,7 @@ Kadane's algorithm solves this in one pass with two running values. "current" is
     ],
   },
   inputFields: [
-    { key: "values", label: "Array (may include negatives)", placeholder: "-2, 1, -3, 4, -1, 2, 1, -5, 4", help: "Comma-separated integers, up to 20." },
+    { key: "values", label: "Array (may include negatives)", placeholder: "-2, 1, -3, 4, -1, 2, 1, -5, 4", help: "Comma-separated integers, up to 50." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -268,7 +268,7 @@ Kadane's algorithm solves this in one pass with two running values. "current" is
         return v;
       });
     if (values.length < 1) throw new Error("Enter at least one number.");
-    if (values.length > 20) throw new Error("Maximum 20 numbers.");
+    if (values.length > 50) throw new Error("Maximum 50 numbers.");
     return { values };
   },
   serializeInput: (input) => ({ values: input.values.join(", ") }),

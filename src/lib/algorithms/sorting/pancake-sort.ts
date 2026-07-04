@@ -314,7 +314,7 @@ The algorithm itself is a straightforward O(n²) comparison sort — its real in
       { question: "The 'pancake number' problem asks…", options: ["How to bake pancakes fastest", "The minimum number of flips needed to sort any arrangement of n pancakes in the worst case", "How many pancakes fit on a plate", "The average case flip count"], answer: 1, explanation: "It's an open combinatorial question for general n, famously worked on by Bill Gates and Christos Papadimitriou." },
     ],
   },
-  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 3, 6, 1, 10, 2, 5", help: "2–20 numbers." }],
+  inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 3, 6, 1, 10, 2, 5", help: "2–35 numbers." }],
   defaultInput: (level, rng) => {
     const n = Math.min(14, 5 + level * 2);
     const values = Array.from({ length: n }, () => rng.int(1, 99));
@@ -322,7 +322,7 @@ The algorithm itself is a straightforward O(n²) comparison sort — its real in
   },
   parseInput: (fields) => {
     const values = parseNumberList(fields.values ?? "");
-    if (values.length < 2 || values.length > 20) throw new Error("Enter 2 to 20 numbers.");
+    if (values.length < 2 || values.length > 35) throw new Error("Enter 2 to 35 numbers.");
     return { values };
   },
   serializeInput: (input) => ({ values: input.values.join(", ") }),

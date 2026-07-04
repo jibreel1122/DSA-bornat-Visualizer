@@ -265,8 +265,8 @@ The key insight is that the minimum of a stack changes only at push and pop, in 
     ],
   },
   inputFields: [
-    { key: "values", label: "Values to push", placeholder: "5, 2, 7, 1, 9", help: "2–7 numbers, pushed left to right." },
-    { key: "popCount", label: "Pops afterward", placeholder: "2", help: "How many to pop at the end (0–3)." },
+    { key: "values", label: "Values to push", placeholder: "5, 2, 7, 1, 9", help: "2–18 numbers, pushed left to right." },
+    { key: "popCount", label: "Pops afterward", placeholder: "2", help: "How many to pop at the end (0–8)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -280,9 +280,9 @@ The key insight is that the minimum of a stack changes only at push and pop, in 
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 7) throw new Error("Maximum 7 values.");
+    if (values.length > 18) throw new Error("Maximum 18 values.");
     const popCount = Number((fields.popCount ?? "0").trim());
-    if (!Number.isInteger(popCount) || popCount < 0 || popCount > 3) throw new Error("Pop count must be 0–3.");
+    if (!Number.isInteger(popCount) || popCount < 0 || popCount > 8) throw new Error("Pop count must be 0–8.");
     return { values, popCount };
   },
   serializeInput: (input) => ({ values: input.values.join(", "), popCount: String(input.popCount) }),

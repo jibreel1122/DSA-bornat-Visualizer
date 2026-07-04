@@ -256,10 +256,10 @@ The standard iterative solution uses three pointers: prev (the reversed portion 
       { question: "The recursive version's drawback compared to iterative is…", options: ["It's slower asymptotically", "It uses O(n) stack space", "It can't reverse", "It needs extra arrays"], answer: 1, explanation: "Recursion depth equals list length, risking stack overflow." },
     ],
   },
-  inputFields: [{ key: "values", label: "List values (head → tail)", placeholder: "1, 2, 3, 4, 5", help: "2–12 numbers." }],
+  inputFields: [{ key: "values", label: "List values (head → tail)", placeholder: "1, 2, 3, 4, 5", help: "2–40 numbers." }],
   defaultInput: (level, rng) => ({ values: randomArray(Math.min(3, level) as 1 | 2 | 3, rng).slice(0, Math.min(9, 3 + level)) }),
   parseInput: (fields) => {
-    const values = parseNumberList(fields.values ?? "", { min: -999, max: 999, maxLen: 12 });
+    const values = parseNumberList(fields.values ?? "", { min: -999, max: 999, maxLen: 40 });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
     return { values };
   },

@@ -2,16 +2,34 @@ import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/
 
 type Input = { n: number };
 
+/** Primes up to `limit` via a simple sieve — used to keep the candidate bar chart short. */
+function primesUpTo(limit: number): number[] {
+  if (limit < 2) return [];
+  const isComposite = new Array(limit + 1).fill(false);
+  const primes: number[] = [];
+  for (let i = 2; i <= limit; i++) {
+    if (!isComposite[i]) {
+      primes.push(i);
+      for (let j = i * i; j <= limit; j += i) isComposite[j] = true;
+    }
+  }
+  return primes;
+}
+
 function generate(input: Input): Step<ArrayFrame>[] {
   const original = input.n;
   const steps: Step<ArrayFrame>[] = [];
   let divisions = 0;
   const factors: number[] = [];
 
-  // the bar chart shows candidate divisors 2..√n (of the ORIGINAL n)
+  // The bar chart shows candidate divisors up to √n. Trial division only ever needs to test
+  // PRIME candidates (any composite divisor's own prime factors would already have been divided
+  // out), so we sieve primes up to √n instead of listing every integer. This is both a real
+  // algorithmic optimization (fewer, more meaningful divisions) and what keeps the bar chart
+  // legible for large n — listing every integer 2..√n would need hundreds of bars long before
+  // listing every prime does.
   const limit = Math.max(2, Math.floor(Math.sqrt(original)));
-  const candidates: number[] = [];
-  for (let d = 2; d <= limit; d++) candidates.push(d);
+  const candidates: number[] = primesUpTo(limit);
 
   const snap = (
     states: Record<number, CellState>,
@@ -29,7 +47,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
           { label: "remaining n", values: [remaining] },
           { label: "factors", values: factors.length ? [...factors] : ["—"] },
         ],
-        note: `Bars are candidate divisors 2…⌊√${original}⌋. A divisor found repeatedly is a prime factor with multiplicity.`,
+        note: `Bars are the PRIME candidate divisors up to ⌊√${original}⌋ (composite candidates are skipped — they can never be the smallest remaining factor). A divisor found repeatedly is a prime factor with multiplicity.`,
       },
       description,
       codeLine,
@@ -259,7 +277,7 @@ The key efficiency insight is the √n bound: if n has any factor larger than �
     ],
   },
   inputFields: [
-    { key: "n", label: "Number n", placeholder: "360", help: "2–10,000." },
+    { key: "n", label: "Number n", placeholder: "360", help: "2–200,000." },
   ],
   defaultInput: (level, rng) => {
     const pools = [
@@ -267,14 +285,14 @@ The key efficiency insight is the √n bound: if n has any factor larger than �
       [60, 84, 90, 96, 120],
       [360, 504, 720, 840, 900],
       [1001, 1234, 2310, 4620, 5040],
-      [8192, 7920, 9240, 9973, 10000],
+      [8192, 7920, 9240, 9973, 199999],
     ];
     const pool = pools[Math.min(level, 5) - 1] ?? pools[2];
     return { n: rng.pick(pool) };
   },
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 2 || n > 10_000) throw new Error("Enter an integer between 2 and 10,000.");
+    if (!Number.isInteger(n) || n < 2 || n > 200_000) throw new Error("Enter an integer between 2 and 200,000.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

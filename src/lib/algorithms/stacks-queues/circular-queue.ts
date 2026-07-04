@@ -351,16 +351,16 @@ Two indices drive it: front points at the next element to remove, and rear at th
     ],
   },
   inputFields: [
-    { key: "capacity", label: "Capacity", placeholder: "5", help: "Number of slots (2–8)." },
-    { key: "ops", label: "Operations", placeholder: "E 5, E 3, E 8, D, D, E 1, E 9", help: "Comma-separated: 'E n' to enqueue n, 'D' to dequeue." },
+    { key: "capacity", label: "Capacity", placeholder: "5", help: "Number of slots (2–16)." },
+    { key: "ops", label: "Operations", placeholder: "E 5, E 3, E 8, D, D, E 1, E 9", help: "Comma-separated: 'E n' to enqueue n, 'D' to dequeue (max 40)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
     const capacity = Number((fields.capacity ?? "").trim());
-    if (!Number.isInteger(capacity) || capacity < 2 || capacity > 8) throw new Error("Capacity must be a whole number from 2 to 8.");
+    if (!Number.isInteger(capacity) || capacity < 2 || capacity > 16) throw new Error("Capacity must be a whole number from 2 to 16.");
     const tokens = (fields.ops ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (tokens.length < 1) throw new Error("Enter at least one operation, e.g. 'E 5' or 'D'.");
-    if (tokens.length > 16) throw new Error("Maximum 16 operations.");
+    if (tokens.length > 40) throw new Error("Maximum 40 operations.");
     const ops: Op[] = tokens.map((t) => {
       const dm = t.match(/^[dD]$/);
       if (dm) return { kind: "dequeue" } as Op;

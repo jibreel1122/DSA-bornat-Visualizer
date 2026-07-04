@@ -3,7 +3,7 @@ import type { AlgorithmModule, CallStackFrame, CallStackItem, Step } from "@/lib
 type Input = { n: number };
 
 function generate(input: Input): Step<CallStackFrame>[] {
-  const n = Math.max(1, Math.min(12, input.n));
+  const n = Math.max(1, Math.min(75, input.n));
   const steps: Step<CallStackFrame>[] = [];
   const memo: (number | null)[] = new Array(n + 1).fill(null);
   const stack: CallStackItem[] = [];
@@ -214,11 +214,11 @@ This exposes the two hallmarks of dynamic programming: overlapping subproblems (
       { question: "Bottom-up Fibonacci can run in how much space?", options: ["O(n)", "O(1) with two rolling variables", "O(n²)", "O(log n)"], answer: 1, explanation: "Only the two previous values are needed to compute the next." },
     ],
   },
-  inputFields: [{ key: "n", label: "n", placeholder: "8", help: "1–12." }],
-  defaultInput: (level) => ({ n: Math.min(12, 4 + level * 2) }),
+  inputFields: [{ key: "n", label: "n", placeholder: "8", help: "1–75." }],
+  defaultInput: (level) => ({ n: Math.min(75, 4 + level * 2) }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 1 || n > 12) throw new Error("Enter a whole number from 1 to 12.");
+    if (!Number.isInteger(n) || n < 1 || n > 75) throw new Error("Enter a whole number from 1 to 75.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

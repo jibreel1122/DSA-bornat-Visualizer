@@ -382,16 +382,16 @@ Each set is represented as a tree whose root is the set's canonical representati
     ],
   },
   inputFields: [
-    { key: "n", label: "Number of elements", placeholder: "6", help: "Elements 0..n-1 (3–8)." },
-    { key: "ops", label: "Union operations", placeholder: "0-1, 2-3, 1-3, 4-5", help: "Comma-separated pairs a-b to union." },
+    { key: "n", label: "Number of elements", placeholder: "6", help: "Elements 0..n-1 (3–20)." },
+    { key: "ops", label: "Union operations", placeholder: "0-1, 2-3, 1-3, 4-5", help: "Comma-separated pairs a-b to union (up to 30)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 3 || n > 8) throw new Error("Number of elements must be 3–8.");
+    if (!Number.isInteger(n) || n < 3 || n > 20) throw new Error("Number of elements must be 3–20.");
     const tokens = (fields.ops ?? "").split(/[,\n;]+/).map((p) => p.trim()).filter(Boolean);
     if (tokens.length < 1) throw new Error("Enter at least one union, e.g. 0-1.");
-    if (tokens.length > 10) throw new Error("Maximum 10 union operations.");
+    if (tokens.length > 30) throw new Error("Maximum 30 union operations.");
     const ops: [number, number][] = tokens.map((t) => {
       const m = t.match(/^(\d+)\s*-\s*(\d+)$/);
       if (!m) throw new Error(`"${t}" is invalid. Use a-b like 0-1.`);

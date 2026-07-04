@@ -333,7 +333,7 @@ The mechanism is a FIFO queue. You enqueue the root, then repeatedly dequeue a n
     ],
   },
   inputFields: [
-    { key: "values", label: "Values (built into a BST)", placeholder: "50, 30, 70, 20, 40, 60, 80", help: "2–9 numbers." },
+    { key: "values", label: "Values (built into a BST)", placeholder: "50, 30, 70, 20, 40, 60, 80", help: "2–20 distinct numbers." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -347,7 +347,7 @@ The mechanism is a FIFO queue. You enqueue the root, then repeatedly dequeue a n
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 9) throw new Error("Maximum 9 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     if (new Set(values).size !== values.length) throw new Error("Values must be distinct for a clean BST.");
     return { values };
   },

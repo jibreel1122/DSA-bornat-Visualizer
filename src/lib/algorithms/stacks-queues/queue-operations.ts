@@ -218,7 +218,7 @@ Its core operations — enqueue (add at rear), dequeue (remove from front), and 
   parseInput: (fields) => {
     const parts = (fields.ops ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length === 0) throw new Error("Enter at least one operation, e.g. enqueue 5.");
-    if (parts.length > 24) throw new Error("Maximum 24 operations.");
+    if (parts.length > 50) throw new Error("Maximum 50 operations.");
     const ops: Op[] = parts.map((p) => {
       const en = p.match(/^enqueue\s+(-?\d+)$/i);
       if (en) return { kind: "enqueue", value: Number(en[1]) };

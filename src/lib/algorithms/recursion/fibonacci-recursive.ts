@@ -3,7 +3,7 @@ import type { AlgorithmModule, CallStackFrame, CallStackItem, Step } from "@/lib
 type Input = { n: number };
 
 function generate(input: Input): Step<CallStackFrame>[] {
-  const n = Math.max(0, Math.min(12, input.n));
+  const n = Math.max(0, Math.min(14, input.n));
   const steps: Step<CallStackFrame>[] = [];
   const stack: CallStackItem[] = [];
   let calls = 0;
@@ -174,11 +174,11 @@ The real cost is overlapping subproblems: fib(5) calls fib(4) and fib(3), but fi
       { question: "fib(0) and fib(1) are defined as…", options: ["1 and 1", "0 and 1", "0 and 0", "1 and 0"], answer: 1, explanation: "The sequence 0, 1, 1, 2, 3, 5, … starts with fib(0) = 0 and fib(1) = 1." },
     ],
   },
-  inputFields: [{ key: "n", label: "n", placeholder: "7", help: "0–12 (kept small — this is exponential!)." }],
-  defaultInput: (level) => ({ n: Math.min(12, 4 + level * 2) }),
+  inputFields: [{ key: "n", label: "n", placeholder: "7", help: "0–14 (kept small — this is exponential! fib(14) already makes ~1600 recursive calls)." }],
+  defaultInput: (level) => ({ n: Math.min(14, 4 + level * 2) }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 0 || n > 12) throw new Error("n must be an integer between 0 and 12.");
+    if (!Number.isInteger(n) || n < 0 || n > 14) throw new Error("n must be an integer between 0 and 14.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

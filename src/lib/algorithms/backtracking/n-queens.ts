@@ -4,7 +4,7 @@ import { MAX_STEPS } from "@/lib/engine/types";
 type Input = { n: number };
 
 function generate(input: Input): Step<GridFrame>[] {
-  const n = Math.max(4, Math.min(8, input.n));
+  const n = Math.max(4, Math.min(10, input.n));
   const steps: Step<GridFrame>[] = [];
   const cols = new Array(n).fill(-1); // cols[row] = column of the queen in that row
   let placements = 0;
@@ -314,11 +314,11 @@ The key insight is that exactly one queen goes in each row, so the search reduce
       { question: "When a row has no safe column, the algorithm…", options: ["Stops entirely", "Backtracks to the previous row", "Restarts", "Places a queen anyway"], answer: 1, explanation: "It removes the previous queen and tries its next column." },
     ],
   },
-  inputFields: [{ key: "n", label: "Board size N", placeholder: "6", help: "4–8 (shows the first solution)." }],
+  inputFields: [{ key: "n", label: "Board size N", placeholder: "6", help: "4–10 (shows the first solution)." }],
   defaultInput: (level) => ({ n: Math.min(8, 4 + Math.floor(level / 1.5)) }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 4 || n > 8) throw new Error("Enter a whole number from 4 to 8.");
+    if (!Number.isInteger(n) || n < 4 || n > 10) throw new Error("Enter a whole number from 4 to 10.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

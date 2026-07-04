@@ -337,7 +337,7 @@ The trade-off is one extra pointer per node (more memory) and more links to main
     ],
   },
   inputFields: [
-    { key: "values", label: "Initial values (inserted at tail)", placeholder: "10, 20, 30, 40", help: "2–6 numbers." },
+    { key: "values", label: "Initial values (inserted at tail)", placeholder: "10, 20, 30, 40", help: "2–15 numbers." },
     { key: "insertHead", label: "Insert at head", placeholder: "5", help: "One value to prepend." },
     { key: "deleteValue", label: "Delete value", placeholder: "20", help: "A value to remove (if present)." },
   ],
@@ -353,7 +353,7 @@ The trade-off is one extra pointer per node (more memory) and more links to main
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 initial values.");
-    if (values.length > 6) throw new Error("Maximum 6 initial values.");
+    if (values.length > 15) throw new Error("Maximum 15 initial values.");
     const insertHead = Number((fields.insertHead ?? "").trim());
     if (!Number.isInteger(insertHead)) throw new Error("Insert-at-head must be a whole number.");
     const deleteValue = Number((fields.deleteValue ?? "").trim());

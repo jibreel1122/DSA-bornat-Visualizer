@@ -9,7 +9,7 @@ export const TOMBSTONE = -1;
 export function parseOps(text: string): OAOp[] {
   const parts = text.split(/[,\n;]+/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) throw new Error("Enter at least one operation, e.g. insert 21.");
-  if (parts.length > 16) throw new Error("Maximum 16 operations.");
+  if (parts.length > 40) throw new Error("Maximum 40 operations.");
   return parts.map((part) => {
     const m = part.match(/^(insert|search|delete)\s+(\d+)$/i);
     if (!m) throw new Error(`"${part}" is invalid. Use: insert N, search N, or delete N.`);
@@ -19,7 +19,7 @@ export function parseOps(text: string): OAOp[] {
 
 export function parseSize(text: string): number {
   const size = Number((text ?? "").trim());
-  if (!Number.isInteger(size) || size < 5 || size > 19) throw new Error("Table size must be an integer between 5 and 19 (prime recommended).");
+  if (!Number.isInteger(size) || size < 5 || size > 31) throw new Error("Table size must be an integer between 5 and 31 (prime recommended).");
   return size;
 }
 
@@ -201,8 +201,8 @@ export const oaParse = (fields: Record<string, string>): OAInput => ({
 });
 
 export const OA_FIELDS = [
-  { key: "ops", label: "Operations", placeholder: "insert 21, insert 32, search 32, delete 21", help: "Comma-separated: insert N, search N, delete N (max 16)." },
-  { key: "size", label: "Table size m", placeholder: "11", help: "5–19 (prime recommended)." },
+  { key: "ops", label: "Operations", placeholder: "insert 21, insert 32, search 32, delete 21", help: "Comma-separated: insert N, search N, delete N (max 40)." },
+  { key: "size", label: "Table size m", placeholder: "11", help: "5–31 (prime recommended)." },
 ];
 
 const mod: AlgorithmModule<HashFrame, OAInput> = {

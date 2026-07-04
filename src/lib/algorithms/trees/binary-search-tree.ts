@@ -373,7 +373,7 @@ Each operation costs O(h), where h is the height of the tree. For a balanced tre
   parseInput: (fields) => {
     const parts = (fields.ops ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length === 0) throw new Error("Enter at least one operation, e.g. insert 50.");
-    if (parts.length > 24) throw new Error("Maximum 24 operations.");
+    if (parts.length > 50) throw new Error("Maximum 50 operations.");
     const ops: Op[] = parts.map((p) => {
       const m = p.match(/^(insert|search|delete)\s+(-?\d+)$/i);
       if (!m) throw new Error(`"${p}" is invalid. Use: insert 50, search 30, or delete 70.`);

@@ -309,7 +309,7 @@ The key insight is that inside a loop the fast pointer gains one position on the
     ],
   },
   inputFields: [
-    { key: "values", label: "List values (head → tail)", placeholder: "3, 2, 0, -4", help: "2–9 numbers." },
+    { key: "values", label: "List values (head → tail)", placeholder: "3, 2, 0, -4", help: "2–20 numbers." },
     { key: "cyclePos", label: "Cycle links to index", placeholder: "1", help: "Index the tail points back to, or -1 for no cycle." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
@@ -324,7 +324,7 @@ The key insight is that inside a loop the fast pointer gains one position on the
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 9) throw new Error("Maximum 9 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     const cyclePos = Number((fields.cyclePos ?? "-1").trim());
     if (!Number.isInteger(cyclePos) || cyclePos < -1 || cyclePos >= values.length) {
       throw new Error(`Cycle index must be -1 (no cycle) or between 0 and ${values.length - 1}.`);

@@ -289,7 +289,7 @@ This also enables a natural pruning rule: if the number of remaining candidates 
     ],
   },
   inputFields: [
-    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C, D", help: "3–6 distinct symbols or numbers." },
+    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C, D", help: "3–10 distinct symbols or numbers." },
     { key: "k", label: "Choose k", placeholder: "2", help: "1 to the number of elements." },
   ],
   defaultInput: (level, rng) => {
@@ -306,7 +306,7 @@ This also enables a natural pruning rule: if the number of remaining candidates 
   },
   parseInput: (fields) => {
     const raw = (fields.items ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-    if (raw.length < 3 || raw.length > 6) throw new Error("Enter 3 to 6 distinct elements.");
+    if (raw.length < 3 || raw.length > 10) throw new Error("Enter 3 to 10 distinct elements.");
     if (new Set(raw).size !== raw.length) throw new Error("Elements must be distinct.");
     const items = raw.map((s) => (/^-?\d+$/.test(s) ? Number(s) : s));
     const k = Number((fields.k ?? "").trim());

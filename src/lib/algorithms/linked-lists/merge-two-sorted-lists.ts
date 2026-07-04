@@ -303,8 +303,8 @@ The technique walks both lists in parallel with two pointers. At each step it co
     ],
   },
   inputFields: [
-    { key: "a", label: "Sorted list A", placeholder: "1, 2, 4", help: "Numbers (auto-sorted), up to 8." },
-    { key: "b", label: "Sorted list B", placeholder: "1, 3, 4", help: "Numbers (auto-sorted), up to 8." },
+    { key: "a", label: "Sorted list A", placeholder: "1, 2, 4", help: "Numbers (auto-sorted), up to 20." },
+    { key: "b", label: "Sorted list B", placeholder: "1, 3, 4", help: "Numbers (auto-sorted), up to 20." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -318,7 +318,7 @@ The technique walks both lists in parallel with two pointers. At each step it co
           if (!Number.isInteger(v)) throw new Error(`${name}: "${p}" is not a whole number.`);
           return v;
         });
-      if (arr.length > 8) throw new Error(`${name}: maximum 8 numbers.`);
+      if (arr.length > 20) throw new Error(`${name}: maximum 20 numbers.`);
       return arr;
     };
     const a = parse(fields.a ?? "", "List A");

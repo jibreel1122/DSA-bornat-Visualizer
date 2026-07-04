@@ -3,7 +3,7 @@ import type { AlgorithmModule, CallStackFrame, CallStackItem, Step } from "@/lib
 type Input = { disks: number };
 
 function generate(input: Input): Step<CallStackFrame>[] {
-  const n = Math.max(1, Math.min(7, input.disks));
+  const n = Math.max(1, Math.min(10, input.disks));
   const steps: Step<CallStackFrame>[] = [];
   const pegs: Record<"A" | "B" | "C", number[]> = {
     A: Array.from({ length: n }, (_, i) => n - i), // largest at bottom
@@ -215,11 +215,11 @@ Its elegant recursive solution is the reason it appears in every algorithms cour
       { question: "Why is the puzzle impractical for large n?", options: ["It needs O(n²) memory", "The number of moves grows exponentially", "It has no solution", "It requires sorting"], answer: 1, explanation: "2ⁿ − 1 moves becomes astronomically large as n grows." },
     ],
   },
-  inputFields: [{ key: "disks", label: "Number of disks", placeholder: "3", help: "1–7 disks (moves = 2ⁿ − 1)." }],
-  defaultInput: (level) => ({ disks: Math.min(7, 2 + level) }),
+  inputFields: [{ key: "disks", label: "Number of disks", placeholder: "3", help: "1–10 disks (moves = 2ⁿ − 1; 10 disks = 1023 moves)." }],
+  defaultInput: (level) => ({ disks: Math.min(10, 2 + level) }),
   parseInput: (fields) => {
     const disks = Number((fields.disks ?? "").trim());
-    if (!Number.isInteger(disks) || disks < 1 || disks > 7) throw new Error("Enter a whole number of disks from 1 to 7.");
+    if (!Number.isInteger(disks) || disks < 1 || disks > 10) throw new Error("Enter a whole number of disks from 1 to 10.");
     return { disks };
   },
   serializeInput: (input) => ({ disks: String(input.disks) }),

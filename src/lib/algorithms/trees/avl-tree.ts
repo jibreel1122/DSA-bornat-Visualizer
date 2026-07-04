@@ -372,7 +372,7 @@ After a normal BST insertion, one subtree may become too tall, violating the inv
     ],
   },
   inputFields: [
-    { key: "values", label: "Values to insert", placeholder: "10, 20, 30, 40, 50", help: "2–7 numbers, inserted in order (watch rotations!)." },
+    { key: "values", label: "Values to insert", placeholder: "10, 20, 30, 40, 50", help: "2–20 distinct numbers, inserted in order (watch rotations!)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -386,7 +386,7 @@ After a normal BST insertion, one subtree may become too tall, violating the inv
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 7) throw new Error("Maximum 7 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     if (new Set(values).size !== values.length) throw new Error("Values must be distinct.");
     return { values };
   },

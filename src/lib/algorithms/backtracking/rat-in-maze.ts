@@ -321,7 +321,7 @@ The solver performs a depth-first exploration. From the current cell it attempts
     ],
   },
   inputFields: [
-    { key: "grid", label: "Maze (rows of 0/1)", placeholder: "1100 / 1110 / 0110 / 0011", help: "Rows separated by / or newline; 1 = open, 0 = wall. Square, up to 7×7." },
+    { key: "grid", label: "Maze (rows of 0/1)", placeholder: "1100 / 1110 / 0110 / 0011", help: "Rows separated by / or newline; 1 = open, 0 = wall. Square, up to 8×8." },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {
@@ -330,7 +330,7 @@ The solver performs a depth-first exploration. From the current cell it attempts
       .map((r) => r.trim())
       .filter(Boolean);
     if (rows.length < 2) throw new Error("Enter at least 2 rows.");
-    if (rows.length > 7) throw new Error("Maximum 7 rows.");
+    if (rows.length > 8) throw new Error("Maximum 8 rows.");
     const n = rows.length;
     const grid = rows.map((r) => {
       if (r.length !== n) throw new Error("The maze must be square (rows and columns equal).");

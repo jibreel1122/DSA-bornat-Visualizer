@@ -258,7 +258,7 @@ The order you choose depends on the task. In-order on a BST prints keys sorted. 
         return n;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 20) throw new Error("Maximum 20 values.");
+    if (values.length > 30) throw new Error("Maximum 30 values.");
     const raw = (fields.order ?? "inorder").trim().toLowerCase();
     const order = (["inorder", "preorder", "postorder", "levelorder"] as const).find((o) => o === raw);
     if (!order) throw new Error("Traversal must be inorder, preorder, postorder, or levelorder.");

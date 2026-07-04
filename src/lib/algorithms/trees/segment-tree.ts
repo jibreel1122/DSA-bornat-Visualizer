@@ -388,7 +388,7 @@ The magic is that any query range can be decomposed into O(log n) precomputed no
     ],
   },
   inputFields: [
-    { key: "values", label: "Array values", placeholder: "1, 3, 5, 7, 9, 11", help: "2–8 numbers." },
+    { key: "values", label: "Array values", placeholder: "1, 3, 5, 7, 9, 11", help: "2–20 numbers." },
     { key: "queryL", label: "Query left index", placeholder: "1", help: "0-based." },
     { key: "queryR", label: "Query right index", placeholder: "4", help: "≥ left index." },
     { key: "updateIdx", label: "Update index", placeholder: "2", help: "Index to change." },
@@ -406,7 +406,7 @@ The magic is that any query range can be decomposed into O(log n) precomputed no
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 8) throw new Error("Maximum 8 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     const n = values.length;
     const queryL = Number((fields.queryL ?? "0").trim());
     const queryR = Number((fields.queryR ?? String(n - 1)).trim());

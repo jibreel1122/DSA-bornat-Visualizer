@@ -165,7 +165,7 @@ Its correctness rests on a simple fact: any common divisor of a and b also divid
     const a = Number((fields.a ?? "").trim());
     const b = Number((fields.b ?? "").trim());
     if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0) throw new Error("Enter two non-negative whole numbers.");
-    if (a > 100000 || b > 100000) throw new Error("Keep values at most 100000.");
+    if (a > 1_000_000_000_000 || b > 1_000_000_000_000) throw new Error("Keep values at most 1,000,000,000,000 (stays exact as a JS number).");
     if (a === 0 && b === 0) throw new Error("At least one value must be non-zero.");
     return { a: Math.max(a, b), b: Math.min(a, b) };
   },

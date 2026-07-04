@@ -306,13 +306,13 @@ A stack captures exactly the "last opened, first closed" discipline (LIFO). Scan
     ],
   },
   inputFields: [
-    { key: "expr", label: "Bracket expression", placeholder: "{[()]}", help: "Use ( ) [ ] { }. Up to 30 characters." },
+    { key: "expr", label: "Bracket expression", placeholder: "{[()]}", help: "Use ( ) [ ] { }. Up to 80 characters." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
     const expr = (fields.expr ?? "").replace(/\s+/g, "");
     if (!expr) throw new Error("Enter a bracket expression.");
-    if (expr.length > 30) throw new Error("Keep it to 30 characters or fewer.");
+    if (expr.length > 80) throw new Error("Keep it to 80 characters or fewer.");
     if (!/^[()\[\]{}]+$/.test(expr)) throw new Error("Only the brackets ( ) [ ] { } are allowed.");
     return { expr };
   },

@@ -252,13 +252,13 @@ The intuition: finishing early frees up the most remaining time for future activ
     ],
   },
   inputFields: [
-    { key: "activities", label: "Activities (start-finish)", placeholder: "1-4, 3-5, 0-6, 5-7, 3-9, 8-9", help: "Comma-separated start-finish pairs (up to 8)." },
+    { key: "activities", label: "Activities (start-finish)", placeholder: "1-4, 3-5, 0-6, 5-7, 3-9, 8-9", help: "Comma-separated start-finish pairs (up to 20)." },
   ],
   defaultInput: (level, rng) => randomActivities(level, rng),
   parseInput: (fields) => {
     const parts = (fields.activities ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length < 1) throw new Error("Enter at least one activity as start-finish, e.g. 1-4.");
-    if (parts.length > 8) throw new Error("Maximum 8 activities.");
+    if (parts.length > 20) throw new Error("Maximum 20 activities.");
     const activities: Activity[] = parts.map((p) => {
       const m = p.match(/^(\d+)\s*-\s*(\d+)$/);
       if (!m) throw new Error(`"${p}" is invalid. Use start-finish like 1-4.`);

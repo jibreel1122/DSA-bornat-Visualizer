@@ -4,12 +4,17 @@ type Input = { base: number; exp: number; mod?: number };
 
 function generate(input: Input): Step<CallStackFrame>[] {
   const { base, exp, mod: m } = input;
+  // BigInt keeps every intermediate product exact, no matter how large base/exp/mod are —
+  // only the recursion depth (O(log exp)) affects step count, not the magnitude of the numbers.
+  const baseB = BigInt(base);
+  const expB = BigInt(exp);
+  const modB = m !== undefined ? BigInt(m) : undefined;
   const steps: Step<CallStackFrame>[] = [];
   const stack: CallStackItem[] = [];
   let mults = 0;
   let uid = 0;
 
-  const reduce = (x: number) => (m ? ((x % m) + m) % m : x);
+  const reduce = (x: bigint) => (modB !== undefined ? ((x % modB) + modB) % modB : x);
 
   const snap = (description: string, codeLine: number, topState?: CallStackItem["state"]) => {
     const shown = stack.map((s, i) => ({ ...s, state: i === stack.length - 1 ? topState ?? s.state : s.state }));
@@ -17,7 +22,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
       frame: {
         stack: shown,
         aux: [{ label: "multiplications", values: [mults] }],
-        note: m ? `All arithmetic is done mod ${m}.` : undefined,
+        note: modB !== undefined ? `All arithmetic is done mod ${modB}.` : undefined,
       },
       description,
       codeLine,
@@ -26,44 +31,49 @@ function generate(input: Input): Step<CallStackFrame>[] {
   };
 
   snap(
-    m
+    modB !== undefined
       ? `Compute ${base}^${exp} mod ${m} by squaring: x^e = (x^(e/2))² for even e, x·x^(e-1) for odd e.`
       : `Compute ${base}^${exp} by squaring: x^e = (x^(e/2))² for even e, x·x^(e-1) for odd e.`,
     0,
   );
 
-  const power = (b: number, e: number): number => {
+  const ZERO = BigInt(0);
+  const ONE = BigInt(1);
+  const TWO = BigInt(2);
+
+  const power = (b: bigint, e: bigint): bigint => {
     const item: CallStackItem = { id: `p${uid++}`, label: `power(${b}, ${e})`, state: "active" };
     stack.push(item);
     snap(`Call power(${b}, ${e}).`, 1, "active");
-    if (e === 0) {
+    if (e === ZERO) {
       item.detail = "= 1";
       snap(`Base case: anything^0 = 1.`, 2, "found");
       stack.pop();
-      return 1;
+      return ONE;
     }
-    const half = power(b, Math.floor(e / 2));
-    let result: number;
-    if (e % 2 === 0) {
+    const half = power(b, e / TWO);
+    let result: bigint;
+    if (e % TWO === ZERO) {
       mults++;
       result = reduce(half * half);
       item.detail = `${half}² = ${result}`;
-      snap(`e = ${e} is even: square the half → ${half}² ${m ? `mod ${m} ` : ""}= ${result}.`, 3, "sorted");
+      snap(`e = ${e} is even: square the half → ${half}² ${modB !== undefined ? `mod ${m} ` : ""}= ${result}.`, 3, "sorted");
     } else {
       mults += 2;
       result = reduce(reduce(half * half) * b);
       item.detail = `${half}²·${b} = ${result}`;
-      snap(`e = ${e} is odd: square the half and multiply by ${b} → ${half}²·${b} ${m ? `mod ${m} ` : ""}= ${result}.`, 4, "sorted");
+      snap(`e = ${e} is odd: square the half and multiply by ${b} → ${half}²·${b} ${modB !== undefined ? `mod ${m} ` : ""}= ${result}.`, 4, "sorted");
     }
     stack.pop();
     return result;
   };
 
-  const result = power(reduce(base), exp);
+  const result = power(reduce(baseB), expB);
+  const naiveMults = exp > 0 ? exp - 1 : 0;
   snap(
-    m
-      ? `${base}^${exp} mod ${m} = ${result}, using only ${mults} multiplications instead of ${Math.max(0, exp - 1)}.`
-      : `${base}^${exp} = ${result}, using only ${mults} multiplications instead of ${Math.max(0, exp - 1)}.`,
+    modB !== undefined
+      ? `${base}^${exp} mod ${m} = ${result}, using only ${mults} multiplications instead of ${naiveMults}.`
+      : `${base}^${exp} = ${result}, using only ${mults} multiplications instead of ${naiveMults}.`,
     5,
   );
   return steps;
@@ -232,9 +242,9 @@ Combined with a modulus — reducing every intermediate product mod m — this b
     ],
   },
   inputFields: [
-    { key: "base", label: "Base x", placeholder: "3", help: "1–20." },
-    { key: "exp", label: "Exponent n", placeholder: "13", help: "0–30." },
-    { key: "mod", label: "Modulus m (optional)", placeholder: "1000003", help: "Leave empty for plain xⁿ; set for modular exponentiation. Max 3,000,000." },
+    { key: "base", label: "Base x", placeholder: "3", help: "1–1,000,000." },
+    { key: "exp", label: "Exponent n", placeholder: "13", help: "0–1,000,000." },
+    { key: "mod", label: "Modulus m (optional)", placeholder: "1000003", help: "Leave empty for plain xⁿ (result must fit safely); set for modular exponentiation. Max 1,000,000,000,000 — arithmetic uses BigInt internally, so it stays exact." },
   ],
   defaultInput: (level, rng) => {
     const base = rng.int(2, 5 + level * 2);
@@ -245,15 +255,18 @@ Combined with a modulus — reducing every intermediate product mod m — this b
     const base = Number((fields.base ?? "").trim());
     const exp = Number((fields.exp ?? "").trim());
     const modRaw = (fields.mod ?? "").trim();
-    if (!Number.isInteger(base) || base < 1 || base > 20) throw new Error("Base must be an integer between 1 and 20.");
-    if (!Number.isInteger(exp) || exp < 0 || exp > 30) throw new Error("Exponent must be an integer between 0 and 30.");
+    if (!Number.isInteger(base) || base < 1 || base > 1_000_000) throw new Error("Base must be an integer between 1 and 1,000,000.");
+    if (!Number.isInteger(exp) || exp < 0 || exp > 1_000_000) throw new Error("Exponent must be an integer between 0 and 1,000,000.");
     if (modRaw === "") {
-      if (Math.pow(base, exp) > Number.MAX_SAFE_INTEGER) throw new Error("xⁿ is too large without a modulus — add one (e.g. 1000000007).");
+      // Without a modulus the raw result xⁿ is shown in full, so keep it representable —
+      // BigInt has no ceiling, but an astronomically long digit string isn't useful to look at.
+      const digits = exp === 0 ? 1 : Math.ceil(exp * Math.log10(Math.max(base, 1) || 1));
+      if (digits > 1000) throw new Error("xⁿ would have over 1000 digits without a modulus — add one (e.g. 1000000007) to keep results readable.");
       return { base, exp };
     }
     const m = Number(modRaw);
     if (!Number.isInteger(m) || m < 2) throw new Error("Modulus must be an integer ≥ 2.");
-    if (m > 3_000_000) throw new Error("Keep the modulus at most 3,000,000 so products stay exact in JavaScript.");
+    if (m > 1_000_000_000_000) throw new Error("Keep the modulus at most 1,000,000,000,000.");
     return { base, exp, mod: m };
   },
   serializeInput: (input) => ({

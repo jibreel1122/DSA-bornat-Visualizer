@@ -385,7 +385,7 @@ A hash match doesn't guarantee a real match — different strings can collide to
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
     if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 40) throw new Error("Keep the text at most 40 characters.");
+    if (text.length > 70) throw new Error("Keep the text at most 70 characters.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

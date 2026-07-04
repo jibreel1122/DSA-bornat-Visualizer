@@ -281,19 +281,19 @@ The greedy insight is to prioritize money: consider jobs from most to least prof
     ],
   },
   inputFields: [
-    { key: "jobs", label: "Jobs (deadline:profit)", placeholder: "2:100, 1:19, 2:27, 1:25, 3:15", help: "Comma-separated deadline:profit pairs (2–6 jobs)." },
+    { key: "jobs", label: "Jobs (deadline:profit)", placeholder: "2:100, 1:19, 2:27, 1:25, 3:15", help: "Comma-separated deadline:profit pairs (2–12 jobs)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
     const parts = (fields.jobs ?? "").split(/[,\n]+/).map((p) => p.trim()).filter(Boolean);
     if (parts.length < 2) throw new Error("Enter at least 2 jobs as deadline:profit, e.g. 2:100.");
-    if (parts.length > 6) throw new Error("Maximum 6 jobs.");
+    if (parts.length > 12) throw new Error("Maximum 12 jobs.");
     const jobs: Job[] = parts.map((p, i) => {
       const m = p.match(/^(\d+)\s*[:x]\s*(\d+)$/);
       if (!m) throw new Error(`"${p}" is invalid. Use deadline:profit like 2:100.`);
       const deadline = Number(m[1]);
       const profit = Number(m[2]);
-      if (deadline < 1 || deadline > 6) throw new Error("Deadlines must be between 1 and 6.");
+      if (deadline < 1 || deadline > 12) throw new Error("Deadlines must be between 1 and 12.");
       return { id: String.fromCharCode(65 + i), deadline, profit };
     });
     return { jobs };

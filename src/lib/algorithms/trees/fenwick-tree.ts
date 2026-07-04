@@ -280,7 +280,7 @@ The core idea is that index i is "responsible" for a range of array elements who
     ],
   },
   inputFields: [
-    { key: "values", label: "Array a[1..n]", placeholder: "3, 2, 5, 1, 4, 6", help: "2–8 numbers (1-indexed)." },
+    { key: "values", label: "Array a[1..n]", placeholder: "3, 2, 5, 1, 4, 6", help: "2–20 numbers (1-indexed)." },
     { key: "queryIdx", label: "Prefix-sum up to index", placeholder: "4", help: "1-based index." },
     { key: "updateIdx", label: "Update index", placeholder: "3", help: "1-based index to increment." },
     { key: "updateDelta", label: "Update delta (+)", placeholder: "5", help: "Amount to add." },
@@ -297,7 +297,7 @@ The core idea is that index i is "responsible" for a range of array elements who
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 8) throw new Error("Maximum 8 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     const n = values.length;
     const queryIdx = Number((fields.queryIdx ?? "").trim());
     if (!Number.isInteger(queryIdx) || queryIdx < 1 || queryIdx > n) throw new Error(`Query index must be 1..${n}.`);

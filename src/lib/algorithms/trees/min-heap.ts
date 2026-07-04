@@ -354,8 +354,8 @@ Two operations maintain the invariant. Insertion appends the new value at the en
     ],
   },
   inputFields: [
-    { key: "values", label: "Values to insert", placeholder: "5, 3, 8, 1, 9, 2", help: "2–9 numbers, inserted one at a time." },
-    { key: "extractCount", label: "Extract-min count", placeholder: "2", help: "How many minimums to remove afterward (0–3)." },
+    { key: "values", label: "Values to insert", placeholder: "5, 3, 8, 1, 9, 2", help: "2–20 numbers, inserted one at a time." },
+    { key: "extractCount", label: "Extract-min count", placeholder: "2", help: "How many minimums to remove afterward (0–10)." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
@@ -369,9 +369,9 @@ Two operations maintain the invariant. Insertion appends the new value at the en
         return v;
       });
     if (values.length < 2) throw new Error("Enter at least 2 values.");
-    if (values.length > 9) throw new Error("Maximum 9 values.");
+    if (values.length > 20) throw new Error("Maximum 20 values.");
     const extractCount = Number((fields.extractCount ?? "0").trim());
-    if (!Number.isInteger(extractCount) || extractCount < 0 || extractCount > 3) throw new Error("Extract count must be 0–3.");
+    if (!Number.isInteger(extractCount) || extractCount < 0 || extractCount > 10) throw new Error("Extract count must be 0–10.");
     return { values, extractCount };
   },
   serializeInput: (input) => ({ values: input.values.join(", "), extractCount: String(input.extractCount) }),
