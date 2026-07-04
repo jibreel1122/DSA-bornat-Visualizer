@@ -1,7 +1,12 @@
 "use client";
 
-/** Simple SVG line chart of loss over epochs. */
-export function LossChart({ history }: { history: number[] }) {
+/**
+ * Simple SVG line chart of loss over epochs. `markers` are epoch indices
+ * where the network architecture changed mid-run (rebuild while keeping
+ * history) — drawn as a dashed vertical line so you can see the before/after
+ * effect of an architecture edit on the same curve.
+ */
+export function LossChart({ history, markers = [] }: { history: number[]; markers?: number[] }) {
   const W = 300;
   const H = 140;
   const pad = 24;
@@ -23,6 +28,21 @@ export function LossChart({ history }: { history: number[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
       <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="var(--border)" strokeWidth={1} />
       <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="var(--border)" strokeWidth={1} />
+      {markers
+        .filter((m) => m > 0 && m < history.length)
+        .map((m, k) => (
+          <line
+            key={`marker-${k}`}
+            x1={x(m)}
+            y1={pad}
+            x2={x(m)}
+            y2={H - pad}
+            stroke="var(--muted-foreground)"
+            strokeWidth={1}
+            strokeDasharray="3,3"
+            opacity={0.6}
+          />
+        ))}
       <path d={path} fill="none" stroke="var(--primary)" strokeWidth={2} />
       <text x={pad} y={pad - 6} className="fill-[var(--muted-foreground)] text-[9px]">
         {max.toFixed(3)}

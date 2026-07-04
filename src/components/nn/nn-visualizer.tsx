@@ -42,6 +42,19 @@ export function NNVisualizer() {
   const [seed, setSeed] = React.useState(42);
 
   const dataset = DATASETS[datasetId];
+  // Softmax over a single output unit is mathematically degenerate (it always
+  // emits exactly 1 regardless of the input), which drives the gradient to a
+  // constant non-zero value and makes weights blow up to NaN — so only offer
+  // it for genuinely multi-output datasets.
+  const availableOutputActivations = React.useMemo(
+    () => (dataset.outputs > 1 ? OUTPUT_ACTIVATIONS : OUTPUT_ACTIVATIONS.filter((id) => id !== "softmax")),
+    [dataset.outputs],
+  );
+  // If the dataset changes to single-output while softmax is selected, fall
+  // back to sigmoid rather than silently training a degenerate network.
+  React.useEffect(() => {
+    if (!availableOutputActivations.includes(outputAct)) setOutputAct("sigmoid");
+  }, [availableOutputActivations, outputAct]);
   // Build the network synchronously so the diagram is populated on first paint
   // (robust to Fast Refresh / remounts that reset post-mount effects).
   const netRef = React.useRef<Network | null>(null);
@@ -53,28 +66,56 @@ export function NNVisualizer() {
   const [epoch, setEpoch] = React.useState(0);
   const [loss, setLoss] = React.useState(() => netRef.current!.datasetLoss(dataset.samples));
   const [history, setHistory] = React.useState<number[]>([]);
+  /** epoch indices (into `history`) where the architecture/activation changed mid-run, for the loss chart marker */
+  const [rebuildMarkers, setRebuildMarkers] = React.useState<number[]>([]);
   const [playing, setPlaying] = React.useState(false);
   const [sampleIdx, setSampleIdx] = React.useState(0);
   const [selectedNeuron, setSelectedNeuron] = React.useState<{ layer: number; index: number } | null>(null);
 
-  // (re)build network when structure/dataset changes
+  // Hard reset: brand-new weights, fresh history. Used for the explicit
+  // "Reset weights" button and whenever the dataset changes (loss values
+  // from a different dataset aren't comparable, so keeping the curve would
+  // be misleading).
   const rebuild = React.useCallback(() => {
     netRef.current = buildNetwork(dataset.inputs, dataset.outputs, hidden, hiddenAct, outputAct, seed);
     setEpoch(0);
     setHistory([]);
+    setRebuildMarkers([]);
     setLoss(netRef.current.datasetLoss(dataset.samples));
     setVersion((v) => v + 1);
     bump();
   }, [dataset, hidden, hiddenAct, outputAct, seed]);
 
-  // Rebuild on config change (skip the very first mount — already built synchronously).
+  // Soft rebuild: new weights (architecture changed, so old weights don't
+  // fit), but the loss history is kept with a marker at the change point —
+  // editing the architecture mid-training no longer throws away progress
+  // context, you can see the before/after on the same chart.
+  const rebuildKeepingHistory = React.useCallback(() => {
+    netRef.current = buildNetwork(dataset.inputs, dataset.outputs, hidden, hiddenAct, outputAct, seed);
+    setEpoch(0);
+    setLoss(netRef.current.datasetLoss(dataset.samples));
+    setHistory((h) => {
+      if (h.length > 0) setRebuildMarkers((m) => [...m, h.length]);
+      return h;
+    });
+    setVersion((v) => v + 1);
+    bump();
+  }, [dataset, hidden, hiddenAct, outputAct, seed]);
+
+  // Rebuild on structural/activation change (skip the very first mount — already built synchronously).
   const firstRun = React.useRef(true);
+  const prevDatasetId = React.useRef(datasetId);
   React.useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
       return;
     }
-    rebuild();
+    if (prevDatasetId.current !== datasetId) {
+      prevDatasetId.current = datasetId;
+      rebuild();
+    } else {
+      rebuildKeepingHistory();
+    }
     setPlaying(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetId, hidden, hiddenAct, outputAct, seed]);
@@ -91,7 +132,14 @@ export function NNVisualizer() {
       }
       setEpoch((p) => p + count);
       setLoss(net.datasetLoss(dataset.samples));
-      setHistory((h) => [...h, ...newHist].slice(-400));
+      setHistory((h) => {
+        const combined = [...h, ...newHist];
+        const dropped = Math.max(0, combined.length - 400);
+        if (dropped > 0) {
+          setRebuildMarkers((m) => m.map((mk) => mk - dropped).filter((mk) => mk > 0));
+        }
+        return combined.slice(-400);
+      });
       setVersion((v) => v + 1);
       bump();
     },
@@ -115,11 +163,13 @@ export function NNVisualizer() {
   const pass: ForwardPass | null = net ? net.forward(sample.input) : null;
   const grads: Gradients | null = net && pass ? net.backward(pass, sample.target) : null;
 
+  const MAX_NEURONS_PER_LAYER = 16;
+  const MAX_HIDDEN_LAYERS = 6;
   const addNeuron = (li: number) =>
-    setHidden((h) => h.map((s, i) => (i === li ? Math.min(8, s + 1) : s)));
+    setHidden((h) => h.map((s, i) => (i === li ? Math.min(MAX_NEURONS_PER_LAYER, s + 1) : s)));
   const removeNeuron = (li: number) =>
     setHidden((h) => h.map((s, i) => (i === li ? Math.max(1, s - 1) : s)));
-  const addLayer = () => setHidden((h) => (h.length < 3 ? [...h, 3] : h));
+  const addLayer = () => setHidden((h) => (h.length < MAX_HIDDEN_LAYERS ? [...h, 3] : h));
   const removeLayer = () => setHidden((h) => (h.length > 0 ? h.slice(0, -1) : h));
 
   const predicted = pass ? pass.output.map((v) => v.toFixed(3)).join(", ") : "—";
@@ -160,14 +210,14 @@ export function NNVisualizer() {
             <Select value={outputAct} onValueChange={(v) => setOutputAct(v as ActivationId)}>
               <SelectTrigger className="h-9 w-36 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {OUTPUT_ACTIVATIONS.map((id) => (
+                {availableOutputActivations.map((id) => (
                   <SelectItem key={id} value={id}>{ACTIVATIONS[id].label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
           <Field label={`Learning rate: ${lr.toFixed(2)}`}>
-            <Slider value={[lr]} min={0.05} max={3} step={0.05} onValueChange={([v]) => setLr(v)} className="w-40" />
+            <Slider value={[lr]} min={0.01} max={5} step={0.01} onValueChange={([v]) => setLr(v)} className="w-40" />
           </Field>
 
           <div className="ml-auto flex items-end gap-1.5">
@@ -198,12 +248,12 @@ export function NNVisualizer() {
             {hidden.map((size, li) => (
               <div key={li} className="flex items-center gap-1 rounded-lg border border-border px-2 py-1">
                 <span className="text-xs text-muted-foreground">H{li + 1}</span>
-                <Button variant="ghost" size="icon-sm" onClick={() => removeNeuron(li)} aria-label="Remove neuron"><Minus /></Button>
-                <span className="w-4 text-center font-mono text-sm">{size}</span>
-                <Button variant="ghost" size="icon-sm" onClick={() => addNeuron(li)} aria-label="Add neuron"><Plus /></Button>
+                <Button variant="ghost" size="icon-sm" onClick={() => removeNeuron(li)} disabled={size <= 1} aria-label="Remove neuron"><Minus /></Button>
+                <span className="w-6 text-center font-mono text-sm">{size}</span>
+                <Button variant="ghost" size="icon-sm" onClick={() => addNeuron(li)} disabled={size >= MAX_NEURONS_PER_LAYER} aria-label="Add neuron"><Plus /></Button>
               </div>
             ))}
-            <Button variant="secondary" size="sm" onClick={addLayer} disabled={hidden.length >= 3}>
+            <Button variant="secondary" size="sm" onClick={addLayer} disabled={hidden.length >= MAX_HIDDEN_LAYERS}>
               <Plus /> Layer
             </Button>
             <Button variant="ghost" size="sm" onClick={removeLayer} disabled={hidden.length <= 0}>
@@ -258,7 +308,7 @@ export function NNVisualizer() {
           </Card>
           <Card>
             <CardHeader className="pb-1"><CardTitle className="text-base">Loss over epochs</CardTitle></CardHeader>
-            <CardContent><LossChart history={history} /></CardContent>
+            <CardContent><LossChart history={history} markers={rebuildMarkers} /></CardContent>
           </Card>
         </div>
       </div>
