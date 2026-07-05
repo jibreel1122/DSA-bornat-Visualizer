@@ -147,10 +147,11 @@ export function VisualizerShell({
   React.useEffect(() => {
     if (liveActionRef.current) {
       liveActionRef.current = false;
+      player.goto(0);
       player.play();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps.length]);
+  }, [hIndex]);
 
   // ---- refs ----
   const rootRef = React.useRef<HTMLDivElement>(null);
