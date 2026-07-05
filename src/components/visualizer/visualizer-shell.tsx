@@ -87,11 +87,11 @@ export function VisualizerShell({
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
 
   const searchFieldKey = React.useMemo(
-    () => module.inputFields.find((f) => SEARCH_FIELD_KEYS.includes(f.key))?.key,
+    () => module.inputFields.find((f) => f.search || SEARCH_FIELD_KEYS.includes(f.key))?.key,
     [module],
   );
-  const hasValuesField = React.useMemo(
-    () => module.inputFields.some((f) => f.key === "values"),
+  const listFieldKey = React.useMemo(
+    () => module.inputFields.find((f) => f.list || f.key === "values")?.key,
     [module],
   );
 

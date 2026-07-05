@@ -328,6 +328,10 @@ export interface InputField {
   label: string;
   placeholder: string;
   help?: string;
+  /** This field holds a comma-separated collection the live builder can insert/delete/edit into. */
+  list?: boolean;
+  /** This field is what the live "Search" action sets before re-generating. */
+  search?: boolean;
 }
 
 export type AlgoDifficulty = "Beginner" | "Intermediate" | "Advanced";
