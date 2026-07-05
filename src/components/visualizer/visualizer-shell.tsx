@@ -20,6 +20,7 @@ import {
   ListMinus,
   ListPlus,
   Pause,
+  Pencil,
   Play,
   Redo2,
   RotateCcw,
@@ -47,7 +48,7 @@ import { ZoomPan, type ZoomPanHandle } from "./zoom-pan";
 import { StatsPanel } from "./stats-panel";
 import { InputDialog } from "./input-dialog";
 import { isListValue } from "./chip-list-input";
-import { ValuePromptButton } from "./value-prompt-button";
+import { EditPromptButton, ValuePromptButton } from "./value-prompt-button";
 
 interface SavedState {
   slug: string;
@@ -137,6 +138,20 @@ export function VisualizerShell({
   const player = useVisualizerPlayer(steps.length, settings.defaultSpeed);
   const step = steps[player.cursor];
 
+  // Auto-play through a live insert/delete/edit/search so the user watches
+  // the new operation animate instead of landing silently on frame 0.
+  // Must be declared AFTER useVisualizerPlayer so this effect runs after its
+  // internal reset-on-stepCount-change effect — otherwise that effect's
+  // setPlaying(false) wins and playback never starts.
+  const liveActionRef = React.useRef(false);
+  React.useEffect(() => {
+    if (liveActionRef.current) {
+      liveActionRef.current = false;
+      player.play();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [steps.length]);
+
   // ---- refs ----
   const rootRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -214,11 +229,13 @@ export function VisualizerShell({
   };
 
   const insertValue = (raw: string) => {
+    if (!listFieldKey) return;
     const fields = module.serializeInput(input);
-    const current = fields.values ?? "";
-    const next = { ...fields, values: current ? `${current}, ${raw}` : raw };
+    const current = fields[listFieldKey] ?? "";
+    const next = { ...fields, [listFieldKey]: current ? `${current}, ${raw}` : raw };
     try {
       pushInput(module.parseInput(next));
+      liveActionRef.current = true;
       toast.success(`Inserted ${raw}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not insert.");
@@ -226,20 +243,42 @@ export function VisualizerShell({
   };
 
   const removeValue = (raw: string) => {
+    if (!listFieldKey) return;
     const fields = module.serializeInput(input);
-    const tokens = (fields.values ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+    const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === raw.trim());
     if (idx === -1) {
       toast.info(`"${raw}" is not in the current values.`);
       return;
     }
     tokens.splice(idx, 1);
-    const next = { ...fields, values: tokens.join(", ") };
+    const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       pushInput(module.parseInput(next));
+      liveActionRef.current = true;
       toast.success(`Removed ${raw}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not remove.");
+    }
+  };
+
+  const editValue = (oldRaw: string, newRaw: string) => {
+    if (!listFieldKey) return;
+    const fields = module.serializeInput(input);
+    const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
+    const idx = tokens.findIndex((t) => t === oldRaw.trim());
+    if (idx === -1) {
+      toast.info(`"${oldRaw}" is not in the current values.`);
+      return;
+    }
+    tokens[idx] = newRaw.trim();
+    const next = { ...fields, [listFieldKey]: tokens.join(", ") };
+    try {
+      pushInput(module.parseInput(next));
+      liveActionRef.current = true;
+      toast.success(`Changed ${oldRaw} to ${newRaw}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not edit.");
     }
   };
 
@@ -249,6 +288,7 @@ export function VisualizerShell({
     const next = { ...fields, [searchFieldKey]: raw };
     try {
       pushInput(module.parseInput(next));
+      liveActionRef.current = true;
       toast.success(`Searching for ${raw}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not search.");
@@ -614,32 +654,49 @@ export function VisualizerShell({
           <IconBtn label="Clear values" onClick={clearInput}>
             <Eraser />
           </IconBtn>
-          {hasValuesField && (
-            <ValuePromptButton
-              icon={<ListPlus />}
-              label="Insert a value"
-              placeholder="e.g. 42"
-              confirmLabel="Insert"
-              onSubmit={insertValue}
-            />
-          )}
-          {hasValuesField && (
-            <ValuePromptButton
-              icon={<ListMinus />}
-              label="Remove a value"
-              placeholder="e.g. 42"
-              confirmLabel="Remove"
-              onSubmit={removeValue}
-            />
-          )}
-          {searchFieldKey && (
-            <ValuePromptButton
-              icon={<Search />}
-              label="Search for a value"
-              placeholder="e.g. 42"
-              confirmLabel="Search"
-              onSubmit={searchValue}
-            />
+          {(listFieldKey || searchFieldKey) && (
+            <div className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 p-1">
+              {listFieldKey && (
+                <ValuePromptButton
+                  icon={<ListPlus />}
+                  label="Insert a value"
+                  placeholder="e.g. 42"
+                  confirmLabel="Insert"
+                  onSubmit={insertValue}
+                  emphasized
+                />
+              )}
+              {listFieldKey && (
+                <ValuePromptButton
+                  icon={<ListMinus />}
+                  label="Delete a value"
+                  placeholder="e.g. 42"
+                  confirmLabel="Delete"
+                  onSubmit={removeValue}
+                  emphasized
+                />
+              )}
+              {listFieldKey && (
+                <EditPromptButton
+                  icon={<Pencil />}
+                  label="Edit a value"
+                  oldPlaceholder="current value"
+                  newPlaceholder="new value"
+                  confirmLabel="Edit"
+                  onSubmit={editValue}
+                />
+              )}
+              {searchFieldKey && (
+                <ValuePromptButton
+                  icon={<Search />}
+                  label="Search for a value"
+                  placeholder="e.g. 42"
+                  confirmLabel="Search"
+                  onSubmit={searchValue}
+                  emphasized
+                />
+              )}
+            </div>
           )}
 
           <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
