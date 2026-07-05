@@ -454,8 +454,9 @@ Because it visits nodes in increasing distance order, BFS computes shortest path
       label: "Edges (undirected)",
       placeholder: "A-B, A-C, B-D, C-D, D-E",
       help: "Comma-separated pairs like A-B. Up to 40 nodes.",
+      list: true,
     },
-    { key: "start", label: "Start node", placeholder: "A" },
+    { key: "start", label: "Start node", placeholder: "A", search: true },
   ],
   defaultInput: (level, rng) => {
     const g = randomGraph(level, rng);

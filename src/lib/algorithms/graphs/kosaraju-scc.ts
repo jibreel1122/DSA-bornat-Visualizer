@@ -289,7 +289,7 @@ The first DFS explores the original graph and records vertices in order of compl
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed edges", placeholder: "A>B, B>C, C>A, C>D", help: "Format A>B. Up to 20 nodes." },
+    { key: "edges", label: "Directed edges", placeholder: "A>B, B>C, C>A, C>D", help: "Format A>B. Up to 20 nodes.", list: true },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {

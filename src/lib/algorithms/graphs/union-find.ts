@@ -383,7 +383,7 @@ Each set is represented as a tree whose root is the set's canonical representati
   },
   inputFields: [
     { key: "n", label: "Number of elements", placeholder: "6", help: "Elements 0..n-1 (3–20)." },
-    { key: "ops", label: "Union operations", placeholder: "0-1, 2-3, 1-3, 4-5", help: "Comma-separated pairs a-b to union (up to 30)." },
+    { key: "ops", label: "Union operations", placeholder: "0-1, 2-3, 1-3, 4-5", help: "Comma-separated pairs a-b to union (up to 30).", list: true },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {

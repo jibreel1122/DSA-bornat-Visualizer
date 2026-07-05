@@ -350,8 +350,8 @@ Each time a node is settled, the algorithm relaxes its outgoing edges: if going 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5", help: "Format A-B:weight (non-negative). Up to 30 nodes." },
-    { key: "start", label: "Start node", placeholder: "A" },
+    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5", help: "Format A-B:weight (non-negative). Up to 30 nodes.", list: true },
+    { key: "start", label: "Start node", placeholder: "A", search: true },
   ],
   defaultInput: (level, rng) => {
     const g = randomGraph(level, rng, { weighted: true });

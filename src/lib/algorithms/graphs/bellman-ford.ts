@@ -350,8 +350,8 @@ The idea is repeated edge relaxation. A relaxation asks: "is going through edge 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:4, B>C:-3, C>D:4", help: "Format A>B:w; negative weights allowed. Up to 20 nodes." },
-    { key: "start", label: "Source vertex", placeholder: "A", help: "Must be one of the vertices." },
+    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:4, B>C:-3, C>D:4", help: "Format A>B:w; negative weights allowed. Up to 20 nodes.", list: true },
+    { key: "start", label: "Source vertex", placeholder: "A", help: "Must be one of the vertices.", search: true },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {

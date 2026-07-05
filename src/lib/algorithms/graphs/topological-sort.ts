@@ -315,7 +315,7 @@ Kahn's algorithm computes it using in-degrees — the number of incoming edges e
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed edges", placeholder: "A>B, A>C, B>D, C>D, D>E", help: "Format A>B (edge points A to B). Must be acyclic. Up to 20 nodes." },
+    { key: "edges", label: "Directed edges", placeholder: "A>B, A>C, B>D, C>D, D>E", help: "Format A>B (edge points A to B). Must be acyclic. Up to 20 nodes.", list: true },
   ],
   defaultInput: (level, rng) => {
     const g = randomGraph(level, rng, { directed: true, acyclic: true });

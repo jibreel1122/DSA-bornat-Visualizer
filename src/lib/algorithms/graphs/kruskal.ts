@@ -273,7 +273,7 @@ The key to doing this efficiently is the union-find (disjoint-set) data structur
     ],
   },
   inputFields: [
-    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5, C-D:8", help: "Undirected, format A-B:weight. Up to 20 nodes." },
+    { key: "edges", label: "Weighted edges", placeholder: "A-B:4, A-C:1, C-B:2, B-D:5, C-D:8", help: "Undirected, format A-B:weight. Up to 20 nodes.", list: true },
   ],
   defaultInput: (level, rng) => {
     const g = randomGraph(level, rng, { weighted: true });

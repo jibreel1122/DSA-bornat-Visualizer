@@ -452,7 +452,7 @@ The Ford-Fulkerson method computes max flow by repeatedly finding an augmenting 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed capacity edges", placeholder: "S>A:10, S>C:10, A>T:8", help: "Format S>A:cap (positive). Up to 20 nodes." },
+    { key: "edges", label: "Directed capacity edges", placeholder: "S>A:10, S>C:10, A>T:8", help: "Format S>A:cap (positive). Up to 20 nodes.", list: true },
     { key: "source", label: "Source", placeholder: "S", help: "Flow origin vertex." },
     { key: "sink", label: "Sink", placeholder: "T", help: "Flow destination vertex." },
   ],

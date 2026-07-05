@@ -223,8 +223,8 @@ DFS is naturally expressed with recursion (using the call stack) or an explicit 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Edges (undirected)", placeholder: "A-B, A-C, B-D, C-D, D-E", help: "Comma-separated pairs like A-B. Up to 26 nodes." },
-    { key: "start", label: "Start node", placeholder: "A" },
+    { key: "edges", label: "Edges (undirected)", placeholder: "A-B, A-C, B-D, C-D, D-E", help: "Comma-separated pairs like A-B. Up to 26 nodes.", list: true },
+    { key: "start", label: "Start node", placeholder: "A", search: true },
   ],
   defaultInput: (level, rng) => {
     const g = randomGraph(level, rng);

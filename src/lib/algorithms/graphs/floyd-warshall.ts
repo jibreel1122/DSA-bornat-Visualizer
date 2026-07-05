@@ -286,7 +286,7 @@ The algorithm is a beautiful dynamic program over one question: "which vertices 
     ],
   },
   inputFields: [
-    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:3, B>C:2, A>C:8", help: "Format A>B:w; negative weights allowed (no negative cycles). Up to 12 nodes." },
+    { key: "edges", label: "Directed weighted edges", placeholder: "A>B:3, B>C:2, A>C:8", help: "Format A>B:w; negative weights allowed (no negative cycles). Up to 12 nodes.", list: true },
   ],
   defaultInput: (level) => templateInput(level),
   parseInput: (fields) => {
