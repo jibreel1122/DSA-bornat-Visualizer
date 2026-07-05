@@ -403,8 +403,8 @@ The power of a trie is that insertion and lookup cost O(L), where L is the lengt
     ],
   },
   inputFields: [
-    { key: "words", label: "Words to insert", placeholder: "cat, car, card, cave", help: "2–12 lowercase words (letters only, up to 12 letters each)." },
-    { key: "search", label: "Word to search", placeholder: "card", help: "One lowercase word to look up (up to 12 letters)." },
+    { key: "words", label: "Words to insert", placeholder: "cat, car, card, cave", help: "2–12 lowercase words (letters only, up to 12 letters each).", list: true },
+    { key: "search", label: "Word to search", placeholder: "card", help: "One lowercase word to look up (up to 12 letters).", search: true },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {

@@ -367,6 +367,7 @@ Each operation costs O(h), where h is the height of the tree. For a balanced tre
       label: "Operations",
       placeholder: "insert 50, insert 30, insert 70, search 30, delete 50",
       help: "Comma-separated: insert N, search N, delete N.",
+      list: true,
     },
   ],
   defaultInput: (level, rng) => ({ ops: randomOps(level, rng) }),
