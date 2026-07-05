@@ -287,7 +287,7 @@ Performance hinges on the load factor α = n/m (keys per bucket). With a good ha
     ],
   },
   inputFields: [
-    { key: "ops", label: "Operations", placeholder: "insert 21, insert 14, insert 28, search 14, delete 21", help: "Comma-separated: insert N, search N, delete N (max 50)." },
+    { key: "ops", label: "Operations", placeholder: "insert 21, insert 14, insert 28, search 14, delete 21", help: "Comma-separated: insert N, search N, delete N (max 50).", list: true },
     { key: "size", label: "Table size m", placeholder: "7", help: "3–20 (prime recommended)." },
   ],
   defaultInput: (level, rng) => randomOps(level, rng),

@@ -201,7 +201,7 @@ export const oaParse = (fields: Record<string, string>): OAInput => ({
 });
 
 export const OA_FIELDS = [
-  { key: "ops", label: "Operations", placeholder: "insert 21, insert 32, search 32, delete 21", help: "Comma-separated: insert N, search N, delete N (max 40)." },
+  { key: "ops", label: "Operations", placeholder: "insert 21, insert 32, search 32, delete 21", help: "Comma-separated: insert N, search N, delete N (max 40).", list: true },
   { key: "size", label: "Table size m", placeholder: "11", help: "5–31 (prime recommended)." },
 ];
 
