@@ -202,7 +202,7 @@ Its three core operations — push (add to top), pop (remove from top), and peek
     ],
   },
   inputFields: [
-    { key: "ops", label: "Operations", placeholder: "push 3, push 7, peek, pop, push 5", help: "Comma-separated: push N, pop, peek." },
+    { key: "ops", label: "Operations", placeholder: "push 3, push 7, peek, pop, push 5", help: "Comma-separated: push N, pop, peek.", list: true },
   ],
   defaultInput: (level, rng) => ({ ops: randomOps(level, rng) }),
   parseInput: (fields) => {

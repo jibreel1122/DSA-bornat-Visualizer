@@ -212,7 +212,7 @@ Its core operations — enqueue (add at rear), dequeue (remove from front), and 
     ],
   },
   inputFields: [
-    { key: "ops", label: "Operations", placeholder: "enqueue 3, enqueue 7, front, dequeue", help: "Comma-separated: enqueue N, dequeue, front." },
+    { key: "ops", label: "Operations", placeholder: "enqueue 3, enqueue 7, front, dequeue", help: "Comma-separated: enqueue N, dequeue, front.", list: true },
   ],
   defaultInput: (level, rng) => ({ ops: randomOps(level, rng) }),
   parseInput: (fields) => {

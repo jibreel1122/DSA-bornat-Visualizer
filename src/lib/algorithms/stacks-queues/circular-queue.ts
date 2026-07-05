@@ -352,7 +352,7 @@ Two indices drive it: front points at the next element to remove, and rear at th
   },
   inputFields: [
     { key: "capacity", label: "Capacity", placeholder: "5", help: "Number of slots (2–16)." },
-    { key: "ops", label: "Operations", placeholder: "E 5, E 3, E 8, D, D, E 1, E 9", help: "Comma-separated: 'E n' to enqueue n, 'D' to dequeue (max 40)." },
+    { key: "ops", label: "Operations", placeholder: "E 5, E 3, E 8, D, D, E 1, E 9", help: "Comma-separated: 'E n' to enqueue n, 'D' to dequeue (max 40).", list: true },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
