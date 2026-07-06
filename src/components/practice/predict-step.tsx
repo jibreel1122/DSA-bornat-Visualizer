@@ -10,6 +10,7 @@ import { ALGORITHMS, loadAlgorithm } from "@/lib/algorithms";
 import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
 import { createRNG, randomSeed } from "@/lib/engine/random";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n";
 
 const ROUNDS = 5;
 
@@ -88,6 +89,7 @@ async function buildChallenge(): Promise<Challenge | null> {
 }
 
 export function PredictStep({ onRecord }: { onRecord: (categoryId: string, correct: boolean) => void }) {
+  const { t } = useLocale();
   const [phase, setPhase] = React.useState<"idle" | "loading" | "playing" | "done">("idle");
   const [challenge, setChallenge] = React.useState<Challenge | null>(null);
   const [round, setRound] = React.useState(0);
@@ -137,13 +139,13 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
       <Card>
         <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
           <Target className="size-10 text-primary" />
-          <h3 className="text-lg font-semibold">Predict the Step</h3>
+          <h3 className="text-lg font-semibold">{t("predict.title")}</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
-            You&apos;ll see an array mid-algorithm. Predict which state comes <em>next</em>. {ROUNDS} rounds
-            per session.
+            {t("predict.descriptionPrefix")} <em>{t("predict.descriptionNext")}</em>. {ROUNDS}{" "}
+            {t("predict.descriptionSuffix")}
           </p>
           <Button onClick={startSession} disabled={phase === "loading"}>
-            {phase === "loading" ? "Loading…" : "Start"}
+            {phase === "loading" ? t("practice.loading") : t("practice.start")}
           </Button>
         </CardContent>
       </Card>
@@ -159,10 +161,14 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
           </motion.div>
           <div className="text-3xl font-bold">{score} / {ROUNDS}</div>
           <p className="text-sm text-muted-foreground">
-            {score >= 4 ? "Sharp eye!" : score >= 2 ? "Getting there." : "Watch a few visualizations and retry."}
+            {score >= 4
+              ? t("predict.sharpEye")
+              : score >= 2
+                ? t("predict.gettingThere")
+                : t("predict.watchRetry")}
           </p>
           <Button onClick={startSession} variant="secondary">
-            <RotateCcw /> Play again
+            <RotateCcw /> {t("predict.playAgain")}
           </Button>
         </CardContent>
       </Card>
@@ -175,16 +181,16 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
     <Card>
       <CardContent className="py-5">
         <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Round {round + 1} of {ROUNDS}</span>
+          <span>{t("predict.round")} {round + 1} {t("predict.of")} {ROUNDS}</span>
           <span className="font-medium text-primary">{challenge.source}</span>
-          <span>Score: {score}</span>
+          <span>{t("predict.score")}: {score}</span>
         </div>
 
         <div className="mb-4 h-48 overflow-hidden rounded-xl border border-border bg-background/40">
           <ArrayView frame={challenge.frame} />
         </div>
 
-        <p className="mb-3 text-center text-sm font-medium">Which array state comes next?</p>
+        <p className="mb-3 text-center text-sm font-medium">{t("predict.question")}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {challenge.options.map((opt, i) => {
             const isAnswer = i === challenge.answer;
@@ -218,7 +224,7 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
               <p className="rounded-xl bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">{challenge.hint}</p>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setShowHint(true)}>
-                <Lightbulb /> Show hint
+                <Lightbulb /> {t("predict.showHint")}
               </Button>
             )}
           </div>
@@ -227,7 +233,7 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
         {picked !== null && (
           <div className="mt-4 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{challenge.hint}</span>
-            <Button onClick={next}>{round + 1 >= ROUNDS ? "Finish" : "Next"}</Button>
+            <Button onClick={next}>{round + 1 >= ROUNDS ? t("practice.finish") : t("practice.next")}</Button>
           </div>
         )}
       </CardContent>

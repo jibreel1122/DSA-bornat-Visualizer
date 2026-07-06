@@ -13,6 +13,7 @@ import { ALGORITHMS } from "@/lib/algorithms";
 import type { ArrayFrame } from "@/lib/engine/types";
 import { parseNumberList } from "@/lib/utils";
 import { createRNG, randomArray, randomSeed } from "@/lib/engine/random";
+import { useLocale } from "@/lib/i18n";
 
 // array algorithms that take a target need a second field
 const TARGET_SLUGS = new Set([
@@ -26,6 +27,7 @@ const TARGET_SLUGS = new Set([
 ]);
 
 export function ArrayLab() {
+  const { t } = useLocale();
   const router = useRouter();
   const arrayMetas = React.useMemo(() => ALGORITHMS.filter((m) => m.renderer === "array"), []);
   const [text, setText] = React.useState("34, 7, 23, 32, 5, 62, 18, 45");
@@ -45,11 +47,11 @@ export function ArrayLab() {
 
   const run = () => {
     if (!parsed || parsed.length < 2) {
-      toast.error("Enter at least 2 valid numbers.");
+      toast.error(t("arrayLab.enterValidNumbers"));
       return;
     }
     if (!slug) {
-      toast.error("Pick an algorithm.");
+      toast.error(t("arrayLab.pickAlgorithm"));
       return;
     }
     const fields: Record<string, string> = { values: parsed.join(", ") };
@@ -71,11 +73,11 @@ export function ArrayLab() {
               <ArrayView frame={frame} />
             ) : (
               <div className="grid h-full place-items-center text-sm text-muted-foreground">
-                Enter valid numbers to preview
+                {t("arrayLab.enterToPreview")}
               </div>
             )}
           </div>
-          <Label htmlFor="array-input">Array values</Label>
+          <Label htmlFor="array-input">{t("arrayLab.values")}</Label>
           <Input
             id="array-input"
             value={text}
@@ -85,10 +87,10 @@ export function ArrayLab() {
           />
           <div className="mt-2 flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={randomize}>
-              <Dices /> Random
+              <Dices /> {t("arrayLab.random")}
             </Button>
             <span className="text-xs text-muted-foreground">
-              {parsed ? `${parsed.length} values` : "invalid input"}
+              {parsed ? `${parsed.length} ${t("arrayLab.valuesCount")}` : t("arrayLab.invalidInput")}
             </span>
           </div>
         </CardContent>
@@ -97,10 +99,10 @@ export function ArrayLab() {
       <Card>
         <CardContent className="grid gap-4 p-4">
           <div>
-            <Label>Algorithm</Label>
+            <Label>{t("arrayLab.algorithm")}</Label>
             <Select value={slug} onValueChange={setSlug}>
               <SelectTrigger className="mt-1.5 w-full">
-                <SelectValue placeholder="Choose an algorithm" />
+                <SelectValue placeholder={t("arrayLab.chooseAlgorithm")} />
               </SelectTrigger>
               <SelectContent>
                 {arrayMetas.map((m) => (
@@ -114,7 +116,7 @@ export function ArrayLab() {
 
           {needsTarget && (
             <div>
-              <Label htmlFor="target-input">Search target</Label>
+              <Label htmlFor="target-input">{t("arrayLab.searchTarget")}</Label>
               <Input
                 id="target-input"
                 value={target}
@@ -126,10 +128,10 @@ export function ArrayLab() {
           )}
 
           <Button onClick={run} disabled={!parsed || !slug}>
-            <Play /> Run in Visualizer
+            <Play /> {t("arrayLab.runInVisualizer")}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Opens the full visualizer with your custom array pre-loaded.
+            {t("arrayLab.opensVisualizerHint")}
           </p>
         </CardContent>
       </Card>

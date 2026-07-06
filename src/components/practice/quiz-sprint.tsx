@@ -11,6 +11,7 @@ import { byCategory, loadAlgorithm } from "@/lib/algorithms";
 import type { CategoryId, QuizQuestion } from "@/lib/engine/types";
 import { createRNG, randomSeed } from "@/lib/engine/random";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n";
 
 interface LoadedQ extends QuizQuestion {
   source: string;
@@ -20,6 +21,7 @@ interface LoadedQ extends QuizQuestion {
 const MAX_Q = 10;
 
 export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correct: boolean) => void }) {
+  const { t } = useLocale();
   const [category, setCategory] = React.useState<CategoryId | "all">("all");
   const [phase, setPhase] = React.useState<"idle" | "loading" | "playing" | "done">("idle");
   const [questions, setQuestions] = React.useState<LoadedQ[]>([]);
@@ -85,10 +87,9 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
       <Card>
         <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
           <Trophy className="size-10 text-amber-400" />
-          <h3 className="text-lg font-semibold">Quiz Sprint</h3>
+          <h3 className="text-lg font-semibold">{t("quiz.title")}</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Answer up to {MAX_Q} questions drawn from the algorithms you choose. Use a hint if you&apos;re
-            stuck — it&apos;s worth half a point.
+            {t("quiz.descriptionPrefix")} {MAX_Q} {t("quiz.descriptionSuffix")}
           </p>
           <div className="flex items-center gap-2">
             <Select value={category} onValueChange={(v) => setCategory(v as CategoryId | "all")}>
@@ -96,7 +97,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All categories</SelectItem>
+                <SelectItem value="all">{t("quiz.allCategories")}</SelectItem>
                 {CATEGORIES.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.short}
@@ -105,7 +106,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
               </SelectContent>
             </Select>
             <Button onClick={start} disabled={phase === "loading"}>
-              {phase === "loading" ? "Loading…" : "Start"}
+              {phase === "loading" ? t("practice.loading") : t("practice.start")}
             </Button>
           </div>
         </CardContent>
@@ -125,10 +126,10 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
             {score} / {questions.length}
           </div>
           <p className="text-sm text-muted-foreground">
-            {pct >= 80 ? "Outstanding!" : pct >= 50 ? "Solid work — keep going." : "Review and try again."}
+            {pct >= 80 ? t("quiz.outstanding") : pct >= 50 ? t("quiz.solidWork") : t("quiz.reviewRetry")}
           </p>
           <Button onClick={start} variant="secondary">
-            <RotateCcw /> New sprint
+            <RotateCcw /> {t("quiz.newSprint")}
           </Button>
         </CardContent>
       </Card>
@@ -139,8 +140,8 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
     <Card>
       <CardContent className="py-5">
         <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Question {index + 1} of {questions.length}</span>
-          <span>Score: {score}</span>
+          <span>{t("quiz.question")} {index + 1} {t("quiz.of")} {questions.length}</span>
+          <span>{t("quiz.score")}: {score}</span>
         </div>
         <AnimatePresence mode="wait">
           <motion.div key={index} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -186,7 +187,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
                       setHintUsed(true);
                     }}
                   >
-                    <Lightbulb /> Show hint (−½ point)
+                    <Lightbulb /> {t("quiz.showHint")}
                   </Button>
                 )}
               </div>
@@ -198,7 +199,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
                   {q.explanation}
                 </motion.div>
                 <div className="mt-4 flex justify-end">
-                  <Button onClick={next}>{index + 1 >= questions.length ? "Finish" : "Next"}</Button>
+                  <Button onClick={next}>{index + 1 >= questions.length ? t("practice.finish") : t("practice.next")}</Button>
                 </div>
               </>
             )}

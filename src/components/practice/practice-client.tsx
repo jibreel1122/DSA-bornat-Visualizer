@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/catalog/page-header";
 import { CATEGORIES } from "@/lib/categories";
 import { useLocalStorage } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 import { QuizSprint } from "./quiz-sprint";
 import { PredictStep } from "./predict-step";
 
@@ -18,14 +19,18 @@ export interface PracticeStats {
 
 const EMPTY_STATS: PracticeStats = { byCategory: {}, streak: 0 };
 
-export function masteryLabel(correct: number): { label: string; color: string } {
-  if (correct >= 50) return { label: "Master", color: "text-fuchsia-500" };
-  if (correct >= 25) return { label: "Skilled", color: "text-emerald-500" };
-  if (correct >= 10) return { label: "Learner", color: "text-sky-500" };
-  return { label: "Novice", color: "text-muted-foreground" };
+export function masteryLabel(
+  correct: number,
+  t: (key: import("@/lib/i18n").DictKey) => string,
+): { label: string; color: string } {
+  if (correct >= 50) return { label: t("practice.rankMaster"), color: "text-fuchsia-500" };
+  if (correct >= 25) return { label: t("practice.rankSkilled"), color: "text-emerald-500" };
+  if (correct >= 10) return { label: t("practice.rankLearner"), color: "text-sky-500" };
+  return { label: t("practice.rankNovice"), color: "text-muted-foreground" };
 }
 
 export function PracticeClient() {
+  const { t } = useLocale();
   const [stats, setStats] = useLocalStorage<PracticeStats>("bdsv:practice", EMPTY_STATS);
 
   const record = React.useCallback(
@@ -54,49 +59,49 @@ export function PracticeClient() {
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <PageHeader
         icon={Target}
-        title="Practice mode"
-        description="Sharpen your understanding with quiz sprints and step-prediction challenges. Your accuracy builds toward mastery in each category."
+        title={t("practice.title")}
+        description={t("practice.description")}
       />
 
       {/* stats header */}
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Brain className="size-4" /> Overall accuracy
+            <Brain className="size-4" /> {t("practice.overallAccuracy")}
           </div>
           <div className="mt-1 text-2xl font-bold">
             {totalAttempted === 0 ? "—" : `${Math.round((totalCorrect / totalAttempted) * 100)}%`}
           </div>
           <div className="text-xs text-muted-foreground">
-            {totalCorrect} correct of {totalAttempted}
+            {totalCorrect} {t("practice.correctOf")} {totalAttempted}
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Flame className="size-4 text-amber-500" /> Current streak
+            <Flame className="size-4 text-amber-500" /> {t("practice.currentStreak")}
           </div>
           <div className="mt-1 text-2xl font-bold">{stats.streak}</div>
-          <div className="text-xs text-muted-foreground">consecutive correct</div>
+          <div className="text-xs text-muted-foreground">{t("practice.consecutiveCorrect")}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="size-4" /> Categories mastered
+            <Target className="size-4" /> {t("practice.categoriesMastered")}
           </div>
           <div className="mt-1 text-2xl font-bold">
             {Object.values(stats.byCategory).filter((c) => c.correct >= 50).length}
             <span className="text-base font-normal text-muted-foreground"> / {CATEGORIES.length}</span>
           </div>
-          <div className="text-xs text-muted-foreground">50+ correct = Master</div>
+          <div className="text-xs text-muted-foreground">{t("practice.masterThreshold")}</div>
         </Card>
       </div>
 
       <Tabs defaultValue="quiz">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="quiz">
-            <Brain /> Quiz Sprint
+            <Brain /> {t("practice.quizSprintTab")}
           </TabsTrigger>
           <TabsTrigger value="predict">
-            <Target /> Predict the Step
+            <Target /> {t("practice.predictStepTab")}
           </TabsTrigger>
         </TabsList>
 
@@ -110,11 +115,11 @@ export function PracticeClient() {
 
       {/* mastery breakdown */}
       <div className="mt-10">
-        <h2 className="mb-3 text-lg font-semibold">Mastery by category</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("practice.masteryByCategory")}</h2>
         <div className="grid gap-2 sm:grid-cols-2">
           {CATEGORIES.map((c) => {
             const cur = stats.byCategory[c.id] ?? { attempted: 0, correct: 0 };
-            const mastery = masteryLabel(cur.correct);
+            const mastery = masteryLabel(cur.correct, t);
             const pct = Math.min(100, (cur.correct / 50) * 100);
             return (
               <Card key={c.id} className="p-3">

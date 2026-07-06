@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ALGORITHMS } from "@/lib/algorithms";
 import { createRNG, randomGraph, randomSeed } from "@/lib/engine/random";
+import { useLocale } from "@/lib/i18n";
 
 /** Known graph algorithms and how to feed them. Filtered to whatever is registered. */
 const GRAPH_ALGOS: Record<string, { needsStart: boolean; weighted: boolean; directed: boolean }> = {
@@ -88,6 +89,7 @@ function buildSeed(): { nodes: Node[]; edges: Edge[] } {
 }
 
 function GraphBuilderInner() {
+  const { t } = useLocale();
   const router = useRouter();
   // seed synchronously so the canvas is populated on first paint (robust to Fast Refresh)
   const [seed] = React.useState(buildSeed);
@@ -157,11 +159,11 @@ function GraphBuilderInner() {
 
   const run = () => {
     if (!slug || !algoConfig) {
-      toast.error("Pick an algorithm.");
+      toast.error(t("graphBuilder.pickAlgorithm"));
       return;
     }
     if (nodes.length < 2 || edges.length < 1) {
-      toast.error("Draw at least two nodes and one edge.");
+      toast.error(t("graphBuilder.drawAtLeast"));
       return;
     }
     const idToLabel = new Map(nodes.map((n) => [n.id, (n.data as { label: string }).label]));
@@ -187,23 +189,23 @@ function GraphBuilderInner() {
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border p-2">
           <Button size="sm" variant="secondary" onClick={addNode}>
-            <Plus /> Node
+            <Plus /> {t("graphBuilder.node")}
           </Button>
           <Button size="sm" variant="ghost" onClick={deleteSelected}>
-            <Trash2 /> Delete
+            <Trash2 /> {t("graphBuilder.delete")}
           </Button>
           <Button size="sm" variant="ghost" onClick={seedRandom}>
-            <Dices /> Random
+            <Dices /> {t("graphBuilder.random")}
           </Button>
           <Button size="sm" variant="ghost" onClick={clearAll}>
-            Clear
+            {t("graphBuilder.clear")}
           </Button>
           <div className="ml-auto flex items-center gap-3">
             <label className="flex items-center gap-1.5 text-xs">
-              <Switch checked={directed} onCheckedChange={setDirected} /> Directed
+              <Switch checked={directed} onCheckedChange={setDirected} /> {t("graphBuilder.directed")}
             </label>
             <label className="flex items-center gap-1.5 text-xs">
-              <Switch checked={weighted} onCheckedChange={setWeighted} /> Weighted
+              <Switch checked={weighted} onCheckedChange={setWeighted} /> {t("graphBuilder.weighted")}
             </label>
           </div>
         </div>
@@ -232,13 +234,13 @@ function GraphBuilderInner() {
       <Card>
         <CardContent className="grid gap-4 p-4">
           <div>
-            <Label>Algorithm</Label>
+            <Label>{t("graphBuilder.algorithm")}</Label>
             {available.length === 0 ? (
-              <p className="mt-1.5 text-xs text-muted-foreground">No graph algorithms registered yet.</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{t("graphBuilder.noAlgorithms")}</p>
             ) : (
               <Select value={slug} onValueChange={setSlug}>
                 <SelectTrigger className="mt-1.5 w-full">
-                  <SelectValue placeholder="Choose an algorithm" />
+                  <SelectValue placeholder={t("graphBuilder.chooseAlgorithm")} />
                 </SelectTrigger>
                 <SelectContent>
                   {available.map((m) => (
@@ -251,18 +253,18 @@ function GraphBuilderInner() {
             )}
             {algoConfig && (
               <p className="mt-1.5 text-xs text-muted-foreground">
-                Runs as {algoConfig.directed ? "directed" : "undirected"}
-                {algoConfig.weighted ? ", weighted" : ", unweighted"}.
+                {t("graphBuilder.runsAsPrefix")} {algoConfig.directed ? t("graphBuilder.directedWord") : t("graphBuilder.undirectedWord")}
+                {algoConfig.weighted ? t("graphBuilder.weightedSuffix") : t("graphBuilder.unweightedSuffix")}.
               </p>
             )}
           </div>
 
           {algoConfig?.needsStart && (
             <div>
-              <Label>Start node</Label>
+              <Label>{t("graphBuilder.startNode")}</Label>
               <Select value={startNode} onValueChange={setStartNode}>
                 <SelectTrigger className="mt-1.5 w-full">
-                  <SelectValue placeholder="Start" />
+                  <SelectValue placeholder={t("practice.start")} />
                 </SelectTrigger>
                 <SelectContent>
                   {nodes.map((n) => (
@@ -277,7 +279,7 @@ function GraphBuilderInner() {
 
           {selectedEdge && (
             <div>
-              <Label>Selected edge weight</Label>
+              <Label>{t("graphBuilder.edgeWeight")}</Label>
               <Input
                 type="number"
                 className="mt-1.5"
@@ -288,15 +290,15 @@ function GraphBuilderInner() {
           )}
 
           <Button onClick={run} disabled={!slug}>
-            <Play /> Run in Visualizer
+            <Play /> {t("graphBuilder.runInVisualizer")}
           </Button>
 
           <div className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground">Tips</p>
+            <p className="font-medium text-foreground">{t("graphBuilder.tips")}</p>
             <ul className="mt-1 grid gap-1">
-              <li>Drag from a node&apos;s right dot to another to connect.</li>
-              <li>Click an edge to edit its weight.</li>
-              <li>Select a node/edge and press Delete.</li>
+              <li>{t("graphBuilder.tipDragConnect")}</li>
+              <li>{t("graphBuilder.tipClickEdge")}</li>
+              <li>{t("graphBuilder.tipSelectDelete")}</li>
             </ul>
           </div>
         </CardContent>
