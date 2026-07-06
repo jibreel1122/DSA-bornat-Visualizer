@@ -1,0 +1,18 @@
+{
+  "nav.explore": "Explore",
+  "nav.categories": "Categories",
+  "nav.algorithms": "Algorithms",
+  "nav.dataStructures": "Data Structures",
+  "nav.neuralNet": "Neural Net",
+  "nav.practice": "Practice",
+  "nav.playground": "Playground",
+  "nav.docs": "Docs",
+  "nav.search": "Search…",
+  "nav.toggleTheme": "Toggle theme",
+  "nav.toggleLanguage": "Toggle language",
+  "nav.light": "Light",
+  "nav.dark": "Dark",
+  "nav.system": "System",
+  "nav.settings": "Settings",
+  "nav.menu": "Menu"
+}

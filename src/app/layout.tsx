@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/components/providers/settings-provider";
+import { LocaleProvider } from "@/lib/i18n";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
@@ -34,16 +35,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <SettingsProvider>
-            <TooltipProvider delayDuration={250}>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <Toaster richColors position="bottom-right" />
-            </TooltipProvider>
-          </SettingsProvider>
+          <LocaleProvider>
+            <SettingsProvider>
+              <TooltipProvider delayDuration={250}>
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+                <Toaster richColors position="bottom-right" />
+              </TooltipProvider>
+            </SettingsProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

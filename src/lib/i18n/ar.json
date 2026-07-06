@@ -1,0 +1,18 @@
+{
+  "nav.explore": "استكشاف",
+  "nav.categories": "الفئات",
+  "nav.algorithms": "الخوارزميات",
+  "nav.dataStructures": "هياكل البيانات",
+  "nav.neuralNet": "الشبكة العصبية",
+  "nav.practice": "تدريب",
+  "nav.playground": "ساحة التجربة",
+  "nav.docs": "التوثيق",
+  "nav.search": "بحث…",
+  "nav.toggleTheme": "تبديل المظهر",
+  "nav.toggleLanguage": "تبديل اللغة",
+  "nav.light": "فاتح",
+  "nav.dark": "داكن",
+  "nav.system": "النظام",
+  "nav.settings": "الإعدادات",
+  "nav.menu": "القائمة"
+}
