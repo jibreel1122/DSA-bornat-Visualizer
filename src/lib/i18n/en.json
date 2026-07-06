@@ -166,5 +166,22 @@
   "home.ctaTitle": "Ready to see algorithms come alive?",
   "home.ctaSubtitle": "Pick a topic, hit play, and watch the theory turn into motion. No signup, no setup.",
   "home.ctaStartExploring": "Start exploring",
-  "home.ctaPracticeMode": "Practice mode"
+  "home.ctaPracticeMode": "Practice mode",
+  "about.pageTitle": "About the project",
+  "about.pageDescription": "A modern, interactive home for learning data structures and algorithms — built to make the invisible visible.",
+  "about.missionTitle": "The mission",
+  "about.missionBody1": "Classic algorithm visualizers proved how powerful it is to see an algorithm run. This project reimagines that idea for today: a single, cohesive, beautiful application where every visualization shares the same controls, the same design language, and the same depth of educational material.",
+  "about.missionBody2": "The goal is a tool that serves everyone from a first-year student meeting recursion for the first time, to an instructor projecting a live demo, to an engineer brushing up before an interview — all in one polished place.",
+  "about.creatorTitle": "The creator",
+  "about.creatorBodyPrefix": "Built with care by",
+  "about.creatorAffiliation": "a Computer Engineering student at",
+  "about.creatorBodySuffix": "This visualizer grew out of a simple conviction: that the elegant ideas behind data structures and algorithms deserve to be experienced, not just read about.",
+  "about.builtWithTitle": "Built with",
+  "about.philosophyTitle": "Design philosophy",
+  "about.philosophyStepsAsDataTitle": "Steps as data",
+  "about.philosophyStepsAsDataDesc": "Every algorithm is a pure function that emits an immutable list of snapshots. That makes scrubbing, stepping backward, and exporting state correct by construction.",
+  "about.philosophyOneShellTitle": "One shell, many structures",
+  "about.philosophyOneShellDesc": "A single universal player provides playback, editing, export, and accessibility for every algorithm — so the experience is identical whether you're sorting an array or balancing an AVL tree.",
+  "about.philosophyUnderstandingTitle": "Understanding over spectacle",
+  "about.philosophyUnderstandingDesc": "Animations exist to explain, not to dazzle. Each step is narrated, each color has meaning, and the theory sits right beside the motion."
 }
