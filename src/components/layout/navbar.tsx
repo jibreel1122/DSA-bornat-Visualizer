@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import {
   Binary,
   ChevronDown,
+  Globe,
   Menu,
   Moon,
   MonitorCog,
@@ -28,20 +29,22 @@ import {
 import { CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 import { CommandPalette } from "./command-palette";
 
 const TOP_LINKS = [
-  { href: "/algorithms", label: "Algorithms" },
-  { href: "/data-structures", label: "Data Structures" },
-  { href: "/neural-network", label: "Neural Net" },
-  { href: "/practice", label: "Practice" },
-  { href: "/playground", label: "Playground" },
-  { href: "/docs", label: "Docs" },
+  { href: "/algorithms", key: "nav.algorithms" as const },
+  { href: "/data-structures", key: "nav.dataStructures" as const },
+  { href: "/neural-network", key: "nav.neuralNet" as const },
+  { href: "/practice", key: "nav.practice" as const },
+  { href: "/playground", key: "nav.playground" as const },
+  { href: "/docs", key: "nav.docs" as const },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { locale, setLocale, t } = useLocale();
   const mounted = useMounted();
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -66,11 +69,11 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-                    Explore <ChevronDown className="size-3.5" />
+                    {t("nav.explore")} <ChevronDown className="size-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="grid w-[440px] grid-cols-2 p-2">
-                  <DropdownMenuLabel className="col-span-2">Categories</DropdownMenuLabel>
+                  <DropdownMenuLabel className="col-span-2">{t("nav.categories")}</DropdownMenuLabel>
                   {CATEGORIES.map((c) => (
                     <DropdownMenuItem key={c.id} asChild>
                       <Link href={`/${c.id}`} className="flex items-start gap-2.5 py-2">
@@ -95,7 +98,7 @@ export function Navbar() {
                     pathname.startsWith(l.href) && "bg-accent text-foreground",
                   )}
                 >
-                  {l.label}
+                  {t(l.key)}
                 </Link>
               ))}
             </div>
@@ -106,7 +109,7 @@ export function Navbar() {
                 className="hidden h-8 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-accent sm:flex"
               >
                 <Search className="size-3.5" />
-                <span>Search…</span>
+                <span>{t("nav.search")}</span>
                 <kbd className="ml-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
                   Ctrl K
                 </kbd>
@@ -115,7 +118,7 @@ export function Navbar() {
                 variant="ghost"
                 size="icon-sm"
                 className="sm:hidden"
-                aria-label="Search"
+                aria-label={t("nav.search")}
                 onClick={() => setSearchOpen(true)}
               >
                 <Search />
@@ -123,25 +126,37 @@ export function Navbar() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="Toggle theme">
+                  <Button variant="ghost" size="icon-sm" aria-label={t("nav.toggleTheme")}>
                     {mounted && theme === "light" ? <Sun /> : <Moon />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setTheme("light")}>
-                    <Sun /> Light
+                    <Sun /> {t("nav.light")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    <Moon /> Dark
+                    <Moon /> {t("nav.dark")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setTheme("system")}>
-                    <MonitorCog /> System
+                    <MonitorCog /> {t("nav.system")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button variant="ghost" size="icon-sm" asChild aria-label="Settings">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label={t("nav.toggleLanguage")}>
+                    <Globe />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setLocale("en")}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocale("ar")}>العربية</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button variant="ghost" size="icon-sm" asChild aria-label={t("nav.settings")}>
                 <Link href="/settings">
                   <Settings />
                 </Link>
@@ -151,7 +166,7 @@ export function Navbar() {
                 variant="ghost"
                 size="icon-sm"
                 className="md:hidden"
-                aria-label="Menu"
+                aria-label={t("nav.menu")}
                 onClick={() => setMobileOpen((o) => !o)}
               >
                 {mobileOpen ? <X /> : <Menu />}
@@ -172,7 +187,7 @@ export function Navbar() {
                     href={l.href}
                     className="rounded-lg px-3 py-2 text-sm hover:bg-accent"
                   >
-                    {l.label}
+                    {t(l.key)}
                   </Link>
                 ))}
                 <div className="mt-1 grid grid-cols-2 gap-0.5 border-t border-border pt-2">
