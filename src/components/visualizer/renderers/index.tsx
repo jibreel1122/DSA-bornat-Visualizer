@@ -22,7 +22,15 @@ import { CallStackView } from "./callstack-view";
 import { StringView } from "./string-view";
 import { HashView } from "./hash-view";
 
-export function RendererSwitch({ kind, frame }: { kind: RendererKind; frame: unknown }) {
+export function RendererSwitch({
+  kind,
+  frame,
+  onCellClick,
+}: {
+  kind: RendererKind;
+  frame: unknown;
+  onCellClick?: (row: number, col: number) => void;
+}) {
   switch (kind) {
     case "array":
       return <ArrayView frame={frame as ArrayFrame} />;
@@ -33,7 +41,7 @@ export function RendererSwitch({ kind, frame }: { kind: RendererKind; frame: unk
     case "graph":
       return <GraphView frame={frame as GraphFrame} />;
     case "grid":
-      return <GridView frame={frame as GridFrame} />;
+      return <GridView frame={frame as GridFrame} onCellClick={onCellClick} />;
     case "table":
       return <TableView frame={frame as TableFrame} />;
     case "callstack":

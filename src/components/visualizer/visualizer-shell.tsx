@@ -296,6 +296,31 @@ export function VisualizerShell({
     }
   };
 
+  const gridFieldKey = React.useMemo(
+    () => module.inputFields.find((f) => f.key === "grid")?.key,
+    [module],
+  );
+
+  const setGridCell = (row: number, col: number, char: string) => {
+    if (!gridFieldKey) return;
+    const fields = module.serializeInput(input);
+    const rows = (fields[gridFieldKey] ?? "").split("/").map((r) => r.trim());
+    if (row < 0 || row >= rows.length || col < 0 || col >= rows[row].length) return;
+    const chars = rows[row].split("");
+    chars[col] = char;
+    rows[row] = chars.join("");
+    const next = { ...fields, [gridFieldKey]: rows.join(" / ") };
+    try {
+      pushInput(module.parseInput(next));
+      liveActionRef.current = true;
+      toast.success(`Set cell (${row}, ${col}) to "${char}".`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not edit that cell.");
+    }
+  };
+
+  const [cellEditTarget, setCellEditTarget] = React.useState<{ row: number; col: number } | null>(null);
+
   const exportJson = () => {
     const payload: SavedState = {
       slug: module.slug,
@@ -467,7 +492,11 @@ export function VisualizerShell({
           >
             <ZoomPan ref={zoomRef} onFullscreen={fullscreen}>
               {step ? (
-                <RendererSwitch kind={module.renderer} frame={step.frame} />
+                <RendererSwitch
+                  kind={module.renderer}
+                  frame={step.frame}
+                  onCellClick={gridFieldKey ? (row, col) => setCellEditTarget({ row, col }) : undefined}
+                />
               ) : (
                 <div className="grid h-full place-items-center text-sm text-muted-foreground">
                   {error ?? "No steps to display."}
@@ -731,6 +760,28 @@ export function VisualizerShell({
           </div>
         </div>
       </Card>
+
+      {cellEditTarget && (
+        <InputDialog
+          open={!!cellEditTarget}
+          onOpenChange={(o) => {
+            if (!o) setCellEditTarget(null);
+          }}
+          fields={[
+            {
+              key: "value",
+              label: `Cell (${cellEditTarget.row}, ${cellEditTarget.col})`,
+              placeholder: "new character",
+              help: "One character — a digit, '.', '0', or '1' depending on this puzzle's format.",
+            },
+          ]}
+          initial={{ value: "" }}
+          onSubmit={(fields) => {
+            setGridCell(cellEditTarget.row, cellEditTarget.col, (fields.value || ".").trim()[0] ?? ".");
+            setCellEditTarget(null);
+          }}
+        />
+      )}
 
       <InputDialog
         open={inputOpen}

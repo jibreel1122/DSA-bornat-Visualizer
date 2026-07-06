@@ -4,7 +4,13 @@ import type { GridFrame } from "@/lib/engine/types";
 import { AuxRows, FrameNote, isEmphasized, vizFill } from "../viz-utils";
 
 /** Matrix renderer for mazes, boards (N-Queens, Sudoku), and sieves. */
-export function GridView({ frame }: { frame: GridFrame }) {
+export function GridView({
+  frame,
+  onCellClick,
+}: {
+  frame: GridFrame;
+  onCellClick?: (row: number, col: number) => void;
+}) {
   const cell = frame.cols > 12 ? 30 : frame.cols > 9 ? 38 : 46;
   return (
     <div className="relative flex h-full w-full flex-col p-4">
@@ -20,6 +26,9 @@ export function GridView({ frame }: { frame: GridFrame }) {
               return (
                 <div
                   key={`${r}-${col}`}
+                  role={onCellClick ? "button" : undefined}
+                  tabIndex={onCellClick ? 0 : undefined}
+                  onClick={onCellClick ? () => onCellClick(r, col) : undefined}
                   className="grid origin-center place-items-center rounded-md font-mono text-xs font-semibold transition-all duration-200"
                   style={{
                     width: cell,
@@ -30,6 +39,7 @@ export function GridView({ frame }: { frame: GridFrame }) {
                     boxShadow: isEmphasized(c.state)
                       ? `0 0 0 2px color-mix(in oklch, ${vizFill(c.state)} 60%, transparent)`
                       : "none",
+                    cursor: onCellClick ? "pointer" : undefined,
                   }}
                 >
                   {c.value ?? ""}
