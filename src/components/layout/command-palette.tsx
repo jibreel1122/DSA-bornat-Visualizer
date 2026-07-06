@@ -77,7 +77,7 @@ export function CommandPalette({
                   >
                     <Star className="size-4 fill-amber-400 text-amber-400" />
                     {m.title}
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="ms-auto text-xs text-muted-foreground">
                       {CATEGORY_MAP[m.category].short}
                     </span>
                   </Command.Item>
@@ -133,7 +133,7 @@ export function CommandPalette({
                   className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm data-[selected=true]:bg-accent"
                 >
                   {m.title}
-                  <span className="ml-auto text-xs text-muted-foreground">
+                  <span className="ms-auto text-xs text-muted-foreground">
                     {CATEGORY_MAP[m.category].short}
                   </span>
                 </Command.Item>

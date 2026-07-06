@@ -56,7 +56,7 @@ export function Navbar() {
       <header className="sticky top-0 z-40 w-full">
         <div className="glass border-b border-glass-border">
           <nav className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:px-6">
-            <Link href="/" className="mr-2 flex items-center gap-2 font-semibold tracking-tight">
+            <Link href="/" className="me-2 flex items-center gap-2 font-semibold tracking-tight">
               <span className="grid size-7 place-items-center rounded-lg gradient-bg text-white shadow-md shadow-primary/30">
                 <Binary className="size-4" />
               </span>
@@ -103,14 +103,14 @@ export function Navbar() {
               ))}
             </div>
 
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ms-auto flex items-center gap-1.5">
               <button
                 onClick={() => setSearchOpen(true)}
                 className="hidden h-8 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-accent sm:flex"
               >
                 <Search className="size-3.5" />
                 <span>{t("nav.search")}</span>
-                <kbd className="ml-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+                <kbd className="ms-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
                   Ctrl K
                 </kbd>
               </button>
