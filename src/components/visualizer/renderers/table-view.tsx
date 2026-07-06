@@ -11,7 +11,7 @@ export function TableView({ frame }: { frame: TableFrame }) {
     <div className="relative flex h-full w-full flex-col p-4">
       <FrameNote note={frame.note} />
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto">
-        <table className="border-separate border-spacing-[3px]">
+        <table dir="ltr" className="border-separate border-spacing-[3px]">
           <thead>
             <tr>
               <th />
