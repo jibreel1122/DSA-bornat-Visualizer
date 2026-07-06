@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CATEGORIES } from "@/lib/categories";
+import { useLocale, type DictKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { MiniSortDemo } from "./mini-sort-demo";
 
@@ -25,6 +26,7 @@ const fadeUp = {
 };
 
 export function Hero({ algoCount }: { algoCount: number }) {
+  const { t } = useLocale();
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 hero-grid" />
@@ -38,24 +40,23 @@ export function Hero({ algoCount }: { algoCount: number }) {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground">
             <span className="size-1.5 rounded-full bg-emerald-500" />
-            {algoCount}+ interactive visualizations
+            {algoCount}+ {t("home.heroBadgeSuffix")}
           </span>
           <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Bornat <span className="gradient-text">Data Structure</span> Visualizer
+            Bornat <span className="gradient-text">{t("home.heroTitleHighlight")}</span> Visualizer
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            Learn, Visualize, Experiment, and Master Data Structures &amp; Algorithms — with
-            fully interactive, step-by-step animations built for real understanding.
+            {t("home.heroSubtitle")}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="lg" asChild>
               <Link href="/algorithms">
-                Explore Algorithms <ArrowRight />
+                {t("home.heroExploreAlgorithms")} <ArrowRight />
               </Link>
             </Button>
             <Button size="lg" variant="secondary" asChild>
               <Link href="/playground">
-                <FlaskConical /> Try the Playground
+                <FlaskConical /> {t("home.heroTryPlayground")}
               </Link>
             </Button>
           </div>
@@ -74,33 +75,34 @@ export function Hero({ algoCount }: { algoCount: number }) {
   );
 }
 
-const FEATURES: { icon: LucideIcon; title: string; desc: string }[] = [
-  { icon: MousePointerClick, title: "Step-by-step execution", desc: "Play, pause, scrub, and step through every operation. Watch comparisons, swaps, and pointer moves unfold." },
-  { icon: Code2, title: "Code in 12 languages", desc: "Read idiomatic implementations in C, C++, Java, Python, Rust, Go, and more — with copy and download." },
-  { icon: Gauge, title: "Editable & scalable", desc: "Build custom inputs, generate random data, and dial difficulty from Very Easy to Expert." },
-  { icon: GraduationCap, title: "Learn deeply", desc: "Theory, complexity, applications, interview questions, and quizzes on every algorithm." },
-  { icon: FlaskConical, title: "Playground", desc: "Draw your own graphs and arrays, then run any compatible algorithm on them instantly." },
-  { icon: Accessibility, title: "Accessible by design", desc: "Light, dark, and system themes with reduced-motion, high-contrast, and large-text options." },
+const FEATURES: { icon: LucideIcon; titleKey: DictKey; descKey: DictKey }[] = [
+  { icon: MousePointerClick, titleKey: "home.featureStepByStepTitle", descKey: "home.featureStepByStepDesc" },
+  { icon: Code2, titleKey: "home.featureCodeTitle", descKey: "home.featureCodeDesc" },
+  { icon: Gauge, titleKey: "home.featureEditableTitle", descKey: "home.featureEditableDesc" },
+  { icon: GraduationCap, titleKey: "home.featureLearnTitle", descKey: "home.featureLearnDesc" },
+  { icon: FlaskConical, titleKey: "home.featurePlaygroundTitle", descKey: "home.featurePlaygroundDesc" },
+  { icon: Accessibility, titleKey: "home.featureAccessibleTitle", descKey: "home.featureAccessibleDesc" },
 ];
 
 export function Features() {
+  const { t } = useLocale();
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <motion.div {...fadeUp} transition={{ duration: 0.4 }} className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Everything you need to master DSA</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("home.featuresTitle")}</h2>
         <p className="mt-3 text-muted-foreground">
-          A modern, polished learning environment — not just animations, but a complete study tool.
+          {t("home.featuresSubtitle")}
         </p>
       </motion.div>
       <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f, i) => (
-          <motion.div key={f.title} {...fadeUp} transition={{ duration: 0.4, delay: i * 0.05 }}>
+          <motion.div key={f.titleKey} {...fadeUp} transition={{ duration: 0.4, delay: i * 0.05 }}>
             <Card className="h-full p-6">
               <span className="grid size-10 place-items-center rounded-xl bg-primary/12 text-primary">
                 <f.icon className="size-5" />
               </span>
-              <h3 className="mt-4 font-semibold">{f.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{f.desc}</p>
+              <h3 className="mt-4 font-semibold">{t(f.titleKey)}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">{t(f.descKey)}</p>
             </Card>
           </motion.div>
         ))}
@@ -110,11 +112,12 @@ export function Features() {
 }
 
 export function Stats({ algoCount, categoryCount }: { algoCount: number; categoryCount: number }) {
-  const stats = [
-    { value: `${algoCount}+`, label: "Algorithms" },
-    { value: String(categoryCount), label: "Categories" },
-    { value: "12", label: "Languages" },
-    { value: "5", label: "Difficulty levels" },
+  const { t } = useLocale();
+  const stats: { value: string; labelKey: DictKey }[] = [
+    { value: `${algoCount}+`, labelKey: "home.statAlgorithms" },
+    { value: String(categoryCount), labelKey: "home.statCategories" },
+    { value: "12", labelKey: "home.statLanguages" },
+    { value: "5", labelKey: "home.statDifficultyLevels" },
   ];
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -124,9 +127,9 @@ export function Stats({ algoCount, categoryCount }: { algoCount: number; categor
         className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card/40 p-8 sm:grid-cols-4"
       >
         {stats.map((s) => (
-          <div key={s.label} className="text-center">
+          <div key={s.labelKey} className="text-center">
             <div className="text-3xl font-bold gradient-text sm:text-4xl">{s.value}</div>
-            <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
+            <div className="mt-1 text-sm text-muted-foreground">{t(s.labelKey)}</div>
           </div>
         ))}
       </motion.div>
@@ -135,11 +138,12 @@ export function Stats({ algoCount, categoryCount }: { algoCount: number; categor
 }
 
 export function CategoryShowcase() {
+  const { t } = useLocale();
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <motion.div {...fadeUp} transition={{ duration: 0.4 }} className="mb-10 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Explore by category</h2>
-        <p className="mt-3 text-muted-foreground">From sorting to string matching — thirteen rich topic areas.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t("home.categoryShowcaseTitle")}</h2>
+        <p className="mt-3 text-muted-foreground">{t("home.categoryShowcaseSubtitle")}</p>
       </motion.div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CATEGORIES.map((c, i) => (
@@ -165,6 +169,7 @@ export function CategoryShowcase() {
 }
 
 export function FinalCta() {
+  const { t } = useLocale();
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <motion.div {...fadeUp} transition={{ duration: 0.4 }}>
@@ -172,18 +177,18 @@ export function FinalCta() {
           <div className="pointer-events-none absolute inset-0 hero-grid opacity-60" />
           <div className="pointer-events-none absolute left-1/2 top-0 size-72 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
           <div className="relative">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to see algorithms come alive?</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("home.ctaTitle")}</h2>
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-              Pick a topic, hit play, and watch the theory turn into motion. No signup, no setup.
+              {t("home.ctaSubtitle")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button size="lg" asChild>
                 <Link href="/algorithms">
-                  Start exploring <ArrowRight />
+                  {t("home.ctaStartExploring")} <ArrowRight />
                 </Link>
               </Button>
               <Button size="lg" variant="secondary" asChild>
-                <Link href="/practice">Practice mode</Link>
+                <Link href="/practice">{t("home.ctaPracticeMode")}</Link>
               </Button>
             </div>
           </div>
