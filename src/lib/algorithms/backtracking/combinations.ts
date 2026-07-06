@@ -289,7 +289,7 @@ This also enables a natural pruning rule: if the number of remaining candidates 
     ],
   },
   inputFields: [
-    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C, D", help: "3–10 distinct symbols or numbers." },
+    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C, D", help: "3–10 distinct symbols or numbers.", list: true },
     { key: "k", label: "Choose k", placeholder: "2", help: "1 to the number of elements." },
   ],
   defaultInput: (level, rng) => {

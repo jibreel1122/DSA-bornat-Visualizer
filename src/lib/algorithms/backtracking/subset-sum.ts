@@ -250,7 +250,7 @@ The backtracking solution walks the elements one by one, and for each makes a bi
     ],
   },
   inputFields: [
-    { key: "items", label: "Numbers", placeholder: "3, 34, 4, 12, 5, 2", help: "2–9 positive integers." },
+    { key: "items", label: "Numbers", placeholder: "3, 34, 4, 12, 5, 2", help: "2–9 positive integers.", list: true },
     { key: "target", label: "Target sum", placeholder: "9", help: "The sum to reach." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),

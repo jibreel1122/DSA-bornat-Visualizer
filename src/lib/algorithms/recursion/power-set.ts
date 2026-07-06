@@ -248,7 +248,7 @@ This "include/exclude" recursion pattern is one of the most important templates 
       { question: "The include/exclude recursion template is the direct ancestor of…", options: ["Binary search", "Subset-sum and 0/1 knapsack recursions", "Merge sort", "Dijkstra's algorithm"], answer: 1, explanation: "Those problems add pruning (skip branches that can't reach the target) to this same per-element in/out skeleton." },
     ],
   },
-  inputFields: [{ key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–10 distinct symbols or numbers (2^n subsets — 10 elements = 1024 subsets)." }],
+  inputFields: [{ key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–10 distinct symbols or numbers (2^n subsets — 10 elements = 1024 subsets).", list: true }],
   defaultInput: (level, rng) => {
     const pools: (string | number)[][] = [
       ["A", "B"],

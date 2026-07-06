@@ -276,7 +276,7 @@ The algorithm builds a permutation one position at a time. At each level of recu
     ],
   },
   inputFields: [
-    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–5 distinct symbols or numbers." },
+    { key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–5 distinct symbols or numbers.", list: true },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {
