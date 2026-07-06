@@ -26,6 +26,7 @@ import type { AlgorithmMeta, AlgorithmModule } from "@/lib/engine/types";
 import { loadAlgorithm } from "@/lib/algorithms";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites, useHistory, useNotes } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { VisualizerShell } from "./visualizer-shell";
 import { CodeViewer } from "./code-viewer";
@@ -37,6 +38,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
   const [initialFields, setInitialFields] = React.useState<Record<string, string> | undefined>();
   const { isFavorite, toggle } = useFavorites();
   const { record } = useHistory();
+  const { t } = useLocale();
   const category = CATEGORY_MAP[meta.category];
 
   React.useEffect(() => {
@@ -95,7 +97,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
             <Star
               className={cn(isFavorite(meta.slug) && "fill-amber-400 text-amber-400")}
             />
-            {isFavorite(meta.slug) ? "Favorited" : "Favorite"}
+            {isFavorite(meta.slug) ? t("algo.favorited") : t("algo.favorite")}
           </Button>
         </div>
       </div>
@@ -108,7 +110,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
       ) : (
         <Card className="grid h-[560px] place-items-center">
           <div className="text-center text-sm text-muted-foreground">
-            {failed ? "This visualization failed to load." : "Loading visualization…"}
+            {failed ? t("algo.loadFailed") : t("algo.loading")}
           </div>
         </Card>
       )}
@@ -117,18 +119,18 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
       {module && (
         <Tabs defaultValue="theory" className="mt-8">
           <TabsList className="flex h-auto w-full flex-wrap justify-start">
-            <TabsTrigger value="theory"><BookOpen /> Theory</TabsTrigger>
-            <TabsTrigger value="code"><Braces /> Code</TabsTrigger>
-            <TabsTrigger value="applications"><Lightbulb /> Applications</TabsTrigger>
-            <TabsTrigger value="interview"><MessageSquareQuote /> Interview</TabsTrigger>
-            <TabsTrigger value="quiz"><BrainCircuit /> Quiz</TabsTrigger>
-            <TabsTrigger value="notes"><NotebookPen /> Notes</TabsTrigger>
+            <TabsTrigger value="theory"><BookOpen /> {t("algo.tabTheory")}</TabsTrigger>
+            <TabsTrigger value="code"><Braces /> {t("algo.tabCode")}</TabsTrigger>
+            <TabsTrigger value="applications"><Lightbulb /> {t("algo.tabApplications")}</TabsTrigger>
+            <TabsTrigger value="interview"><MessageSquareQuote /> {t("algo.tabInterview")}</TabsTrigger>
+            <TabsTrigger value="quiz"><BrainCircuit /> {t("algo.tabQuiz")}</TabsTrigger>
+            <TabsTrigger value="notes"><NotebookPen /> {t("algo.tabNotes")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="theory" className="mt-4 grid gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Overview</CardTitle>
+                <CardTitle>{t("algo.overview")}</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 text-sm leading-relaxed text-foreground/90">
                 {module.content.overview.split(/\n\n+/).map((p, i) => (
@@ -139,7 +141,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
 
             <Card>
               <CardHeader>
-                <CardTitle>How it works</CardTitle>
+                <CardTitle>{t("algo.howItWorks")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ol className="grid gap-2.5 text-sm">
@@ -158,15 +160,15 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="size-4 text-primary" /> Complexity
+                  <Clock className="size-4 text-primary" /> {t("algo.complexity")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <ComplexityStat label="Best" value={module.content.complexity.time.best} />
-                  <ComplexityStat label="Average" value={module.content.complexity.time.average} />
-                  <ComplexityStat label="Worst" value={module.content.complexity.time.worst} />
-                  <ComplexityStat label="Space" value={module.content.complexity.space} />
+                  <ComplexityStat label={t("algo.best")} value={module.content.complexity.time.best} />
+                  <ComplexityStat label={t("algo.average")} value={module.content.complexity.time.average} />
+                  <ComplexityStat label={t("algo.worst")} value={module.content.complexity.time.worst} />
+                  <ComplexityStat label={t("algo.space")} value={module.content.complexity.space} />
                 </div>
                 {module.content.complexity.notes && (
                   <p className="mt-3 text-sm text-muted-foreground">
@@ -180,7 +182,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-500" /> Advantages
+                    <CheckCircle2 className="size-4 text-emerald-500" /> {t("algo.advantages")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -197,7 +199,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <XCircle className="size-4 text-rose-500" /> Disadvantages
+                    <XCircle className="size-4 text-rose-500" /> {t("algo.disadvantages")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -216,7 +218,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-amber-500" /> Common mistakes
+                  <AlertTriangle className="size-4 text-amber-500" /> {t("algo.commonMistakes")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -233,7 +235,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
 
             <Card className="border-primary/25 bg-primary/[0.04]">
               <CardHeader>
-                <CardTitle>Summary</CardTitle>
+                <CardTitle>{t("algo.summary")}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm leading-relaxed">
                 {module.content.summary}
@@ -248,7 +250,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
           <TabsContent value="applications" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Real-world applications</CardTitle>
+                <CardTitle>{t("algo.realWorldApplications")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="grid gap-2.5 text-sm">
@@ -266,7 +268,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
           <TabsContent value="interview" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Interview questions</CardTitle>
+                <CardTitle>{t("algo.interviewQuestions")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ol className="grid gap-3 text-sm">
