@@ -14,5 +14,15 @@
   "nav.dark": "Dark",
   "nav.system": "System",
   "nav.settings": "Settings",
-  "nav.menu": "Menu"
+  "nav.menu": "Menu",
+  "footer.tagline": "Learn, visualize, experiment, and master data structures & algorithms with fully interactive, step-by-step animations.",
+  "footer.madeBy": "Made with",
+  "footer.by": "by",
+  "footer.affiliation": "Computer Engineering — Birzeit University",
+  "footer.explore": "Explore",
+  "footer.app": "App",
+  "footer.allAlgorithms": "All Algorithms",
+  "footer.documentation": "Documentation",
+  "footer.about": "About",
+  "footer.rights": "© All Rights Reserved"
 }

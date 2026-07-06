@@ -14,5 +14,15 @@
   "nav.dark": "داكن",
   "nav.system": "النظام",
   "nav.settings": "الإعدادات",
-  "nav.menu": "القائمة"
+  "nav.menu": "القائمة",
+  "footer.tagline": "تعلّم، تصوّر، جرّب، وأتقن هياكل البيانات والخوارزميات من خلال رسوم متحركة تفاعلية خطوة بخطوة.",
+  "footer.madeBy": "صُنع بـ",
+  "footer.by": "بواسطة",
+  "footer.affiliation": "هندسة الحاسوب — جامعة بيرزيت",
+  "footer.explore": "استكشاف",
+  "footer.app": "التطبيق",
+  "footer.allAlgorithms": "جميع الخوارزميات",
+  "footer.documentation": "التوثيق",
+  "footer.about": "حول",
+  "footer.rights": "© جميع الحقوق محفوظة"
 }
