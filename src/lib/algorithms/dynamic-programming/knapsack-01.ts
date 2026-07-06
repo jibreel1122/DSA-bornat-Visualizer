@@ -287,7 +287,7 @@ The dynamic-programming solution fills a table dp[i][c] = the best value achieva
     ],
   },
   inputFields: [
-    { key: "items", label: "Items (weight:value)", placeholder: "2:3, 3:4, 4:5, 5:6", help: "Comma-separated weight:value pairs (up to 12)." },
+    { key: "items", label: "Items (weight:value)", placeholder: "2:3, 3:4, 4:5, 5:6", help: "Comma-separated weight:value pairs (up to 12).", list: true },
     { key: "capacity", label: "Capacity W", placeholder: "8", help: "1–25." },
   ],
   defaultInput: (level, rng) => randomItems(level, rng),

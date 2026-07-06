@@ -291,7 +291,7 @@ The DP builds up answers for every amount from 0 to the target. dp[a] holds the 
     ],
   },
   inputFields: [
-    { key: "coins", label: "Coin denominations", placeholder: "1, 3, 4", help: "Comma-separated positive integers (up to 10)." },
+    { key: "coins", label: "Coin denominations", placeholder: "1, 3, 4", help: "Comma-separated positive integers (up to 10).", list: true },
     { key: "amount", label: "Target amount", placeholder: "6", help: "0–40." },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
