@@ -281,7 +281,7 @@ The greedy insight is to prioritize money: consider jobs from most to least prof
     ],
   },
   inputFields: [
-    { key: "jobs", label: "Jobs (deadline:profit)", placeholder: "2:100, 1:19, 2:27, 1:25, 3:15", help: "Comma-separated deadline:profit pairs (2–12 jobs)." },
+    { key: "jobs", label: "Jobs (deadline:profit)", placeholder: "2:100, 1:19, 2:27, 1:25, 3:15", help: "Comma-separated deadline:profit pairs (2–12 jobs).", list: true },
   ],
   defaultInput: (level, rng) => randomInput(level, rng),
   parseInput: (fields) => {

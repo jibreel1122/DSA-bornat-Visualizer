@@ -284,7 +284,7 @@ Unlike 0/1 knapsack (which needs dynamic programming), fractional knapsack is so
     ],
   },
   inputFields: [
-    { key: "items", label: "Items (weight:value)", placeholder: "10:60, 20:100, 30:120", help: "Comma-separated weight:value pairs (up to 12)." },
+    { key: "items", label: "Items (weight:value)", placeholder: "10:60, 20:100, 30:120", help: "Comma-separated weight:value pairs (up to 12).", list: true },
     { key: "capacity", label: "Capacity W", placeholder: "50", help: "1–30." },
   ],
   defaultInput: (level, rng) => randomItems(level, rng),

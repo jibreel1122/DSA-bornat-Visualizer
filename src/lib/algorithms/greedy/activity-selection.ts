@@ -252,7 +252,7 @@ The intuition: finishing early frees up the most remaining time for future activ
     ],
   },
   inputFields: [
-    { key: "activities", label: "Activities (start-finish)", placeholder: "1-4, 3-5, 0-6, 5-7, 3-9, 8-9", help: "Comma-separated start-finish pairs (up to 20)." },
+    { key: "activities", label: "Activities (start-finish)", placeholder: "1-4, 3-5, 0-6, 5-7, 3-9, 8-9", help: "Comma-separated start-finish pairs (up to 20).", list: true },
   ],
   defaultInput: (level, rng) => randomActivities(level, rng),
   parseInput: (fields) => {
