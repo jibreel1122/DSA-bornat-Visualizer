@@ -25,6 +25,7 @@ import { useMounted } from "@/lib/hooks";
 import { LEVELS, type Level } from "@/lib/engine/types";
 import { Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n";
 
 const SHORTCUTS: [string, string][] = [
   ["Space", "Play / Pause"],
@@ -51,22 +52,28 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
   const { settings, update } = useSettings();
+  const { locale, setLocale, t } = useLocale();
 
   const themeOptions = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
+    { value: "light", label: t("nav.light"), icon: Sun },
+    { value: "dark", label: t("nav.dark"), icon: Moon },
+    { value: "system", label: t("nav.system"), icon: Monitor },
+  ];
+
+  const languageOptions: { value: "en" | "ar"; label: string }[] = [
+    { value: "en", label: "English" },
+    { value: "ar", label: "العربية" },
   ];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <PageHeader icon={SettingsIcon} title="Settings" description="Personalize appearance, accessibility, and visualizer defaults. Everything is stored locally on this device." />
+      <PageHeader icon={SettingsIcon} title={t("settings.title")} description={t("settings.description")} />
 
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Choose your color theme.</CardDescription>
+            <CardTitle>{t("settings.appearance")}</CardTitle>
+            <CardDescription>{t("settings.appearanceDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
@@ -91,25 +98,50 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Accessibility</CardTitle>
-            <CardDescription>Make the app more comfortable to use.</CardDescription>
+            <CardTitle>{t("settings.language")}</CardTitle>
+            <CardDescription>{t("settings.languageDesc")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              {languageOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setLocale(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition-colors",
+                    locale === opt.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-accent",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("settings.accessibility")}</CardTitle>
+            <CardDescription>{t("settings.accessibilityDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-1">
             <ToggleRow
-              label="Reduced motion"
-              desc="Minimize animations and auto-playing effects."
+              label={t("settings.reducedMotion")}
+              desc={t("settings.reducedMotionDesc")}
               checked={settings.reducedMotion}
               onChange={(v) => update({ reducedMotion: v })}
             />
             <ToggleRow
-              label="High contrast"
-              desc="Increase border and text contrast."
+              label={t("settings.highContrast")}
+              desc={t("settings.highContrastDesc")}
               checked={settings.highContrast}
               onChange={(v) => update({ highContrast: v })}
             />
             <ToggleRow
-              label="Large text"
-              desc="Scale up the base font size."
+              label={t("settings.largeText")}
+              desc={t("settings.largeTextDesc")}
               checked={settings.largeText}
               onChange={(v) => update({ largeText: v })}
             />
@@ -118,13 +150,13 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Visualizer defaults</CardTitle>
-            <CardDescription>Applied to every new visualization you open.</CardDescription>
+            <CardTitle>{t("settings.visualizerDefaults")}</CardTitle>
+            <CardDescription>{t("settings.visualizerDefaultsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
             <div>
               <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="font-medium">Default animation speed</span>
+                <span className="font-medium">{t("settings.defaultSpeed")}</span>
                 <span className="font-mono text-muted-foreground">{settings.defaultSpeed}×</span>
               </div>
               <Slider
@@ -136,7 +168,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Default difficulty</span>
+              <span className="text-sm font-medium">{t("settings.defaultDifficulty")}</span>
               <Select value={String(settings.defaultLevel)} onValueChange={(v) => update({ defaultLevel: Number(v) as Level })}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
@@ -155,24 +187,36 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Data</CardTitle>
-            <CardDescription>Manage everything stored on this device.</CardDescription>
+            <CardTitle>{t("settings.data")}</CardTitle>
+            <CardDescription>{t("settings.dataDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <DataButton
-              label="Clear favorites"
+              label={t("settings.clearFavorites")}
+              cancelLabel={t("settings.cancel")}
+              confirmLabel={t("settings.confirm")}
+              confirmDesc={t("settings.confirmUndo")}
               onConfirm={() => clearKeys((k) => k === "bdsv:favorites")}
             />
             <DataButton
-              label="Clear history"
+              label={t("settings.clearHistory")}
+              cancelLabel={t("settings.cancel")}
+              confirmLabel={t("settings.confirm")}
+              confirmDesc={t("settings.confirmUndo")}
               onConfirm={() => clearKeys((k) => k === "bdsv:history")}
             />
             <DataButton
-              label="Clear notes & saves"
+              label={t("settings.clearNotes")}
+              cancelLabel={t("settings.cancel")}
+              confirmLabel={t("settings.confirm")}
+              confirmDesc={t("settings.confirmUndo")}
               onConfirm={() => clearKeys((k) => k.startsWith("bdsv:notes:") || k.startsWith("bdsv:save:"))}
             />
             <DataButton
-              label="Reset everything"
+              label={t("settings.resetEverything")}
+              cancelLabel={t("settings.cancel")}
+              confirmLabel={t("settings.confirm")}
+              confirmDesc={t("settings.confirmUndo")}
               destructive
               onConfirm={() => clearKeys(() => true)}
             />
@@ -181,8 +225,8 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Keyboard shortcuts</CardTitle>
-            <CardDescription>Available on any visualizer page.</CardDescription>
+            <CardTitle>{t("settings.shortcuts")}</CardTitle>
+            <CardDescription>{t("settings.shortcutsDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2">
@@ -224,10 +268,16 @@ function ToggleRow({
 
 function DataButton({
   label,
+  cancelLabel,
+  confirmLabel,
+  confirmDesc,
   destructive,
   onConfirm,
 }: {
   label: string;
+  cancelLabel: string;
+  confirmLabel: string;
+  confirmDesc: string;
   destructive?: boolean;
   onConfirm: () => number;
 }) {
@@ -241,11 +291,11 @@ function DataButton({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{label}?</DialogTitle>
-          <DialogDescription>This cannot be undone. The data is removed from this device only.</DialogDescription>
+          <DialogDescription>{confirmDesc}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost">{cancelLabel}</Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
@@ -255,7 +305,7 @@ function DataButton({
                 toast.success(`Cleared ${n} item${n === 1 ? "" : "s"}.`);
               }}
             >
-              Confirm
+              {confirmLabel}
             </Button>
           </DialogClose>
         </DialogFooter>
