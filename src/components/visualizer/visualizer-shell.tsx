@@ -42,6 +42,7 @@ import { useVisualizerPlayer } from "@/lib/engine/player";
 import { createRNG, randomSeed } from "@/lib/engine/random";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type Level, type Step } from "@/lib/engine/types";
 import { useSettings } from "@/components/providers/settings-provider";
+import { useLocale } from "@/lib/i18n";
 import { cn, downloadText, readFileAsText } from "@/lib/utils";
 import { RendererSwitch } from "./renderers";
 import { ZoomPan, type ZoomPanHandle } from "./zoom-pan";
@@ -49,6 +50,7 @@ import { StatsPanel } from "./stats-panel";
 import { InputDialog } from "./input-dialog";
 import { isListValue } from "./chip-list-input";
 import { EditPromptButton, ValuePromptButton } from "./value-prompt-button";
+import type { DictKey } from "@/lib/i18n";
 
 interface SavedState {
   slug: string;
@@ -58,14 +60,14 @@ interface SavedState {
 
 const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 
-const SHORTCUTS: { keys: string[]; label: string }[] = [
-  { keys: ["Space"], label: "Play / pause" },
-  { keys: ["←"], label: "Previous step" },
-  { keys: ["→"], label: "Next step" },
-  { keys: ["R"], label: "Reset to start" },
-  { keys: ["F"], label: "Toggle fullscreen" },
-  { keys: ["+"], label: "Speed up" },
-  { keys: ["-"], label: "Slow down" },
+const SHORTCUTS: { keys: string[]; labelKey: DictKey }[] = [
+  { keys: ["Space"], labelKey: "shell.shortcutPlayPause" },
+  { keys: ["←"], labelKey: "shell.shortcutPrevStep" },
+  { keys: ["→"], labelKey: "shell.shortcutNextStep" },
+  { keys: ["R"], labelKey: "shell.shortcutReset" },
+  { keys: ["F"], labelKey: "shell.shortcutFullscreen" },
+  { keys: ["+"], labelKey: "shell.shortcutSpeedUp" },
+  { keys: ["-"], labelKey: "shell.shortcutSlowDown" },
 ];
 
 /**
@@ -83,6 +85,7 @@ export function VisualizerShell({
   initialFields?: Record<string, string>;
 }) {
   const { settings } = useSettings();
+  const { t } = useLocale();
   const [level, setLevel] = React.useState<Level>(settings.defaultLevel);
   const [inputOpen, setInputOpen] = React.useState(false);
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
@@ -127,7 +130,7 @@ export function VisualizerShell({
       const s = module.generate(input) as Step[];
       return { steps: s.slice(0, MAX_STEPS), error: null };
     } catch (e) {
-      return { steps: [], error: e instanceof Error ? e.message : "Failed to generate steps." };
+      return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
   }, [module, input]);
 
@@ -194,14 +197,14 @@ export function VisualizerShell({
       touched = true;
     }
     if (!touched) {
-      toast.info("Nothing to shuffle here.");
+      toast.info(t("shell.nothingToShuffle"));
       return;
     }
     try {
       pushInput(module.parseInput(next));
-      toast.success("Shuffled.");
+      toast.success(t("shell.shuffled"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not shuffle.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotShuffle"));
     }
   };
 
@@ -216,16 +219,16 @@ export function VisualizerShell({
       }
     }
     if (!touched) {
-      toast.info("Nothing to clear here — try Custom input.");
+      toast.info(t("shell.nothingToClear"));
       return;
     }
     try {
       pushInput(module.parseInput(next));
-      toast.success("Cleared.");
+      toast.success(t("shell.cleared"));
     } catch {
       setDialogPreset(next);
       setInputOpen(true);
-      toast.info("Enter new values to continue.");
+      toast.info(t("shell.enterNewValues"));
     }
   };
 
@@ -239,7 +242,7 @@ export function VisualizerShell({
       liveActionRef.current = true;
       toast.success(`Inserted ${raw}.`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not insert.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
     }
   };
 
@@ -249,7 +252,7 @@ export function VisualizerShell({
     const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === raw.trim());
     if (idx === -1) {
-      toast.info(`"${raw}" is not in the current values.`);
+      toast.info(`"${raw}" ${t("shell.notInCurrentValues")}`);
       return;
     }
     tokens.splice(idx, 1);
@@ -259,7 +262,7 @@ export function VisualizerShell({
       liveActionRef.current = true;
       toast.success(`Removed ${raw}.`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not remove.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotRemove"));
     }
   };
 
@@ -269,7 +272,7 @@ export function VisualizerShell({
     const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === oldRaw.trim());
     if (idx === -1) {
-      toast.info(`"${oldRaw}" is not in the current values.`);
+      toast.info(`"${oldRaw}" ${t("shell.notInCurrentValues")}`);
       return;
     }
     tokens[idx] = newRaw.trim();
@@ -279,7 +282,7 @@ export function VisualizerShell({
       liveActionRef.current = true;
       toast.success(`Changed ${oldRaw} to ${newRaw}.`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not edit.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotEdit"));
     }
   };
 
@@ -292,7 +295,7 @@ export function VisualizerShell({
       liveActionRef.current = true;
       toast.success(`Searching for ${raw}.`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not search.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotSearch"));
     }
   };
 
@@ -328,7 +331,7 @@ export function VisualizerShell({
       cursor: player.cursor,
     };
     downloadText(`${module.slug}-state.json`, JSON.stringify(payload, null, 2), "application/json");
-    toast.success("State exported as JSON.");
+    toast.success(t("shell.stateExported"));
   };
 
   const importJson = async () => {
@@ -345,9 +348,9 @@ export function VisualizerShell({
         }
         const parsed = module.parseInput(data.fields);
         pushInput(parsed);
-        toast.success("State imported.");
+        toast.success(t("shell.stateImported"));
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not import file.");
+        toast.error(e instanceof Error ? e.message : t("shell.couldNotImport"));
       }
     };
     picker.click();
@@ -360,21 +363,21 @@ export function VisualizerShell({
       cursor: player.cursor,
     };
     localStorage.setItem(`bdsv:save:${module.slug}`, JSON.stringify(payload));
-    toast.success("Saved. Use Load to restore it any time.");
+    toast.success(t("shell.savedUseLoad"));
   };
 
   const loadLocal = () => {
     const raw = localStorage.getItem(`bdsv:save:${module.slug}`);
     if (!raw) {
-      toast.info("No saved state for this algorithm yet.");
+      toast.info(t("shell.noSavedState"));
       return;
     }
     try {
       const data = JSON.parse(raw) as SavedState;
       pushInput(module.parseInput(data.fields));
-      toast.success("Saved state loaded.");
+      toast.success(t("shell.savedStateLoaded"));
     } catch {
-      toast.error("Saved state is corrupted.");
+      toast.error(t("shell.savedStateCorrupted"));
     }
   };
 
@@ -386,22 +389,22 @@ export function VisualizerShell({
       a.href = url;
       a.download = `${module.slug}.png`;
       a.click();
-      toast.success("Screenshot saved as PNG.");
+      toast.success(t("shell.screenshotSaved"));
     } catch {
-      toast.error("Screenshot failed.");
+      toast.error(t("shell.screenshotFailed"));
     }
   };
 
   const exportSvg = () => {
     const svg = canvasRef.current?.querySelector("svg");
     if (!svg) {
-      toast.info("This visualization has no SVG canvas — use PNG instead.");
+      toast.info(t("shell.noSvgCanvas"));
       return;
     }
     const clone = svg.cloneNode(true) as SVGElement;
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     downloadText(`${module.slug}.svg`, clone.outerHTML, "image/svg+xml");
-    toast.success("Exported SVG.");
+    toast.success(t("shell.exportedSvg"));
   };
 
   const [isFullscreen, setIsFullscreen] = React.useState(false);
@@ -499,7 +502,7 @@ export function VisualizerShell({
                 />
               ) : (
                 <div className="grid h-full place-items-center text-sm text-muted-foreground">
-                  {error ?? "No steps to display."}
+                  {error ?? t("shell.noSteps")}
                 </div>
               )}
             </ZoomPan>
@@ -514,8 +517,8 @@ export function VisualizerShell({
           >
             <Tabs defaultValue="pseudocode" className="flex min-h-0 flex-1 flex-col">
               <TabsList className="m-2 grid grid-cols-2">
-                <TabsTrigger value="pseudocode">Pseudocode</TabsTrigger>
-                <TabsTrigger value="stats">Statistics</TabsTrigger>
+                <TabsTrigger value="pseudocode">{t("shell.tabPseudocode")}</TabsTrigger>
+                <TabsTrigger value="stats">{t("shell.tabStatistics")}</TabsTrigger>
               </TabsList>
               <TabsContent value="pseudocode" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 pb-3">
                 <ol ref={codeListRef} className="font-mono text-[11.5px] leading-relaxed">
@@ -546,7 +549,7 @@ export function VisualizerShell({
           <span className="mr-2 rounded-md bg-primary/12 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary tabular-nums">
             {steps.length === 0 ? "—" : `${player.cursor + 1}/${steps.length}`}
           </span>
-          {step?.description ?? "Generate an input to begin."}
+          {step?.description ?? t("shell.generateToBegin")}
         </div>
 
         {/* playback */}
@@ -558,33 +561,33 @@ export function VisualizerShell({
               max={Math.max(0, steps.length - 1)}
               step={1}
               onValueChange={([v]) => player.goto(v)}
-              aria-label="Step scrubber"
+              aria-label={t("shell.stepScrubber")}
               className="flex-1"
             />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-between">
             <div className="flex items-center gap-1">
-              <IconBtn label="Reset (R)" onClick={player.reset} disabled={player.atStart}>
+              <IconBtn label={t("shell.reset")} onClick={player.reset} disabled={player.atStart}>
                 <RotateCcw />
               </IconBtn>
-              <IconBtn label="First step" onClick={() => player.goto(0)} disabled={player.atStart}>
+              <IconBtn label={t("shell.firstStep")} onClick={() => player.goto(0)} disabled={player.atStart}>
                 <ChevronFirst />
               </IconBtn>
-              <IconBtn label="Previous (←)" onClick={player.prev} disabled={player.atStart}>
+              <IconBtn label={t("shell.previous")} onClick={player.prev} disabled={player.atStart}>
                 <ChevronLeft />
               </IconBtn>
               <Button
                 size="icon"
                 onClick={player.toggle}
-                aria-label={player.playing ? "Pause (Space)" : "Play (Space)"}
+                aria-label={player.playing ? t("shell.pause") : t("shell.play")}
                 className="mx-1 rounded-full shadow-lg shadow-primary/30"
               >
                 {player.playing ? <Pause /> : <Play className="ml-0.5" />}
               </Button>
-              <IconBtn label="Next (→)" onClick={player.next} disabled={player.atEnd}>
+              <IconBtn label={t("shell.next")} onClick={player.next} disabled={player.atEnd}>
                 <ChevronRight />
               </IconBtn>
-              <IconBtn label="Last step" onClick={player.goToEnd} disabled={player.atEnd}>
+              <IconBtn label={t("shell.lastStep")} onClick={player.goToEnd} disabled={player.atEnd}>
                 <ChevronLast />
               </IconBtn>
             </div>
@@ -609,18 +612,18 @@ export function VisualizerShell({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts">
+                    <Button variant="ghost" size="icon-sm" aria-label={t("shell.keyboardShortcuts")}>
                       <HelpCircle />
                     </Button>
                   </PopoverTrigger>
                 </TooltipTrigger>
-                <TooltipContent>Keyboard shortcuts</TooltipContent>
+                <TooltipContent>{t("shell.keyboardShortcuts")}</TooltipContent>
               </Tooltip>
               <PopoverContent align="end" className="w-64">
-                <p className="mb-2 text-sm font-semibold">Keyboard shortcuts</p>
+                <p className="mb-2 text-sm font-semibold">{t("shell.keyboardShortcuts")}</p>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
-                  {SHORTCUTS.map(({ keys, label }) => (
-                    <React.Fragment key={label}>
+                  {SHORTCUTS.map(({ keys, labelKey }) => (
+                    <React.Fragment key={labelKey}>
                       <dt className="flex items-center gap-1">
                         {keys.map((k) => (
                           <kbd
@@ -631,12 +634,12 @@ export function VisualizerShell({
                           </kbd>
                         ))}
                       </dt>
-                      <dd className="text-muted-foreground">{label}</dd>
+                      <dd className="text-muted-foreground">{t(labelKey)}</dd>
                     </React.Fragment>
                   ))}
                 </dl>
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  Shortcuts are disabled while typing in a text field.
+                  {t("shell.shortcutsDisabled")}
                 </p>
               </PopoverContent>
             </Popover>
@@ -666,7 +669,7 @@ export function VisualizerShell({
           </Select>
 
           <Button variant="secondary" size="sm" onClick={() => randomize()}>
-            <Dices /> Random
+            <Dices /> {t("shell.random")}
           </Button>
           <Button
             variant="secondary"
@@ -676,12 +679,12 @@ export function VisualizerShell({
               setInputOpen(true);
             }}
           >
-            <SlidersHorizontal /> Custom input
+            <SlidersHorizontal /> {t("shell.customInput")}
           </Button>
-          <IconBtn label="Shuffle values" onClick={shuffleInput}>
+          <IconBtn label={t("shell.shuffleValues")} onClick={shuffleInput}>
             <Shuffle />
           </IconBtn>
-          <IconBtn label="Clear values" onClick={clearInput}>
+          <IconBtn label={t("shell.clearValues")} onClick={clearInput}>
             <Eraser />
           </IconBtn>
           {(listFieldKey || searchFieldKey) && (
@@ -689,7 +692,7 @@ export function VisualizerShell({
               {listFieldKey && (
                 <ValuePromptButton
                   icon={<ListPlus />}
-                  label="Insert a value"
+                  label={t("shell.insertValue")}
                   placeholder="e.g. 42"
                   confirmLabel="Insert"
                   onSubmit={insertValue}
@@ -699,7 +702,7 @@ export function VisualizerShell({
               {listFieldKey && (
                 <ValuePromptButton
                   icon={<ListMinus />}
-                  label="Delete a value"
+                  label={t("shell.deleteValue")}
                   placeholder="e.g. 42"
                   confirmLabel="Delete"
                   onSubmit={removeValue}
@@ -709,7 +712,7 @@ export function VisualizerShell({
               {listFieldKey && (
                 <EditPromptButton
                   icon={<Pencil />}
-                  label="Edit a value"
+                  label={t("shell.editValue")}
                   oldPlaceholder="current value"
                   newPlaceholder="new value"
                   confirmLabel="Edit"
@@ -719,7 +722,7 @@ export function VisualizerShell({
               {searchFieldKey && (
                 <ValuePromptButton
                   icon={<Search />}
-                  label="Search for a value"
+                  label={t("shell.searchValue")}
                   placeholder="e.g. 42"
                   confirmLabel="Search"
                   onSubmit={searchValue}
@@ -731,30 +734,30 @@ export function VisualizerShell({
 
           <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
 
-          <IconBtn label="Undo input change" onClick={() => setHIndex((i) => i - 1)} disabled={!canUndo}>
+          <IconBtn label={t("shell.undo")} onClick={() => setHIndex((i) => i - 1)} disabled={!canUndo}>
             <Undo2 />
           </IconBtn>
-          <IconBtn label="Redo input change" onClick={() => setHIndex((i) => i + 1)} disabled={!canRedo}>
+          <IconBtn label={t("shell.redo")} onClick={() => setHIndex((i) => i + 1)} disabled={!canRedo}>
             <Redo2 />
           </IconBtn>
 
           <div className="ml-auto flex items-center gap-1.5">
-            <IconBtn label="Save state" onClick={saveLocal}>
+            <IconBtn label={t("shell.saveState")} onClick={saveLocal}>
               <Save />
             </IconBtn>
-            <IconBtn label="Load saved state" onClick={loadLocal}>
+            <IconBtn label={t("shell.loadState")} onClick={loadLocal}>
               <FolderOpen />
             </IconBtn>
-            <IconBtn label="Export JSON" onClick={exportJson}>
+            <IconBtn label={t("shell.exportJson")} onClick={exportJson}>
               <FileDown />
             </IconBtn>
-            <IconBtn label="Import JSON" onClick={importJson}>
+            <IconBtn label={t("shell.importJson")} onClick={importJson}>
               <FileUp />
             </IconBtn>
-            <IconBtn label="Screenshot (PNG)" onClick={screenshot}>
+            <IconBtn label={t("shell.screenshotPng")} onClick={screenshot}>
               <Camera />
             </IconBtn>
-            <IconBtn label="Export SVG" onClick={exportSvg}>
+            <IconBtn label={t("shell.exportSvg")} onClick={exportSvg}>
               <ImageDown />
             </IconBtn>
           </div>
