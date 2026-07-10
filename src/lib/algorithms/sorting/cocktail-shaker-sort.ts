@@ -1,15 +1,9 @@
 import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
 import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
+import { arrayFrame } from "../step-helpers";
 
 type Input = { values: number[] };
-
-function frame(values: number[], states: Record<number, CellState>, lo: number, hi: number): ArrayFrame {
-  const merged: Record<number, CellState> = { ...states };
-  for (let i = 0; i < lo; i++) merged[i] ??= "sorted";
-  for (let i = hi + 1; i < values.length; i++) merged[i] ??= "sorted";
-  return { values: [...values], states: merged, note: `active range [${lo}..${hi}]` };
-}
 
 function generate(input: Input): Step<ArrayFrame>[] {
   const a = [...input.values];
@@ -19,7 +13,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let swaps = 0;
   const c = () => ({ comparisons, swaps });
 
-  steps.push({ frame: frame(a, {}, 0, n - 1), description: `Cocktail sort bubbles in both directions each pass, sorting from both ends inward.`, codeLine: 0, counters: c() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0, sortedFrom: n, note: `active range [0..${n - 1}]` }), description: `Cocktail sort bubbles in both directions each pass, sorting from both ends inward.`, codeLine: 0, counters: c() });
 
   let lo = 0;
   let hi = n - 1;
@@ -28,30 +22,30 @@ function generate(input: Input): Step<ArrayFrame>[] {
     swapped = false;
     for (let i = lo; i < hi; i++) {
       comparisons++;
-      steps.push({ frame: frame(a, { [i]: "compare", [i + 1]: "compare" }, lo, hi), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, codeLine: 2, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + 1]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, codeLine: 2, counters: c() });
       if (a[i] > a[i + 1]) {
         [a[i], a[i + 1]] = [a[i + 1], a[i]];
         swaps++;
         swapped = true;
-        steps.push({ frame: frame(a, { [i]: "swap", [i + 1]: "swap" }, lo, hi), description: `Swap — larger bubbles right.`, codeLine: 3, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i]: "swap", [i + 1]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — larger bubbles right.`, codeLine: 3, counters: c() });
       }
     }
     hi--;
-    steps.push({ frame: frame(a, {}, lo, hi), description: `Largest is parked at the right end; shrink upper bound.`, codeLine: 4, counters: c() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Largest is parked at the right end; shrink upper bound.`, codeLine: 4, counters: c() });
     if (!swapped) break;
     swapped = false;
     for (let i = hi; i > lo; i--) {
       comparisons++;
-      steps.push({ frame: frame(a, { [i - 1]: "compare", [i]: "compare" }, lo, hi), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, codeLine: 5, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i - 1]: "compare", [i]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, codeLine: 5, counters: c() });
       if (a[i - 1] > a[i]) {
         [a[i - 1], a[i]] = [a[i], a[i - 1]];
         swaps++;
         swapped = true;
-        steps.push({ frame: frame(a, { [i - 1]: "swap", [i]: "swap" }, lo, hi), description: `Swap — smaller bubbles left.`, codeLine: 6, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i - 1]: "swap", [i]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — smaller bubbles left.`, codeLine: 6, counters: c() });
       }
     }
     lo++;
-    steps.push({ frame: frame(a, {}, lo, hi), description: `Smallest is parked at the left end; raise lower bound.`, codeLine: 4, counters: c() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Smallest is parked at the left end; raise lower bound.`, codeLine: 4, counters: c() });
   }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
