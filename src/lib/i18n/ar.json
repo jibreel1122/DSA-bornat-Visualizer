@@ -233,7 +233,7 @@
   "docs.sectionPracticeModeLabel": "وضع التدريب",
   "docs.sectionPracticeBodySuffix": "يحوّل الكتالوج إلى جلسة دراسة نشطة. خض جولات اختبار قصيرة من أي فئة، أو تنبّأ بالخطوة التالية لخوارزمية قيد التشغيل. تُتابَع دقتك لكل فئة وتتجمّع في مستوى إتقان — من مبتدئ إلى خبير — لترى بالضبط أين أنت قوي وأين تحتاج للتركيز.",
   "docs.sectionPlaygroundTitle": "ساحة التجربة",
-  "docs.sectionPlaygroundBodyPrefix": "",
+  "docs.sectionPlaygroundBodyPrefix": "إنّ",
   "docs.sectionPlaygroundLabel": "ساحة التجربة",
   "docs.sectionPlaygroundBodySuffix": "هي محرر حر الشكل. ارسم رسمك البياني الخاص عقدة تلو عقدة وحافة تلو حافة، أو اكتب مصفوفة مخصصة، ثم شغّل أي خوارزمية متوافقة على إبداعك. تُرمَّز الهياكل مباشرة في رابط عميق قابل للمشاركة، بحيث يمكنك تسليم أي شخص رابطًا يعيد إنتاج إعدادك بالضبط.",
   "docs.sectionFaqTitle": "الأسئلة الشائعة",
