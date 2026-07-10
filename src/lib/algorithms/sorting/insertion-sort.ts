@@ -1,14 +1,9 @@
-import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
+import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
 import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
+import { arrayFrame } from "../step-helpers";
 
 type Input = { values: number[] };
-
-function frame(values: number[], states: Record<number, CellState>, sortedTo: number, note?: string): ArrayFrame {
-  const merged: Record<number, CellState> = { ...states };
-  for (let i = 0; i < sortedTo; i++) merged[i] ??= "sorted";
-  return { values: [...values], states: merged, note };
-}
 
 function generate(input: Input): Step<ArrayFrame>[] {
   const a = [...input.values];
@@ -18,28 +13,28 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let shifts = 0;
   const counters = () => ({ comparisons, shifts });
 
-  steps.push({ frame: frame(a, { 0: "sorted" }, 1), description: `The first element is a trivially sorted prefix. Insert each following element into it.`, codeLine: 0, counters: counters() });
+  steps.push({ frame: arrayFrame(a, { 0: "sorted" }, { sortedTo: 1 }), description: `The first element is a trivially sorted prefix. Insert each following element into it.`, codeLine: 0, counters: counters() });
 
   for (let i = 1; i < n; i++) {
     const key = a[i];
-    steps.push({ frame: frame(a, { [i]: "active" }, i), description: `Take key = a[${i}] = ${key}; find where it belongs in the sorted prefix.`, codeLine: 1, counters: counters() });
+    steps.push({ frame: arrayFrame(a, { [i]: "active" }, { sortedTo: i }), description: `Take key = a[${i}] = ${key}; find where it belongs in the sorted prefix.`, codeLine: 1, counters: counters() });
     let j = i - 1;
     while (j >= 0) {
       comparisons++;
-      steps.push({ frame: frame(a, { [j]: "compare", [j + 1]: "active" }, i), description: `Compare key ${key} with a[${j}] = ${a[j]}.`, codeLine: 3, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [j]: "compare", [j + 1]: "active" }, { sortedTo: i }), description: `Compare key ${key} with a[${j}] = ${a[j]}.`, codeLine: 3, counters: counters() });
       if (a[j] > key) {
         a[j + 1] = a[j];
         shifts++;
-        steps.push({ frame: frame(a, { [j]: "swap", [j + 1]: "swap" }, i), description: `${a[j]} > ${key}, shift it right.`, codeLine: 4, counters: counters() });
+        steps.push({ frame: arrayFrame(a, { [j]: "swap", [j + 1]: "swap" }, { sortedTo: i }), description: `${a[j]} > ${key}, shift it right.`, codeLine: 4, counters: counters() });
         j--;
       } else {
         break;
       }
     }
     a[j + 1] = key;
-    steps.push({ frame: frame(a, { [j + 1]: "found" }, i + 1), description: `Insert key ${key} at position ${j + 1}.`, codeLine: 5, counters: counters() });
+    steps.push({ frame: arrayFrame(a, { [j + 1]: "found" }, { sortedTo: i + 1 }), description: `Insert key ${key} at position ${j + 1}.`, codeLine: 5, counters: counters() });
   }
-  steps.push({ frame: frame(a, {}, n), description: `Sorted with ${comparisons} comparisons and ${shifts} shifts.`, codeLine: 6, counters: counters() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: n }), description: `Sorted with ${comparisons} comparisons and ${shifts} shifts.`, codeLine: 6, counters: counters() });
   return steps;
 }
 
