@@ -124,6 +124,7 @@ const mod: AlgorithmModule<GraphFrame, Input> = {
     "  // Pass 2",
     "  while stack not empty:",
     "    v = pop(); if unvisited: DFS Gᵀ from v → one SCC",
+    "  return the collected SCCs",
   ],
   code: {
     pseudocode: `Pass 1: DFS(G); push vertex on finish -> order[]
