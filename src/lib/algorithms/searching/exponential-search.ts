@@ -36,8 +36,15 @@ function generate(input: Input): Step<ArrayFrame>[] {
     comparisons++;
     snap({ [mid]: "active" }, { from: l, to: h }, `Middle a[${mid}] = ${a[mid]}.`, 4, [{ index: l, label: "lo" }, { index: mid, label: "mid" }, { index: h, label: "hi" }]);
     if (a[mid] === target) { snap({ [mid]: "found" }, { from: l, to: h }, `Found ${target} at index ${mid} in ${comparisons} comparisons.`, 5); return steps; }
-    if (a[mid] < target) { snap({ [mid]: "discarded" }, { from: mid + 1, to: h }, `Too small — go right.`, 6); l = mid + 1; }
-    else { snap({ [mid]: "discarded" }, { from: l, to: mid - 1 }, `Too large — go left.`, 7); h = mid - 1; }
+    if (a[mid] < target) {
+      const newL = mid + 1;
+      snap({ [mid]: "discarded" }, newL <= h ? { from: newL, to: h } : null, `Too small — go right.`, 6);
+      l = newL;
+    } else {
+      const newH = mid - 1;
+      snap({ [mid]: "discarded" }, l <= newH ? { from: l, to: newH } : null, `Too large — go left.`, 7);
+      h = newH;
+    }
   }
   snap({}, null, `${target} is not present.`, 8);
   return steps;
