@@ -84,14 +84,14 @@ function generate(input: Input): Step<GraphFrame>[] {
       } while (w !== v);
       sccCount++;
       const st: Record<string, CellState> = { ...sccColors };
-      snap(st, {}, `${v} is an SCC root (index == lowlink == ${index[v]}). Pop the stack to form SCC #${sccCount}: {${members.join(", ")}}.`, 8);
+      snap(st, {}, `${v} is an SCC root (index == lowlink == ${index[v]}). Pop the stack to form SCC #${sccCount}: {${members.join(", ")}}.`, 6);
     }
   };
 
   snap({}, {}, `Tarjan's algorithm finds strongly connected components in one DFS using discovery indices and "lowlink" values.`, 0);
   for (const v of nodes) if (index[v] === undefined) strongconnect(v);
 
-  snap({ ...sccColors }, {}, `Done. ${sccCount} strongly connected component(s) found — nodes sharing a color can all reach each other.`, 9);
+  snap({ ...sccColors }, {}, `Done. ${sccCount} strongly connected component(s) found — nodes sharing a color can all reach each other.`, 8);
   return steps;
 }
 
@@ -125,6 +125,7 @@ const mod: AlgorithmModule<GraphFrame, Input> = {
     "  if low[v] == index[v]:",
     "    pop stack until v → one SCC",
     "  // run strongconnect on every unvisited vertex",
+    "  return the SCCs found",
   ],
   code: {
     pseudocode: `strongconnect(v):
