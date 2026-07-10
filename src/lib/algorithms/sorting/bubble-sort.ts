@@ -1,19 +1,9 @@
-import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
+import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
 import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
+import { arrayFrame } from "../step-helpers";
 
 type Input = { values: number[] };
-
-function frame(
-  values: number[],
-  states: Record<number, CellState>,
-  sortedFrom: number,
-  note?: string,
-): ArrayFrame {
-  const merged: Record<number, CellState> = { ...states };
-  for (let i = sortedFrom; i < values.length; i++) merged[i] ??= "sorted";
-  return { values: [...values], states: merged, note };
-}
 
 function generate(input: Input): Step<ArrayFrame>[] {
   const a = [...input.values];
@@ -24,7 +14,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const counters = () => ({ comparisons, swaps });
 
   steps.push({
-    frame: frame(a, {}, n),
+    frame: arrayFrame(a, {}, { sortedFrom: n }),
     description: `Start with ${n} unsorted elements. Each pass bubbles the largest remaining value to the end.`,
     codeLine: 0,
     counters: counters(),
@@ -33,7 +23,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   for (let i = 0; i < n - 1; i++) {
     let swapped = false;
     steps.push({
-      frame: frame(a, {}, n - i),
+      frame: arrayFrame(a, {}, { sortedFrom: n - i }),
       description: `Pass ${i + 1}: scan up to index ${n - i - 2}.`,
       codeLine: 1,
       counters: counters(),
@@ -41,7 +31,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     for (let j = 0; j < n - i - 1; j++) {
       comparisons++;
       steps.push({
-        frame: frame(a, { [j]: "compare", [j + 1]: "compare" }, n - i),
+        frame: arrayFrame(a, { [j]: "compare", [j + 1]: "compare" }, { sortedFrom: n - i }),
         description: `Compare a[${j}] = ${a[j]} with a[${j + 1}] = ${a[j + 1]}.`,
         codeLine: 3,
         counters: counters(),
@@ -51,7 +41,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
         swaps++;
         swapped = true;
         steps.push({
-          frame: frame(a, { [j]: "swap", [j + 1]: "swap" }, n - i),
+          frame: arrayFrame(a, { [j]: "swap", [j + 1]: "swap" }, { sortedFrom: n - i }),
           description: `${a[j + 1]} > ${a[j]}, so swap them.`,
           codeLine: 4,
           counters: counters(),
@@ -59,14 +49,14 @@ function generate(input: Input): Step<ArrayFrame>[] {
       }
     }
     steps.push({
-      frame: frame(a, { [n - i - 1]: "sorted" }, n - i - 1),
+      frame: arrayFrame(a, { [n - i - 1]: "sorted" }, { sortedFrom: n - i - 1 }),
       description: `Pass ${i + 1} done — ${a[n - i - 1]} is locked in its final position.`,
       codeLine: 5,
       counters: counters(),
     });
     if (!swapped) {
       steps.push({
-        frame: frame(a, {}, 0),
+        frame: arrayFrame(a, {}, { sortedFrom: 0 }),
         description: "No swaps in this pass — the array is already sorted. Early exit.",
         codeLine: 6,
         counters: counters(),
@@ -76,7 +66,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   }
 
   steps.push({
-    frame: frame(a, {}, 0),
+    frame: arrayFrame(a, {}, { sortedFrom: 0 }),
     description: `Sorted! ${comparisons} comparisons and ${swaps} swaps in total.`,
     codeLine: 7,
     counters: counters(),
