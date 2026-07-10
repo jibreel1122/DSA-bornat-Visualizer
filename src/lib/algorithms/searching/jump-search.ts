@@ -44,7 +44,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     }
     if (a[i] > target) break;
   }
-  snap({}, null, `${target} is not present in the array.`, 6);
+  snap({}, null, `${target} is not present in the array.`, 5);
   return steps;
 }
 
