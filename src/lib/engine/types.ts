@@ -79,7 +79,8 @@ export interface Step<F = unknown> {
   description: string;
   /** 0-based line index into `pseudocode` to highlight. */
   codeLine?: number;
-  /** CUMULATIVE counters at this step (e.g. { comparisons: 3, swaps: 1 }). */
+  /** Counters at this step — usually CUMULATIVE (e.g. { comparisons: 3, swaps: 1 }),
+   *  but some are live gauges that can fall (e.g. recursion depth, live item count). */
   counters?: Record<string, number>;
 }
 

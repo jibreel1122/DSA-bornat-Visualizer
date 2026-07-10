@@ -15,7 +15,23 @@ const SEEDS = [1, 42];
  * queue size), EITHER move it into the frame's aux rows in the module,
  * OR add it here with a one-line justification.
  */
-const GAUGE_COUNTERS: Record<string, string[]> = {};
+const GAUGE_COUNTERS: Record<string, string[]> = {
+  "a-star": ["open"], // open-set size shrinks as nodes are expanded/closed
+  "binary-search-tree": ["nodes"], // live node count falls on delete
+  "double-hashing": ["items"], // live stored-item count falls on delete
+  "doubly-linked-list": ["nodes"], // live node count falls on delete
+  "euclidean-gcd": ["depth"], // call-stack depth unwinds as recursion returns
+  factorial: ["depth"], // call-stack depth unwinds as recursion returns
+  "fast-power": ["depth"], // call-stack depth unwinds as recursion returns
+  "fibonacci-recursive": ["depth"], // call-stack depth unwinds as recursion returns
+  "hash-chaining": ["items"], // live stored-item count falls on delete
+  "linear-probing": ["items"], // live stored-item count falls on delete
+  "quadratic-probing": ["items"], // live stored-item count falls on delete
+  "queue-operations": ["size"], // live queue size falls on dequeue
+  "sieve-of-eratosthenes": ["primes"], // count of numbers still marked prime falls as composites are crossed out
+  "stack-operations": ["size"], // live stack size falls on pop
+  "topological-sort": ["remaining"], // unprocessed-node count falls as nodes are ordered
+};
 
 describe.each(ALGORITHMS.map((m) => [m.slug, m] as const))(
   "%s",
