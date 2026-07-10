@@ -88,7 +88,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
 
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, `Sorted with ${merges} merges and ${comparisons} comparisons. Real-world Timsort (Python, Java) also detects naturally-occurring runs and uses galloping mode — this shows the core fixed-run-size skeleton.`, 9);
+  snap(sorted, `Sorted with ${merges} merges and ${comparisons} comparisons. Real-world Timsort (Python, Java) also detects naturally-occurring runs and uses galloping mode — this shows the core fixed-run-size skeleton.`, 8);
   return steps;
 }
 
