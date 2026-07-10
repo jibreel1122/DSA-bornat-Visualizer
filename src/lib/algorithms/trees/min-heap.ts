@@ -81,7 +81,7 @@ function generate(input: Input): Step<TreeFrame>[] {
         if (heap[r] < heap[smallest]) smallest = r;
       }
       if (smallest === i) {
-        toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 10, `sift-down`);
+        toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 7, `sift-down`);
         break;
       }
       toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 9, `sift-down`);
@@ -91,7 +91,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     }
   }
 
-  toFrame(heap.length ? { 0: "found" } : {}, heap.length ? `Done. Current minimum is ${heap[0]}.` : `Done. Heap is empty.`, 11, `final`);
+  toFrame(heap.length ? { 0: "found" } : {}, heap.length ? `Done. Current minimum is ${heap[0]}.` : `Done. Heap is empty.`, 9, `final`);
   return steps;
 }
 
