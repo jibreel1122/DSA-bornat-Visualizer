@@ -72,9 +72,9 @@ function generate(input: Input): Step<CallStackFrame>[] {
   }
 
   if (stack.length === 0) {
-    frame(undefined, s.length - 1, `End of string and the stack is empty → every bracket matched. ✓ Balanced!`, 8);
+    frame(undefined, s.length - 1, `End of string and the stack is empty → every bracket matched. ✓ Balanced!`, 7);
   } else {
-    frame("swap", s.length - 1, `End of string but ${stack.length} opening bracket(s) remain unmatched. ✗ Not balanced.`, 8, true);
+    frame("swap", s.length - 1, `End of string but ${stack.length} opening bracket(s) remain unmatched. ✗ Not balanced.`, 7, true);
   }
   return steps;
 }
