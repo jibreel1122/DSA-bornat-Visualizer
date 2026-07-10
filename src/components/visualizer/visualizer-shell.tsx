@@ -60,6 +60,14 @@ interface SavedState {
 
 const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 
+const LEVEL_LABEL_KEYS: Record<Level, DictKey> = {
+  1: "shell.level1",
+  2: "shell.level2",
+  3: "shell.level3",
+  4: "shell.level4",
+  5: "shell.level5",
+};
+
 const SHORTCUTS: { keys: string[]; labelKey: DictKey }[] = [
   { keys: ["Space"], labelKey: "shell.shortcutPlayPause" },
   { keys: ["←"], labelKey: "shell.shortcutPrevStep" },
@@ -601,7 +609,7 @@ export function VisualizerShell({
                 step={0.25}
                 onValueChange={([v]) => player.setSpeed(v)}
                 className="w-28"
-                aria-label="Animation speed"
+                aria-label={t("shell.animationSpeed")}
               />
               <span className="w-10 font-mono text-xs text-muted-foreground tabular-nums">
                 {player.speed}×
@@ -662,7 +670,7 @@ export function VisualizerShell({
             <SelectContent>
               {LEVELS.map((l) => (
                 <SelectItem key={l.level} value={String(l.level)}>
-                  {l.label}
+                  {t(LEVEL_LABEL_KEYS[l.level])}
                 </SelectItem>
               ))}
             </SelectContent>
