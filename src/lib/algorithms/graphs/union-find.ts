@@ -140,6 +140,7 @@ const mod: AlgorithmModule<GraphFrame, Input> = {
     "  union(a, b):",
     "    ra = find(a); rb = find(b); if ra == rb: return",
     "    attach lower-rank root under the higher; tie ⇒ bump rank",
+    "  return the disjoint sets",
   ],
   code: {
     pseudocode: `parent[i] = i; rank[i] = 0
