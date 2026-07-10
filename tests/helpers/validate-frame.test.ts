@@ -45,4 +45,34 @@ describe("validateFrame", () => {
     });
     expect(violations.length).toBeGreaterThan(0);
   });
+
+  it("rejects a TableFrame with a cell invalid state", () => {
+    const violations = validateFrame("table", {
+      rowLabels: ["R1", "R2"],
+      colLabels: ["C1", "C2"],
+      cells: [
+        [{ value: 1 }, { value: 2 }],
+        [{ value: 3 }, { value: 4, state: "sparkly" }],
+      ],
+    });
+    expect(violations.some((v) => v.includes("sparkly"))).toBe(true);
+  });
+
+  it("rejects a HashFrame with a bucket-level invalid state", () => {
+    const violations = validateFrame("hash", {
+      chained: true,
+      buckets: [
+        { index: 0, items: [{ key: "a" }], state: "sparkly" },
+      ],
+    });
+    expect(violations.some((v) => v.includes("sparkly"))).toBe(true);
+  });
+
+  it("rejects a StringFrame with a pattern char invalid state", () => {
+    const violations = validateFrame("string", {
+      text: [{ ch: "a" }],
+      pattern: [{ ch: "a", state: "sparkly" }],
+    });
+    expect(violations.some((v) => v.includes("sparkly"))).toBe(true);
+  });
 });

@@ -118,6 +118,10 @@ function validateTable(f: TableFrame, out: string[]) {
   f.cells.forEach((row, r) => {
     if (row.length !== f.colLabels.length)
       out.push(`row ${r} has ${row.length} cols, expected ${f.colLabels.length}`);
+    row.forEach((c, cIdx) => {
+      if (c.state !== undefined && !CELL_STATES.has(c.state))
+        out.push(`cell [${r}][${cIdx}] invalid state "${c.state}"`);
+    });
   });
 }
 
@@ -133,6 +137,9 @@ function validateString(f: StringFrame, out: string[]) {
   for (const t of f.text)
     if (t.state !== undefined && !CELL_STATES.has(t.state))
       out.push(`text char invalid state "${t.state}"`);
+  for (const p of f.pattern ?? [])
+    if (p.state !== undefined && !CELL_STATES.has(p.state))
+      out.push(`pattern char invalid state "${p.state}"`);
   if (f.shift !== undefined && !Number.isInteger(f.shift))
     out.push(`shift ${f.shift} is not an integer`);
 }
@@ -142,6 +149,8 @@ function validateHash(f: HashFrame, out: string[]) {
   for (const b of f.buckets) {
     if (!Number.isInteger(b.index) || b.index < 0)
       out.push(`bucket index ${b.index} invalid`);
+    if (b.state !== undefined && !CELL_STATES.has(b.state))
+      out.push(`bucket ${b.index} invalid state "${b.state}"`);
     for (const item of b.items)
       if (item.state !== undefined && !CELL_STATES.has(item.state))
         out.push(`bucket ${b.index} item "${item.key}" invalid state`);
