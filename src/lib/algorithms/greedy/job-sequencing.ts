@@ -74,7 +74,7 @@ function generate(input: Input): Step<TableFrame>[] {
   }
 
   const seq = slots.map((s, i) => (s ? `t${i + 1}:${s}` : `t${i + 1}:—`)).join(", ");
-  frame(null, null, `Done. Schedule: ${seq}. Maximum profit = ${totalProfit} from ${scheduled} job(s).`, 7);
+  frame(null, null, `Done. Schedule: ${seq}. Maximum profit = ${totalProfit} from ${scheduled} job(s).`, 6);
   return steps;
 }
 
