@@ -51,11 +51,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
       }
     }
     lo++;
-    steps.push({ frame: frame(a, {}, lo, hi), description: `Smallest is parked at the left end; raise lower bound.`, codeLine: 7, counters: c() });
+    steps.push({ frame: frame(a, {}, lo, hi), description: `Smallest is parked at the left end; raise lower bound.`, codeLine: 4, counters: c() });
   }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  steps.push({ frame: { values: [...a], states: sorted }, description: `Sorted from both ends inward.`, codeLine: 8, counters: c() });
+  steps.push({ frame: { values: [...a], states: sorted }, description: `Sorted from both ends inward.`, codeLine: 6, counters: c() });
   return steps;
 }
 
