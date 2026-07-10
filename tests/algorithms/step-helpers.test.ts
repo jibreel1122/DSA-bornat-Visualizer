@@ -30,4 +30,12 @@ describe("arrayFrame", () => {
     expect(f.pointers).toEqual([{ index: 0, label: "i" }]);
     expect(f.aux).toEqual([{ label: "buf", values: [7] }]);
   });
+
+  it("emits note always, pointers/aux only when provided", () => {
+    expect(Object.keys(arrayFrame([1]))).toEqual(["values", "states", "note"]);
+    expect(Object.keys(arrayFrame([1], {}, { pointers: [{ index: 0, label: "i" }] })))
+      .toEqual(["values", "states", "note", "pointers"]);
+    expect(Object.keys(arrayFrame([1], {}, { aux: [{ label: "b", values: [1] }] })))
+      .toEqual(["values", "states", "note", "aux"]);
+  });
 });
