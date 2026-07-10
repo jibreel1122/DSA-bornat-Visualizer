@@ -1,14 +1,9 @@
-import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
+import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
 import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
+import { arrayFrame } from "../step-helpers";
 
 type Input = { values: number[] };
-
-function frame(values: number[], states: Record<number, CellState>, sortedTo: number, note?: string): ArrayFrame {
-  const merged: Record<number, CellState> = { ...states };
-  for (let i = 0; i < sortedTo; i++) merged[i] ??= "sorted";
-  return { values: [...values], states: merged, note };
-}
 
 function generate(input: Input): Step<ArrayFrame>[] {
   const a = [...input.values];
@@ -18,29 +13,29 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let swaps = 0;
   const counters = () => ({ comparisons, swaps });
 
-  steps.push({ frame: frame(a, {}, 0), description: `Select the minimum of the unsorted region each pass and place it at the front.`, codeLine: 0, counters: counters() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0 }), description: `Select the minimum of the unsorted region each pass and place it at the front.`, codeLine: 0, counters: counters() });
 
   for (let i = 0; i < n - 1; i++) {
     let min = i;
-    steps.push({ frame: frame(a, { [i]: "active", [min]: "pivot" }, i), description: `Pass ${i + 1}: assume a[${i}] = ${a[i]} is the minimum.`, codeLine: 1, counters: counters() });
+    steps.push({ frame: arrayFrame(a, { [i]: "active", [min]: "pivot" }, { sortedTo: i }), description: `Pass ${i + 1}: assume a[${i}] = ${a[i]} is the minimum.`, codeLine: 1, counters: counters() });
     for (let j = i + 1; j < n; j++) {
       comparisons++;
-      steps.push({ frame: frame(a, { [min]: "pivot", [j]: "compare" }, i), description: `Compare a[${j}] = ${a[j]} against current min a[${min}] = ${a[min]}.`, codeLine: 3, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [min]: "pivot", [j]: "compare" }, { sortedTo: i }), description: `Compare a[${j}] = ${a[j]} against current min a[${min}] = ${a[min]}.`, codeLine: 3, counters: counters() });
       if (a[j] < a[min]) {
         min = j;
-        steps.push({ frame: frame(a, { [min]: "pivot" }, i), description: `New minimum found: a[${min}] = ${a[min]}.`, codeLine: 4, counters: counters() });
+        steps.push({ frame: arrayFrame(a, { [min]: "pivot" }, { sortedTo: i }), description: `New minimum found: a[${min}] = ${a[min]}.`, codeLine: 4, counters: counters() });
       }
     }
     if (min !== i) {
       [a[i], a[min]] = [a[min], a[i]];
       swaps++;
-      steps.push({ frame: frame(a, { [i]: "swap", [min]: "swap" }, i), description: `Swap the minimum into position ${i}.`, codeLine: 5, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [i]: "swap", [min]: "swap" }, { sortedTo: i }), description: `Swap the minimum into position ${i}.`, codeLine: 5, counters: counters() });
     } else {
-      steps.push({ frame: frame(a, { [i]: "sorted" }, i), description: `a[${i}] is already the minimum — no swap needed.`, codeLine: 5, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [i]: "sorted" }, { sortedTo: i }), description: `a[${i}] is already the minimum — no swap needed.`, codeLine: 5, counters: counters() });
     }
-    steps.push({ frame: frame(a, {}, i + 1), description: `Position ${i} is finalized.`, codeLine: 6, counters: counters() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: i + 1 }), description: `Position ${i} is finalized.`, codeLine: 6, counters: counters() });
   }
-  steps.push({ frame: frame(a, {}, n), description: `Sorted with exactly ${swaps} swaps — selection sort minimizes writes.`, codeLine: 7, counters: counters() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: n }), description: `Sorted with exactly ${swaps} swaps — selection sort minimizes writes.`, codeLine: 7, counters: counters() });
   return steps;
 }
 
