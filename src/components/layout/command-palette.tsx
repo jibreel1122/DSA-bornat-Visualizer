@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ALGORITHMS, getMeta } from "@/lib/algorithms";
 import { CATEGORIES, CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites, useHistory } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 
 export function CommandPalette({
   open,
@@ -19,6 +20,7 @@ export function CommandPalette({
   const router = useRouter();
   const { favorites } = useFavorites();
   const { history } = useHistory();
+  const { t } = useLocale();
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,24 +50,24 @@ export function CommandPalette({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="top-[20%] max-w-xl translate-y-0 gap-0 p-0 overflow-hidden">
-        <DialogTitle className="sr-only">Global search</DialogTitle>
-        <Command label="Global search" className="outline-none">
+        <DialogTitle className="sr-only">{t("cmdk.label")}</DialogTitle>
+        <Command label={t("cmdk.label")} className="outline-none">
           <div className="flex items-center gap-2 border-b border-border px-4">
             <Search className="size-4 shrink-0 text-muted-foreground" />
             <Command.Input
               autoFocus
-              placeholder="Search algorithms, structures, categories…"
+              placeholder={t("cmdk.placeholder")}
               className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
           <Command.List className="max-h-[50vh] overflow-y-auto p-2">
             <Command.Empty className="py-8 text-center text-sm text-muted-foreground">
-              No results found.
+              {t("cmdk.noResults")}
             </Command.Empty>
 
             {favs.length > 0 && (
               <Command.Group
-                heading="Favorites"
+                heading={t("cmdk.favorites")}
                 className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
               >
                 {favs.map((m) => (
@@ -87,7 +89,7 @@ export function CommandPalette({
 
             {recent.length > 0 && (
               <Command.Group
-                heading="Recently viewed"
+                heading={t("cmdk.recentlyViewed")}
                 className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
               >
                 {recent.map((m) => (
@@ -105,7 +107,7 @@ export function CommandPalette({
             )}
 
             <Command.Group
-              heading="Categories"
+              heading={t("cmdk.categories")}
               className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               {CATEGORIES.map((c) => (
@@ -122,7 +124,7 @@ export function CommandPalette({
             </Command.Group>
 
             <Command.Group
-              heading="Algorithms"
+              heading={t("cmdk.algorithms")}
               className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
             >
               {ALGORITHMS.map((m) => (

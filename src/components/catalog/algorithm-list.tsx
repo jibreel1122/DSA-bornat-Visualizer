@@ -8,10 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { AlgorithmMeta, AlgoDifficulty, CategoryId } from "@/lib/engine/types";
 import { CATEGORIES, CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites } from "@/lib/hooks";
+import { useLocale, type DictKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { AlgorithmCard } from "./algorithm-card";
 
 const DIFFICULTIES: AlgoDifficulty[] = ["Beginner", "Intermediate", "Advanced"];
+
+const DIFFICULTY_KEY: Record<AlgoDifficulty, DictKey> = {
+  Beginner: "catalog.difficultyBeginner",
+  Intermediate: "catalog.difficultyIntermediate",
+  Advanced: "catalog.difficultyAdvanced",
+};
 
 /** Shared filterable, groupable algorithm browser used by /algorithms and /data-structures. */
 export function AlgorithmList({
@@ -25,6 +32,7 @@ export function AlgorithmList({
   showCategoryFilter?: boolean;
 }) {
   const { favorites } = useFavorites();
+  const { t } = useLocale();
   const [query, setQuery] = React.useState("");
   const [difficulty, setDifficulty] = React.useState<AlgoDifficulty | "all">("all");
   const [category, setCategory] = React.useState<CategoryId | "all">("all");
@@ -39,7 +47,7 @@ export function AlgorithmList({
       return (
         m.title.toLowerCase().includes(q) ||
         m.summary.toLowerCase().includes(q) ||
-        m.tags.some((t) => t.toLowerCase().includes(q))
+        m.tags.some((tag) => tag.toLowerCase().includes(q))
       );
     });
   }, [items, query, difficulty, category]);
@@ -74,7 +82,7 @@ export function AlgorithmList({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, tag, or description…"
+            placeholder={t("catalog.searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -91,7 +99,7 @@ export function AlgorithmList({
                   : "border-border text-muted-foreground hover:bg-accent",
               )}
             >
-              {d}
+              {t(DIFFICULTY_KEY[d])}
             </button>
           ))}
         </div>
@@ -99,10 +107,10 @@ export function AlgorithmList({
         {showCategoryFilter && (
           <Select value={category} onValueChange={(v) => setCategory(v as CategoryId | "all")}>
             <SelectTrigger className="h-9 w-40 text-sm">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t("catalog.categoryFilter")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">{t("catalog.allCategories")}</SelectItem>
               {categories.map((cid) => (
                 <SelectItem key={cid} value={cid}>
                   {CATEGORY_MAP[cid].short}
@@ -119,7 +127,7 @@ export function AlgorithmList({
             favFirst ? "border-amber-400 bg-amber-400/12 text-amber-500" : "border-border text-muted-foreground hover:bg-accent",
           )}
         >
-          <Star className={cn("size-3.5", favFirst && "fill-amber-400 text-amber-400")} /> Favorites first
+          <Star className={cn("size-3.5", favFirst && "fill-amber-400 text-amber-400")} /> {t("catalog.favoritesFirst")}
         </button>
 
         {activeFilters && (
@@ -133,18 +141,18 @@ export function AlgorithmList({
               setFavFirst(false);
             }}
           >
-            <X /> Clear
+            <X /> {t("catalog.resetFilters")}
           </Button>
         )}
       </div>
 
       <p className="mb-4 text-sm text-muted-foreground">
-        {filtered.length} {filtered.length === 1 ? "result" : "results"}
+        {filtered.length} {filtered.length === 1 ? t("catalog.resultSingular") : t("catalog.resultPlural")}
       </p>
 
       {grouped.length === 0 ? (
         <div className="grid place-items-center rounded-2xl border border-dashed border-border py-20 text-center">
-          <p className="text-muted-foreground">No algorithms match your filters.</p>
+          <p className="text-muted-foreground">{t("catalog.noMatches")}</p>
         </div>
       ) : (
         <div className="grid gap-10">

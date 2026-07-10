@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import type { AlgorithmMeta } from "@/lib/engine/types";
+import type { AlgorithmMeta, AlgoDifficulty } from "@/lib/engine/types";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites } from "@/lib/hooks";
+import { useLocale, type DictKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const DIFFICULTY_VARIANT = {
@@ -16,8 +17,15 @@ const DIFFICULTY_VARIANT = {
   Advanced: "destructive",
 } as const;
 
+const DIFFICULTY_KEY: Record<AlgoDifficulty, DictKey> = {
+  Beginner: "catalog.difficultyBeginner",
+  Intermediate: "catalog.difficultyIntermediate",
+  Advanced: "catalog.difficultyAdvanced",
+};
+
 export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?: number }) {
   const { isFavorite, toggle } = useFavorites();
+  const { t } = useLocale();
   const category = CATEGORY_MAP[meta.category];
   const fav = isFavorite(meta.slug);
 
@@ -37,7 +45,7 @@ export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?
             </span>
             <button
               type="button"
-              aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+              aria-label={fav ? t("catalog.removeFromFavorites") : t("catalog.addToFavorites")}
               aria-pressed={fav}
               onClick={(e) => {
                 e.preventDefault();
@@ -54,10 +62,10 @@ export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?
           </h3>
           <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted-foreground">{meta.summary}</p>
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <Badge variant={DIFFICULTY_VARIANT[meta.difficulty]}>{meta.difficulty}</Badge>
-            {meta.tags.slice(0, 2).map((t) => (
-              <Badge key={t} variant="secondary">
-                {t}
+            <Badge variant={DIFFICULTY_VARIANT[meta.difficulty]}>{t(DIFFICULTY_KEY[meta.difficulty])}</Badge>
+            {meta.tags.slice(0, 2).map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
               </Badge>
             ))}
           </div>
