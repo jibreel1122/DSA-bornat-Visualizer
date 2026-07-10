@@ -92,16 +92,16 @@ function generate(input: Input): Step<TreeFrame>[] {
   const update = (node: Node): void => {
     if (node.lo === node.hi) {
       node.sum = val;
-      toFrame({ [node.id]: "swap" }, `Leaf [${node.lo}] updated to ${val}.`, 8, `update`);
+      toFrame({ [node.id]: "swap" }, `Leaf [${node.lo}] updated to ${val}.`, 6, `update`);
       return;
     }
     const mid = (node.lo + node.hi) >> 1;
     if (idx <= mid) update(node.left!);
     else update(node.right!);
     node.sum = node.left!.sum + node.right!.sum;
-    toFrame({ [node.id]: "active" }, `Recompute node [${node.lo}..${node.hi}] sum = ${node.sum} after the change.`, 9, `update`);
+    toFrame({ [node.id]: "active" }, `Recompute node [${node.lo}..${node.hi}] sum = ${node.sum} after the change.`, 6, `update`);
   };
-  toFrame({}, `Point update: set index ${idx} to ${val} (was ${val - delta}). Update the leaf, then fix sums on the path to the root.`, 7, `update idx ${idx}`);
+  toFrame({}, `Point update: set index ${idx} to ${val} (was ${val - delta}). Update the leaf, then fix sums on the path to the root.`, 6, `update idx ${idx}`);
   ops++;
   update(root);
 
@@ -113,7 +113,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(nd.right);
   };
   markAll(root);
-  toFrame(done, `Done. Both range queries and point updates run in O(log n) on the segment tree.`, 10, `final`);
+  toFrame(done, `Done. Both range queries and point updates run in O(log n) on the segment tree.`, 7, `final`);
   return steps;
 }
 
@@ -143,6 +143,7 @@ const mod: AlgorithmModule<TreeFrame, Input> = {
     "    if node range inside [l,r]: return node.sum",
     "    return query(left) + query(right)",
     "  update(node, i, v): fix the leaf, recompute sums upward",
+    "  return (queries & updates run in O(log n))",
   ],
   code: {
     pseudocode: `build(lo,hi): if lo==hi: sum=a[lo]
