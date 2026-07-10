@@ -139,7 +139,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       root!.color = "black";
       recolors++;
     }
-    toFrame({}, `Root is forced black. Red-black properties restored after inserting ${value}.`, 9, `balanced`);
+    toFrame({}, `Root is forced black. Red-black properties restored after inserting ${value}.`, 7, `balanced`);
   };
 
   for (const v of input.values) insert(v);
@@ -152,7 +152,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(n.right);
   };
   markAll(root);
-  toFrame(done, `Done. The red-black tree stays balanced with height ≤ 2·log₂(n+1); all operations are O(log n).`, 10, `final red-black tree`);
+  toFrame(done, `Done. The red-black tree stays balanced with height ≤ 2·log₂(n+1); all operations are O(log n).`, 8, `final red-black tree`);
   return steps;
 }
 
@@ -179,6 +179,7 @@ const mod: AlgorithmModule<TreeFrame, Input> = {
     "      if z is an inner child: rotate parent",
     "      recolor parent black, grandparent red; rotate grandparent",
     "  color the root BLACK",
+    "  return the balanced tree",
   ],
   code: {
     pseudocode: `insert z as RED; BST-insert
