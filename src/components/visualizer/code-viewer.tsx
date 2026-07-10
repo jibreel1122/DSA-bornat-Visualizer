@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LANGUAGES, type Language } from "@/lib/engine/types";
 import { downloadText } from "@/lib/utils";
 import { useMounted } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 
 SyntaxHighlighter.registerLanguage("c", c);
 SyntaxHighlighter.registerLanguage("cpp", cpp);
@@ -39,6 +40,7 @@ SyntaxHighlighter.registerLanguage("typescript", typescript);
 /** Multi-language implementation viewer with copy + download. */
 export function CodeViewer({ code, slug }: { code: Record<Language, string>; slug: string }) {
   const { resolvedTheme } = useTheme();
+  const { t } = useLocale();
   const mounted = useMounted();
   const available = LANGUAGES.filter((l) => code[l.id]?.trim());
   const [lang, setLang] = React.useState<Language>(
@@ -71,14 +73,14 @@ export function CodeViewer({ code, slug }: { code: Record<Language, string>; slu
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy code">
+          <Button variant="ghost" size="icon-sm" onClick={copy} aria-label={t("shell.copyCode")}>
             {copied ? <Check className="text-emerald-500" /> : <Copy />}
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={() => downloadText(`${slug}.${active.ext}`, source)}
-            aria-label="Download code"
+            aria-label={t("shell.downloadCode")}
           >
             <Download />
           </Button>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLocale } from "@/lib/i18n";
 import { clamp } from "@/lib/utils";
 
 export interface ZoomPanHandle {
@@ -18,6 +19,7 @@ export const ZoomPan = React.forwardRef<
   ZoomPanHandle,
   { children: React.ReactNode; onFullscreen?: () => void }
 >(function ZoomPan({ children, onFullscreen }, ref) {
+  const { t } = useLocale();
   const [scale, setScale] = React.useState(1);
   const [tx, setTx] = React.useState(0);
   const [ty, setTy] = React.useState(0);
@@ -66,22 +68,22 @@ export const ZoomPan = React.forwardRef<
       <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-xl border border-border bg-popover/85 p-1 shadow-sm backdrop-blur">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={() => zoom(-0.25)} aria-label="Zoom out">
+            <Button variant="ghost" size="icon-sm" onClick={() => zoom(-0.25)} aria-label={t("shell.zoomOut")}>
               <Minus />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Zoom out</TooltipContent>
+          <TooltipContent>{t("shell.zoomOut")}</TooltipContent>
         </Tooltip>
         <span className="min-w-10 text-center font-mono text-xs text-muted-foreground">
           {Math.round(scale * 100)}%
         </span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={() => zoom(0.25)} aria-label="Zoom in">
+            <Button variant="ghost" size="icon-sm" onClick={() => zoom(0.25)} aria-label={t("shell.zoomIn")}>
               <Plus />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Zoom in</TooltipContent>
+          <TooltipContent>{t("shell.zoomIn")}</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -93,21 +95,21 @@ export const ZoomPan = React.forwardRef<
                 setTx(0);
                 setTy(0);
               }}
-              aria-label="Reset view"
+              aria-label={t("shell.resetView")}
             >
               <RotateCcw />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Reset view</TooltipContent>
+          <TooltipContent>{t("shell.resetView")}</TooltipContent>
         </Tooltip>
         {onFullscreen && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" onClick={onFullscreen} aria-label="Fullscreen">
+              <Button variant="ghost" size="icon-sm" onClick={onFullscreen} aria-label={t("shell.fullscreen")}>
                 <Maximize2 />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Fullscreen (F)</TooltipContent>
+            <TooltipContent>{t("shell.fullscreenTooltip")}</TooltipContent>
           </Tooltip>
         )}
       </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { QuizQuestion } from "@/lib/engine/types";
 import { useLocalStorage } from "@/lib/hooks";
+import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export interface QuizRecord {
@@ -17,6 +18,7 @@ export interface QuizRecord {
 
 /** Multiple-choice quiz with scoring; best score persists for practice mastery. */
 export function QuizPanel({ slug, quiz }: { slug: string; quiz: QuizQuestion[] }) {
+  const { t } = useLocale();
   const [record, setRecord] = useLocalStorage<QuizRecord>(`bdsv:quiz:${slug}`, {
     best: 0,
     attempts: 0,
@@ -69,16 +71,20 @@ export function QuizPanel({ slug, quiz }: { slug: string; quiz: QuizQuestion[] }
           </div>
           <p className="text-sm text-muted-foreground">
             {score === quiz.length
-              ? "Perfect score — you've mastered this one!"
+              ? t("shell.quizPerfectScore")
               : score >= quiz.length / 2
-                ? "Nice work. Review the explanations and try again for a perfect run."
-                : "Keep practicing — watch the visualization again and retry."}
+                ? t("shell.quizNiceWork")
+                : t("shell.quizKeepPracticing")}
           </p>
           <p className="text-xs text-muted-foreground">
-            Best: {Math.max(record.best, score)} / {quiz.length} · Attempts: {record.attempts}
+            {t("shell.quizBestAttempts", {
+              best: Math.max(record.best, score),
+              total: quiz.length,
+              attempts: record.attempts,
+            })}
           </p>
           <Button onClick={restart} variant="secondary">
-            <RotateCcw /> Try again
+            <RotateCcw /> {t("shell.tryAgain")}
           </Button>
         </CardContent>
       </Card>
@@ -89,10 +95,8 @@ export function QuizPanel({ slug, quiz }: { slug: string; quiz: QuizQuestion[] }
     <Card>
       <CardContent className="py-5">
         <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            Question {index + 1} of {quiz.length}
-          </span>
-          <span>Score: {score}</span>
+          <span>{t("shell.quizQuestionOf", { current: index + 1, total: quiz.length })}</span>
+          <span>{t("shell.quizScoreLabel", { score })}</span>
         </div>
         <AnimatePresence mode="wait">
           <motion.div
@@ -139,7 +143,7 @@ export function QuizPanel({ slug, quiz }: { slug: string; quiz: QuizQuestion[] }
             {picked !== null && (
               <div className="mt-4 flex justify-end">
                 <Button onClick={nextQ}>
-                  {index + 1 >= quiz.length ? "Finish" : "Next question"}
+                  {index + 1 >= quiz.length ? t("shell.quizFinish") : t("shell.quizNextQuestion")}
                 </Button>
               </div>
             )}

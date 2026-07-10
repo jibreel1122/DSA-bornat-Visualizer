@@ -1,6 +1,7 @@
 "use client";
 
 import type { Step } from "@/lib/engine/types";
+import { useLocale } from "@/lib/i18n";
 import { formatBytes, roughSizeOf } from "@/lib/utils";
 import { STATE_LEGEND, vizFill } from "./viz-utils";
 
@@ -14,18 +15,19 @@ export function StatsPanel({
   cursor: number;
   total: number;
 }) {
+  const { t } = useLocale();
   const counters = Object.entries(step?.counters ?? {});
   return (
     <div className="flex flex-col gap-3 text-sm">
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="Step" value={total === 0 ? "—" : `${cursor + 1} / ${total}`} />
-        <Stat label="Memory (frame)" value={step ? formatBytes(roughSizeOf(step.frame)) : "—"} />
+        <Stat label={t("shell.step")} value={total === 0 ? "—" : `${cursor + 1} / ${total}`} />
+        <Stat label={t("shell.memoryFrame")} value={step ? formatBytes(roughSizeOf(step.frame)) : "—"} />
         {counters.map(([k, v]) => (
           <Stat key={k} label={prettify(k)} value={String(v)} />
         ))}
       </div>
       <div>
-        <div className="mb-1.5 text-xs font-medium text-muted-foreground">Legend</div>
+        <div className="mb-1.5 text-xs font-medium text-muted-foreground">{t("shell.legend")}</div>
         <div className="flex flex-wrap gap-x-3 gap-y-1.5">
           {STATE_LEGEND.map((l) => (
             <span key={l.state} className="flex items-center gap-1.5 text-xs text-muted-foreground">

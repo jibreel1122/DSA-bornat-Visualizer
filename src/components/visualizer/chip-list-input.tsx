@@ -4,6 +4,7 @@ import * as React from "react";
 import { Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** A comma-separated string is "list-like" once it holds 2+ tokens. */
@@ -30,6 +31,7 @@ export function ChipListInput({
   /** Highlights the field border when the parent dialog attributed a parse error here. */
   invalid?: boolean;
 }) {
+  const { t } = useLocale();
   const tokens = tokenize(value);
   const [editingIdx, setEditingIdx] = React.useState<number | null>(null);
   const [editingText, setEditingText] = React.useState("");
@@ -71,7 +73,7 @@ export function ChipListInput({
         invalid ? "border-destructive" : "border-input",
       )}
     >
-      {tokens.map((t, i) =>
+      {tokens.map((tok, i) =>
         editingIdx === i ? (
           <Input
             key={i}
@@ -95,10 +97,10 @@ export function ChipListInput({
               "group inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 py-0.5 pl-2.5 pr-1 text-xs font-medium tabular-nums",
             )}
           >
-            {t}
+            {tok}
             <button
               type="button"
-              aria-label={`Edit ${t}`}
+              aria-label={t("shell.editValueNamed", { value: tok })}
               onClick={() => startEdit(i)}
               className="rounded-full p-0.5 text-muted-foreground opacity-60 transition-opacity hover:bg-primary/15 hover:text-primary hover:opacity-100"
             >
@@ -106,7 +108,7 @@ export function ChipListInput({
             </button>
             <button
               type="button"
-              aria-label={`Delete ${t}`}
+              aria-label={t("shell.deleteValueNamed", { value: tok })}
               onClick={() => remove(i)}
               className="rounded-full p-0.5 text-muted-foreground opacity-60 transition-opacity hover:bg-destructive/15 hover:text-destructive hover:opacity-100"
             >
@@ -125,10 +127,10 @@ export function ChipListInput({
               add();
             }
           }}
-          placeholder="Add value…"
+          placeholder={t("shell.addValuePlaceholder")}
           className="h-7 w-24 px-2 text-xs"
         />
-        <Button type="button" size="icon-sm" variant="ghost" aria-label="Add value" onClick={add}>
+        <Button type="button" size="icon-sm" variant="ghost" aria-label={t("shell.addValue")} onClick={add}>
           <Plus />
         </Button>
       </div>

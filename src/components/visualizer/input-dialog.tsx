@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
+import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { InputField } from "@/lib/engine/types";
 import { ChipListInput, isListValue } from "./chip-list-input";
@@ -67,6 +68,7 @@ export function InputDialog({
   /** Same validation the module uses — enables per-field error localization. */
   parseInput?: (fields: Record<string, string>) => unknown;
 }) {
+  const { t } = useLocale();
   const [values, setValues] = React.useState<Record<string, string>>(initial);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
 
@@ -91,10 +93,8 @@ export function InputDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Custom input</DialogTitle>
-          <DialogDescription>
-            Build your own dataset — the visualization regenerates instantly.
-          </DialogDescription>
+          <DialogTitle>{t("shell.customInput")}</DialogTitle>
+          <DialogDescription>{t("shell.customInputDesc")}</DialogDescription>
         </DialogHeader>
         <form
           className="grid gap-4"
@@ -105,7 +105,7 @@ export function InputDialog({
               setFieldErrors({});
               onOpenChange(false);
             } catch (err) {
-              const message = err instanceof Error ? err.message : "Invalid input.";
+              const message = err instanceof Error ? err.message : t("shell.invalidInput");
               const localized = parseInput
                 ? localizeErrors(fields, values, initial, parseInput, message)
                 : {};
@@ -159,9 +159,9 @@ export function InputDialog({
           })}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("shell.cancel")}
             </Button>
-            <Button type="submit">Generate</Button>
+            <Button type="submit">{t("shell.generate")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
