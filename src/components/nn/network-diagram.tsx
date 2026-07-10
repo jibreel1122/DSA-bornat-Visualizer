@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { ForwardPass, Network } from "@/lib/nn/network";
 import { useSettings } from "@/components/providers/settings-provider";
+import { useLocale } from "@/lib/i18n";
 
 /** Color for a weight edge: teal for positive, rose for negative, width/opacity by magnitude. */
 function weightStroke(w: number): { color: string; width: number; opacity: number } {
@@ -47,6 +48,7 @@ export function NetworkDiagram({
   onSelectNeuron: (n: { layer: number; index: number } | null) => void;
 }) {
   const { settings } = useSettings();
+  const { t } = useLocale();
   const prefersReducedMotionOS = usePrefersReducedMotion();
   const motionEnabled = !settings.reducedMotion && !prefersReducedMotionOS;
 
@@ -76,7 +78,8 @@ export function NetworkDiagram({
     return offset + gap * (i + 0.5);
   };
 
-  const layerLabel = (l: number) => (l === 0 ? "Input" : l === L - 1 ? "Output" : `Hidden ${l}`);
+  const layerLabel = (l: number) =>
+    l === 0 ? t("nn.layerInput") : l === L - 1 ? t("nn.layerOutput") : t("nn.layerHidden", { n: l });
   const showValueLabel = R >= 11; // avoid unreadable overlapping text on dense layers
 
   return (

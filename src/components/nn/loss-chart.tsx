@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/lib/i18n";
+
 /**
  * Simple SVG line chart of loss over epochs. `markers` are epoch indices
  * where the network architecture changed mid-run (rebuild while keeping
@@ -7,13 +9,14 @@
  * effect of an architecture edit on the same curve.
  */
 export function LossChart({ history, markers = [] }: { history: number[]; markers?: number[] }) {
+  const { t } = useLocale();
   const W = 300;
   const H = 140;
   const pad = 24;
   if (history.length < 2) {
     return (
       <div className="grid h-[140px] place-items-center text-xs text-muted-foreground">
-        Train to see the loss curve
+        {t("nn.trainToSeeLossCurve")}
       </div>
     );
   }
@@ -51,7 +54,7 @@ export function LossChart({ history, markers = [] }: { history: number[]; marker
         {min.toFixed(3)}
       </text>
       <text x={W - pad} y={H - pad + 14} textAnchor="end" className="fill-[var(--muted-foreground)] text-[9px]">
-        epoch {history.length}
+        {t("nn.epochCount", { count: history.length })}
       </text>
     </svg>
   );

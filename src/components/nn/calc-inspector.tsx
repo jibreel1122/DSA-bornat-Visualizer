@@ -4,6 +4,7 @@ import * as React from "react";
 import type { ForwardPass, Gradients, Network } from "@/lib/nn/network";
 import { ACTIVATIONS } from "@/lib/nn/activations";
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/lib/i18n";
 
 /**
  * Shows the exact math for a selected neuron: the weighted sum term by term,
@@ -23,10 +24,11 @@ export function CalcInspector({
   /** called after a weight/bias is edited in place, so the caller can force a re-render */
   onEdited?: () => void;
 }) {
+  const { t } = useLocale();
   if (!selected || !pass) {
     return (
       <div className="grid h-full min-h-[160px] place-items-center text-center text-sm text-muted-foreground">
-        Click a neuron in the network to inspect its exact computation.
+        {t("nn.clickNeuronToInspect")}
       </div>
     );
   }
@@ -35,52 +37,54 @@ export function CalcInspector({
   if (layer === 0) {
     return (
       <div className="text-sm">
-        <div className="font-medium">Input neuron x{index + 1}</div>
+        <div className="font-medium">{t("nn.inputNeuronLabel", { index: index + 1 })}</div>
         <p className="mt-1 text-muted-foreground">
-          Value = <span className="font-mono text-foreground">{pass.a[0][index].toFixed(4)}</span>. Input neurons hold the
-          raw feature value and have no weighted sum.
+          {t("nn.valueEquals")} <span className="font-mono text-foreground">{pass.a[0][index].toFixed(4)}</span>. {t("nn.inputNeuronNote")}
         </p>
       </div>
     );
   }
 
-  const t = layer - 1; // transition index feeding this layer
-  const W = net.weights[t][index];
-  const b = net.biases[t][index];
+  const ti = layer - 1; // transition index feeding this layer
+  const W = net.weights[ti][index];
+  const b = net.biases[ti][index];
   const prev = pass.a[layer - 1];
-  const z = pass.z[t][index];
+  const z = pass.z[ti][index];
   const a = pass.a[layer][index];
-  const actId = net.activations[t];
+  const actId = net.activations[ti];
   const act = ACTIVATIONS[actId];
-  const delta = grads?.delta?.[t]?.[index];
+  const delta = grads?.delta?.[ti]?.[index];
 
   return (
     <div className="grid gap-3 text-sm">
       <div className="font-medium">
-        {layer === net.layerSizes.length - 1 ? "Output" : `Hidden ${layer}`} neuron #{index + 1}
+        {layer === net.layerSizes.length - 1 ? t("nn.layerOutput") : t("nn.layerHidden", { n: layer })}{" "}
+        {t("nn.neuronHash", { index: index + 1 })}
         <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{act.label}</span>
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-medium text-muted-foreground">Weighted sum z = b + Σ wᵢ·aᵢ</div>
+        <div className="mb-1 text-xs font-medium text-muted-foreground">
+          {t("nn.weightedSumLabel")} <span dir="ltr">z = b + Σ wᵢ·aᵢ</span>
+        </div>
         <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-[11px]">
+          <table dir="ltr" className="w-full text-[11px]">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="px-2 py-1 text-left">term</th>
-                <th className="px-2 py-1 text-right">weight</th>
-                <th className="px-2 py-1 text-right">input a</th>
+                <th className="px-2 py-1 text-left">{t("nn.tableTerm")}</th>
+                <th className="px-2 py-1 text-right">{t("nn.tableWeight")}</th>
+                <th className="px-2 py-1 text-right">{t("nn.tableInputA")}</th>
                 <th className="px-2 py-1 text-right">w·a</th>
               </tr>
             </thead>
             <tbody className="font-mono">
               <tr className="border-t border-border/60">
-                <td className="px-2 py-1">bias (θ)</td>
+                <td className="px-2 py-1">{t("nn.tableBias")}</td>
                 <td className="px-2 py-1 text-right">
                   <EditableCell
                     value={b}
                     onCommit={(v) => {
-                      net.setBias(t, index, v);
+                      net.setBias(ti, index, v);
                       onEdited?.();
                     }}
                   />
@@ -95,7 +99,7 @@ export function CalcInspector({
                     <EditableCell
                       value={w}
                       onCommit={(v) => {
-                        net.setWeight(t, index, c, v);
+                        net.setWeight(ti, index, c, v);
                         onEdited?.();
                       }}
                     />
@@ -110,7 +114,7 @@ export function CalcInspector({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="z (weighted sum)" value={z.toFixed(4)} />
+        <Stat label={t("nn.zWeightedSum")} value={z.toFixed(4)} />
         <Stat label={`a = ${act.label}(z)`} value={a.toFixed(4)} accent />
         {delta !== undefined && <Stat label="δ = ∂Loss/∂z" value={delta.toFixed(4)} />}
         {delta !== undefined && <Stat label="∂Loss/∂b" value={delta.toFixed(4)} />}
@@ -118,8 +122,7 @@ export function CalcInspector({
 
       {delta !== undefined && (
         <p className="text-xs text-muted-foreground">
-          During backprop this neuron receives error signal δ = {delta.toFixed(4)}. Each weight&apos;s gradient is δ·aᵢ, so
-          gradient descent nudges w by −learningRate·δ·aᵢ.
+          {t("nn.backpropNote", { delta: delta.toFixed(4) })}
         </p>
       )}
     </div>
@@ -132,6 +135,7 @@ export function CalcInspector({
  * a raw editable number input, and commits (calling `onCommit`) on blur or Enter.
  */
 function EditableCell({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
+  const { t } = useLocale();
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(String(value));
 
@@ -154,7 +158,7 @@ function EditableCell({ value, onCommit }: { value: number; onCommit: (v: number
           setEditing(true);
         }}
         className="w-full rounded px-1 text-right font-mono text-[11px] hover:bg-accent"
-        title="Click to edit"
+        title={t("nn.clickToEdit")}
       >
         {value.toFixed(3)}
       </button>
