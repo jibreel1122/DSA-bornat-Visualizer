@@ -96,6 +96,7 @@ const mod: AlgorithmModule<CallStackFrame, Input> = {
     "    choose e (mark used, append)",
     "    permute(current)",
     "    un-choose e (mark unused, remove)  // backtrack",
+    "  return all recorded permutations",
   ],
   code: {
     pseudocode: `permute(current):
