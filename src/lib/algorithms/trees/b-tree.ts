@@ -54,7 +54,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     parent.keys.splice(i, 0, upKey);
     parent.children.splice(i + 1, 0, z);
     splits++;
-    toFrame({ [parent.id]: "special", [child.id]: "swap", [z.id]: "found" }, `Split full node [${[...child.keys, upKey, ...z.keys].join(", ")}]: push median ${upKey} up to the parent, keep the rest in two children.`, 4, `split`);
+    toFrame({ [parent.id]: "special", [child.id]: "swap", [z.id]: "found" }, `Split full node [${[...child.keys, upKey, ...z.keys].join(", ")}]: push median ${upKey} up to the parent, keep the rest in two children.`, 6, `split`);
   };
 
   const insertNonFull = (node: BNode, k: number) => {
@@ -62,11 +62,11 @@ function generate(input: Input): Step<TreeFrame>[] {
     if (node.leaf) {
       while (i >= 0 && k < node.keys[i]) i--;
       node.keys.splice(i + 1, 0, k);
-      toFrame({ [node.id]: "found" }, `Insert ${k} into leaf → [${node.keys.join(", ")}].`, 6, `insert ${k}`);
+      toFrame({ [node.id]: "found" }, `Insert ${k} into leaf → [${node.keys.join(", ")}].`, 5, `insert ${k}`);
     } else {
       while (i >= 0 && k < node.keys[i]) i--;
       i++;
-      toFrame({ [node.id]: "compare", [node.children[i].id]: "active" }, `${k}: descend into child ${i + 1} of node [${node.keys.join(", ")}].`, 8, `insert ${k}`);
+      toFrame({ [node.id]: "compare", [node.children[i].id]: "active" }, `${k}: descend into child ${i + 1} of node [${node.keys.join(", ")}].`, 6, `insert ${k}`);
       if (node.children[i].keys.length === MAX_KEYS) {
         splitChild(node, i);
         if (k > node.keys[i]) i++;
@@ -81,7 +81,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       const s = mk(false);
       s.children = [root];
       root = s;
-      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 3, `insert ${k}`);
+      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 2, `insert ${k}`);
       splitChild(s, 0);
       insertNonFull(s, k);
     } else {
@@ -106,7 +106,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     }
     return h;
   })();
-  toFrame(done, `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`, 9, `final B-tree`);
+  toFrame(done, `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`, 0, `final B-tree`);
   return steps;
 }
 
