@@ -79,11 +79,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
   while (k <= n) {
     bit[k] += delta;
     upath.add(k);
-    frame(new Set(upath), k, `Add ${delta} to bit[${k}] → ${bit[k]}. Next: ${k} + ${lowbit(k)} = ${k + lowbit(k)}.`, 8, `update`);
+    frame(new Set(upath), k, `Add ${delta} to bit[${k}] → ${bit[k]}. Next: ${k} + ${lowbit(k)} = ${k + lowbit(k)}.`, 2, `update`);
     k += lowbit(k);
     ops++;
   }
-  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 9, `done`);
+  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 1, `done`);
   return steps;
 }
 
