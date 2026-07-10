@@ -102,7 +102,7 @@ function generate(input: Input): Step<ListFrame>[] {
 
   const done: Record<string, CellState> = {};
   order.forEach((n) => (done[n.id] = "found"));
-  frame(done, `Final list: [${order.map((n) => n.value).join(" ⇄ ")}]. It can be walked forward or backward.`, 9);
+  frame(done, `Final list: [${order.map((n) => n.value).join(" ⇄ ")}]. It can be walked forward or backward.`, 8);
   return steps;
 }
 
