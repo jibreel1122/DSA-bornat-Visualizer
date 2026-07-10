@@ -240,7 +240,7 @@ export function VisualizerShell({
     try {
       pushInput(module.parseInput(next));
       liveActionRef.current = true;
-      toast.success(`Inserted ${raw}.`);
+      toast.success(t("shell.toastInserted", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
     }
@@ -252,7 +252,7 @@ export function VisualizerShell({
     const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === raw.trim());
     if (idx === -1) {
-      toast.info(`"${raw}" ${t("shell.notInCurrentValues")}`);
+      toast.info(t("shell.toastNotInValues", { value: raw }));
       return;
     }
     tokens.splice(idx, 1);
@@ -260,7 +260,7 @@ export function VisualizerShell({
     try {
       pushInput(module.parseInput(next));
       liveActionRef.current = true;
-      toast.success(`Removed ${raw}.`);
+      toast.success(t("shell.toastRemoved", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotRemove"));
     }
@@ -272,7 +272,7 @@ export function VisualizerShell({
     const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === oldRaw.trim());
     if (idx === -1) {
-      toast.info(`"${oldRaw}" ${t("shell.notInCurrentValues")}`);
+      toast.info(t("shell.toastNotInValues", { value: oldRaw }));
       return;
     }
     tokens[idx] = newRaw.trim();
@@ -280,7 +280,7 @@ export function VisualizerShell({
     try {
       pushInput(module.parseInput(next));
       liveActionRef.current = true;
-      toast.success(`Changed ${oldRaw} to ${newRaw}.`);
+      toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotEdit"));
     }
@@ -293,7 +293,7 @@ export function VisualizerShell({
     try {
       pushInput(module.parseInput(next));
       liveActionRef.current = true;
-      toast.success(`Searching for ${raw}.`);
+      toast.success(t("shell.toastSearching", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotSearch"));
     }
@@ -316,9 +316,9 @@ export function VisualizerShell({
     try {
       pushInput(module.parseInput(next));
       liveActionRef.current = true;
-      toast.success(`Set cell (${row}, ${col}) to "${char}".`);
+      toast.success(t("shell.toastCellSet", { row, col, char }));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not edit that cell.");
+      toast.error(e instanceof Error ? e.message : t("shell.couldNotEditCell"));
     }
   };
 
