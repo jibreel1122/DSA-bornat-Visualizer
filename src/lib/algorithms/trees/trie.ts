@@ -68,21 +68,21 @@ function generate(input: Input): Step<TreeFrame>[] {
   for (const ch of target) {
     if (cur && cur.children.has(ch)) {
       cur = cur.children.get(ch)!;
-      toFrame({ [cur.id]: "compare" }, `Matched '${ch}' — descend.`, 9, `search "${target}"`);
+      toFrame({ [cur.id]: "compare" }, `Matched '${ch}' — descend.`, 7, `search "${target}"`);
     } else {
       ok = false;
       const st: Record<string, CellState> = {};
       if (cur) st[cur.id] = "discarded";
-      toFrame(st, `No edge for '${ch}': "${target}" is not in the trie.`, 10, `search "${target}"`);
+      toFrame(st, `No edge for '${ch}': "${target}" is not in the trie.`, 7, `search "${target}"`);
       cur = null;
       break;
     }
   }
   if (ok && cur) {
     if (cur.isEnd) {
-      toFrame({ [cur.id]: "found" }, `Reached the end and it is marked ★ — "${target}" is present.`, 11, `search "${target}"`);
+      toFrame({ [cur.id]: "found" }, `Reached the end and it is marked ★ — "${target}" is present.`, 7, `search "${target}"`);
     } else {
-      toFrame({ [cur.id]: "discarded" }, `Path exists but the final node isn't ★ — "${target}" is only a prefix, not a stored word.`, 11, `search "${target}"`);
+      toFrame({ [cur.id]: "discarded" }, `Path exists but the final node isn't ★ — "${target}" is only a prefix, not a stored word.`, 7, `search "${target}"`);
     }
   }
   return steps;
