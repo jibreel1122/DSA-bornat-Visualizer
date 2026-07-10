@@ -79,7 +79,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   return steps;
 }
 
-function randomInput(level: number, rng: { int: (a: number, b: number) => number; pick: <T>(a: readonly T[]) => T }): Input {
+function randomInput(level: number): Input {
   const balanced = [
     "()",
     "()[]{}",
@@ -308,7 +308,7 @@ A stack captures exactly the "last opened, first closed" discipline (LIFO). Scan
   inputFields: [
     { key: "expr", label: "Bracket expression", placeholder: "{[()]}", help: "Use ( ) [ ] { }. Up to 80 characters." },
   ],
-  defaultInput: (level, rng) => randomInput(level, rng),
+  defaultInput: (level) => randomInput(level),
   parseInput: (fields) => {
     const expr = (fields.expr ?? "").replace(/\s+/g, "");
     if (!expr) throw new Error("Enter a bracket expression.");

@@ -1,5 +1,4 @@
 import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
-import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
 
 type Input = { values: number[]; target: number };

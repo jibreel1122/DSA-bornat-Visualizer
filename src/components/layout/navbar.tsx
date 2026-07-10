@@ -44,7 +44,7 @@ const TOP_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { locale, setLocale, t } = useLocale();
+  const { setLocale, t } = useLocale();
   const mounted = useMounted();
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);

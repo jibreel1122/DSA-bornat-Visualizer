@@ -174,6 +174,8 @@ export function NNVisualizer() {
 
   // Ordered walkthrough sequence: every non-input neuron, layer by layer,
   // left to right — the order a forward pass actually computes them in.
+  // `net` is reassigned to a new Network instance (never mutated in place)
+  // whenever the architecture changes, so it alone is a sufficient dependency.
   const neuronSequence = React.useMemo(() => {
     if (!net) return [] as { layer: number; index: number }[];
     const seq: { layer: number; index: number }[] = [];
@@ -181,7 +183,7 @@ export function NNVisualizer() {
       for (let i = 0; i < net.layerSizes[l]; i++) seq.push({ layer: l, index: i });
     }
     return seq;
-  }, [net, net?.layerSizes.join(",")]);
+  }, [net]);
 
   const stepIndex = selectedNeuron
     ? neuronSequence.findIndex((n) => n.layer === selectedNeuron.layer && n.index === selectedNeuron.index)

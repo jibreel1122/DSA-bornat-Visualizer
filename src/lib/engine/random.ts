@@ -84,7 +84,8 @@ export function randomGraph(
   for (let i = 1; i < n; i++) {
     const j = rng.int(0, i - 1);
     if (opts?.acyclic) addEdge(ids[j], ids[i]);
-    else rng.next() < 0.5 ? addEdge(ids[j], ids[i]) : addEdge(ids[i], ids[j]);
+    else if (rng.next() < 0.5) addEdge(ids[j], ids[i]);
+    else addEdge(ids[i], ids[j]);
   }
   const extra = rng.int(Math.floor(n / 3), Math.max(1, Math.floor(n * 0.8)));
   for (let k = 0; k < extra; k++) {

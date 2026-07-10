@@ -132,7 +132,7 @@ export function VisualizerShell({
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
-  }, [module, input]);
+  }, [module, input, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);

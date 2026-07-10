@@ -249,7 +249,7 @@ This "include/exclude" recursion pattern is one of the most important templates 
     ],
   },
   inputFields: [{ key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–10 distinct symbols or numbers (2^n subsets — 10 elements = 1024 subsets).", list: true }],
-  defaultInput: (level, rng) => {
+  defaultInput: (level) => {
     const pools: (string | number)[][] = [
       ["A", "B"],
       ["A", "B", "C"],

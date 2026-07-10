@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Brain, Flame, Target } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/catalog/page-header";
 import { CATEGORIES } from "@/lib/categories";
 import { useLocalStorage } from "@/lib/hooks";

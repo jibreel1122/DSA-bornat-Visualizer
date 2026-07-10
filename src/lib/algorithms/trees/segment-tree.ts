@@ -67,7 +67,6 @@ function generate(input: Input): Step<TreeFrame>[] {
   // --- range sum query ---
   const L = input.queryL;
   const R = input.queryR;
-  const querySteps: string[] = [];
   const query = (node: Node | null, l: number, r: number): number => {
     if (!node || r < node.lo || node.hi < l) {
       if (node) toFrame({ [node.id]: "discarded" }, `Node [${node.lo}..${node.hi}] is outside query [${l}..${r}] → contributes 0.`, 3, `query`);

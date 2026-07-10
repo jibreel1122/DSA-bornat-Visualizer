@@ -71,7 +71,7 @@ function generate(input: Input): Step<GridFrame>[] {
       frame([r, c], null, `Reached the cheese at (${r}, ${c})! A path exists.`, 4);
       return true;
     }
-    for (const [dr, dc, name] of DIRS) {
+    for (const [dr, dc] of DIRS) {
       const nr = r + dr;
       const nc = c + dc;
       if (inBounds(nr, nc) && g[nr][nc] === 1 && !visited[nr][nc]) {

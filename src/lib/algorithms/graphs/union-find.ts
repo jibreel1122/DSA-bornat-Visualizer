@@ -115,7 +115,7 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
   const opCount = Math.min(7, 3 + level);
   const ops: [number, number][] = [];
   for (let k = 0; k < opCount; k++) {
-    let a = rng.int(0, n - 1);
+    const a = rng.int(0, n - 1);
     let b = rng.int(0, n - 1);
     if (a === b) b = (b + 1) % n;
     ops.push([a, b]);
