@@ -1,12 +1,9 @@
 import type { AlgorithmModule, ArrayFrame, CellState, Step } from "@/lib/engine/types";
 import { randomArray } from "@/lib/engine/random";
 import { parseNumberList } from "@/lib/utils";
+import { arrayFrame } from "../step-helpers";
 
 type Input = { values: number[] };
-
-function frame(values: number[], states: Record<number, CellState>, gap: number): ArrayFrame {
-  return { values: [...values], states: { ...states }, note: `gap = ${gap}` };
-}
 
 function generate(input: Input): Step<ArrayFrame>[] {
   const a = [...input.values];
@@ -17,7 +14,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const c = () => ({ comparisons, swaps });
   const SHRINK = 1.3;
 
-  steps.push({ frame: frame(a, {}, n), description: `Comb sort compares elements a large gap apart, shrinking the gap by 1.3× each pass.`, codeLine: 0, counters: c() });
+  steps.push({ frame: arrayFrame(a, {}, { note: `gap = ${n}` }), description: `Comb sort compares elements a large gap apart, shrinking the gap by 1.3× each pass.`, codeLine: 0, counters: c() });
 
   let gap = n;
   let swapped = true;
@@ -27,12 +24,12 @@ function generate(input: Input): Step<ArrayFrame>[] {
     swapped = false;
     for (let i = 0; i + gap < n; i++) {
       comparisons++;
-      steps.push({ frame: frame(a, { [i]: "compare", [i + gap]: "compare" }, gap), description: `Compare a[${i}] = ${a[i]} with a[${i + gap}] = ${a[i + gap]} (gap ${gap}).`, codeLine: 2, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + gap]: "compare" }, { note: `gap = ${gap}` }), description: `Compare a[${i}] = ${a[i]} with a[${i + gap}] = ${a[i + gap]} (gap ${gap}).`, codeLine: 2, counters: c() });
       if (a[i] > a[i + gap]) {
         [a[i], a[i + gap]] = [a[i + gap], a[i]];
         swaps++;
         swapped = true;
-        steps.push({ frame: frame(a, { [i]: "swap", [i + gap]: "swap" }, gap), description: `Out of order — swap across the gap.`, codeLine: 3, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i]: "swap", [i + gap]: "swap" }, { note: `gap = ${gap}` }), description: `Out of order — swap across the gap.`, codeLine: 3, counters: c() });
       }
     }
   }
