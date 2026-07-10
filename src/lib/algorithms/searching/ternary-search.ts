@@ -26,9 +26,20 @@ function generate(input: Input): Step<ArrayFrame>[] {
     snap({ [m1]: "active", [m2]: "active" }, { from: lo, to: hi }, `Probe m1 = ${m1} (${a[m1]}) and m2 = ${m2} (${a[m2]}).`, 1, [{ index: lo, label: "lo" }, { index: m1, label: "m1" }, { index: m2, label: "m2" }, { index: hi, label: "hi" }]);
     if (a[m1] === target) { snap({ [m1]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m1}.`, 2); return steps; }
     if (a[m2] === target) { snap({ [m2]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m2}.`, 2); return steps; }
-    if (target < a[m1]) { snap({ [m1]: "discarded", [m2]: "discarded" }, { from: lo, to: m1 - 1 }, `${target} < ${a[m1]}: search the first third.`, 3); hi = m1 - 1; }
-    else if (target > a[m2]) { snap({ [m1]: "discarded", [m2]: "discarded" }, { from: m2 + 1, to: hi }, `${target} > ${a[m2]}: search the last third.`, 4); lo = m2 + 1; }
-    else { snap({ [m1]: "discarded", [m2]: "discarded" }, { from: m1 + 1, to: m2 - 1 }, `Between the probes: search the middle third.`, 5); lo = m1 + 1; hi = m2 - 1; }
+    if (target < a[m1]) {
+      const newHi = m1 - 1;
+      snap({ [m1]: "discarded", [m2]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${target} < ${a[m1]}: search the first third.`, 3);
+      hi = newHi;
+    } else if (target > a[m2]) {
+      const newLo = m2 + 1;
+      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${target} > ${a[m2]}: search the last third.`, 4);
+      lo = newLo;
+    } else {
+      const newLo = m1 + 1;
+      const newHi = m2 - 1;
+      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= newHi ? { from: newLo, to: newHi } : null, `Between the probes: search the middle third.`, 5);
+      lo = newLo; hi = newHi;
+    }
   }
   snap({}, null, `${target} is not present.`, 6);
   return steps;
