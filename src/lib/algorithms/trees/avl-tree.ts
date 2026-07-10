@@ -107,27 +107,27 @@ function generate(input: Input): Step<TreeFrame>[] {
       updateHeight(z);
       const balance = bf(z);
       if (balance > 1 || balance < -1) {
-        toFrame({ [z.id]: "swap" }, `Node ${z.value} is unbalanced (bf ${balance > 0 ? "+" : ""}${balance}). Rebalance with a rotation.`, 6, `rebalance`);
+        toFrame({ [z.id]: "swap" }, `Node ${z.value} is unbalanced (bf ${balance > 0 ? "+" : ""}${balance}). Rebalance with a rotation.`, 3, `rebalance`);
         if (balance > 1 && bf(z.left) >= 0) {
           // Left-Left
-          toFrame({ [z.id]: "swap", [z.left!.id]: "active" }, `Left-Left case → right-rotate ${z.value}.`, 7, `LL rotation`);
+          toFrame({ [z.id]: "swap", [z.left!.id]: "active" }, `Left-Left case → right-rotate ${z.value}.`, 4, `LL rotation`);
           rotateRight(z);
         } else if (balance > 1) {
           // Left-Right
-          toFrame({ [z.id]: "swap", [z.left!.id]: "active", [z.left!.right!.id]: "compare" }, `Left-Right case → left-rotate ${z.left!.value}, then right-rotate ${z.value}.`, 8, `LR rotation`);
+          toFrame({ [z.id]: "swap", [z.left!.id]: "active", [z.left!.right!.id]: "compare" }, `Left-Right case → left-rotate ${z.left!.value}, then right-rotate ${z.value}.`, 5, `LR rotation`);
           rotateLeft(z.left!);
           rotateRight(z);
         } else if (balance < -1 && bf(z.right) <= 0) {
           // Right-Right
-          toFrame({ [z.id]: "swap", [z.right!.id]: "active" }, `Right-Right case → left-rotate ${z.value}.`, 9, `RR rotation`);
+          toFrame({ [z.id]: "swap", [z.right!.id]: "active" }, `Right-Right case → left-rotate ${z.value}.`, 6, `RR rotation`);
           rotateLeft(z);
         } else {
           // Right-Left
-          toFrame({ [z.id]: "swap", [z.right!.id]: "active", [z.right!.left!.id]: "compare" }, `Right-Left case → right-rotate ${z.right!.value}, then left-rotate ${z.value}.`, 10, `RL rotation`);
+          toFrame({ [z.id]: "swap", [z.right!.id]: "active", [z.right!.left!.id]: "compare" }, `Right-Left case → right-rotate ${z.right!.value}, then left-rotate ${z.value}.`, 7, `RL rotation`);
           rotateRight(z.right!);
           rotateLeft(z);
         }
-        toFrame({}, `Rebalanced. Heights are AVL-valid again (all balance factors in {−1,0,+1}).`, 11, `balanced`);
+        toFrame({}, `Rebalanced. Heights are AVL-valid again (all balance factors in {−1,0,+1}).`, 8, `balanced`);
         break; // one rotation suffices for a single insertion
       }
       z = z.parent;
@@ -144,7 +144,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(n.right);
   };
   markAll(root);
-  toFrame(done, `All values inserted. The tree is height-balanced with height ${h(root)} — searches stay O(log n).`, 12, `final AVL tree`);
+  toFrame(done, `All values inserted. The tree is height-balanced with height ${h(root)} — searches stay O(log n).`, 8, `final AVL tree`);
   return steps;
 }
 
