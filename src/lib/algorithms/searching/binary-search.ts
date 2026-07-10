@@ -38,11 +38,13 @@ function generate(input: Input): Step<ArrayFrame>[] {
       return steps;
     }
     if (a[mid] < target) {
-      snap({ [mid]: "discarded" }, { from: mid + 1, to: hi }, `${a[mid]} < ${target}: discard the left half, search right.`, 4, [{ index: mid, label: "mid" }]);
-      lo = mid + 1;
+      const newLo = mid + 1;
+      snap({ [mid]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${a[mid]} < ${target}: discard the left half, search right.`, 4, [{ index: mid, label: "mid" }]);
+      lo = newLo;
     } else {
-      snap({ [mid]: "discarded" }, { from: lo, to: mid - 1 }, `${a[mid]} > ${target}: discard the right half, search left.`, 5, [{ index: mid, label: "mid" }]);
-      hi = mid - 1;
+      const newHi = mid - 1;
+      snap({ [mid]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${a[mid]} > ${target}: discard the right half, search left.`, 5, [{ index: mid, label: "mid" }]);
+      hi = newHi;
     }
   }
   snap({}, null, `${target} is not present — the search range is empty.`, 6);
