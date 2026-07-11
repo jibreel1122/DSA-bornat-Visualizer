@@ -28,7 +28,7 @@ const GAUGE_COUNTERS: Record<string, string[]> = {
   "linear-probing": ["items"], // live stored-item count falls on delete
   "quadratic-probing": ["items"], // live stored-item count falls on delete
   "queue-operations": ["size"], // live queue size falls on dequeue
-  "sieve-of-eratosthenes": ["primes"], // count of numbers still marked prime falls as composites are crossed out
+  "sieve-of-eratosthenes": ["candidates"], // numbers still possibly prime — falls as composites are crossed out
   "stack-operations": ["size"], // live stack size falls on pop
   "topological-sort": ["remaining"], // unprocessed-node count falls as nodes are ordered
 };

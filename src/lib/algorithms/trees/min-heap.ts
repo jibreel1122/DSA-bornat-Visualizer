@@ -48,26 +48,26 @@ function generate(input: Input): Step<TreeFrame>[] {
         swaps++;
         i = parent;
       } else {
-        toFrame({ [i]: "sorted", [parent]: "compare" }, `${heap[i]} ≥ parent ${heap[parent]}: heap property restored.`, 4, `sift-up`);
+        toFrame({ [i]: "sorted", [parent]: "compare" }, `${heap[i]} ≥ parent ${heap[parent]}: heap property restored.`, 3, `sift-up`);
         break;
       }
     }
   }
-  toFrame({ 0: "found" }, `All values inserted. The minimum, ${heap[0]}, sits at the root.`, 5, `heap built`);
+  toFrame({ 0: "found" }, `All values inserted. The minimum, ${heap[0]}, sits at the root.`, 0, `heap built`);
 
   // --- extract-min (sift down) ---
   const times = Math.min(input.extractCount, heap.length);
   for (let e = 0; e < times; e++) {
     const min = heap[0];
     const last = heap.pop()!;
-    toFrame({ 0: "swap" }, `extractMin(): remove root ${min}. Move last element ${last} to the root.`, 7, `extract-min`);
+    toFrame({ 0: "swap" }, `extractMin(): remove root ${min}. Move last element ${last} to the root.`, 5, `extract-min`);
     if (heap.length === 0) {
       steps[steps.length - 1].description = `extractMin(): removed ${min}. The heap is now empty.`;
       break;
     }
     heap[0] = last;
     let i = 0;
-    toFrame({ 0: "active" }, `Now sift ${last} down to its correct spot.`, 8, `sift-down`);
+    toFrame({ 0: "active" }, `Now sift ${last} down to its correct spot.`, 6, `sift-down`);
     while (true) {
       const l = 2 * i + 1;
       const r = 2 * i + 2;
@@ -84,7 +84,7 @@ function generate(input: Input): Step<TreeFrame>[] {
         toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 7, `sift-down`);
         break;
       }
-      toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 9, `sift-down`);
+      toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 6, `sift-down`);
       [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
       swaps++;
       i = smallest;

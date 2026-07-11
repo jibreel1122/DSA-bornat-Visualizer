@@ -99,7 +99,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     const node: Node = { id: `n${idc++}`, value, left: null, right: null, parent, height: 1 };
     if (value < parent.value) parent.left = node;
     else parent.right = node;
-    toFrame({ [node.id]: "found" }, `Insert ${value} as a leaf under ${parent.value}. Now retrace upward to rebalance.`, 4, `insert ${value}`);
+    toFrame({ [node.id]: "found" }, `Insert ${value} as a leaf under ${parent.value}. Now retrace upward to rebalance.`, 1, `insert ${value}`);
 
     // 2) Retrace: update heights and rebalance at the first unbalanced ancestor.
     let z: Node | null = parent;

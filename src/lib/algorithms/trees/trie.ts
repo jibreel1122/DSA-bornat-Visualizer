@@ -64,7 +64,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   const target = input.search;
   let cur: TNode | null = root;
   let ok = true;
-  toFrame({ root: "active" }, `search("${target}"): walk the trie character by character.`, 8, `search "${target}"`);
+  toFrame({ root: "active" }, `search("${target}"): walk the trie character by character.`, 7, `search "${target}"`);
   for (const ch of target) {
     if (cur && cur.children.has(ch)) {
       cur = cur.children.get(ch)!;

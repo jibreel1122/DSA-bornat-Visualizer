@@ -53,14 +53,14 @@ function generate(input: Input): Step<ArrayFrame>[] {
     ops++;
     frame(path, i, `Build: add a[${i}] = ${a[i - 1]} into bit[${[...path].join(", ")}] (each responsible for index ${i}).`, 2, `build (O(n log n))`);
   }
-  frame(new Set(), null, `Fenwick tree built. Each bit[i] holds the sum of a range of size lowbit(i) ending at i.`, 3, `built`);
+  frame(new Set(), null, `Fenwick tree built. Each bit[i] holds the sum of a range of size lowbit(i) ending at i.`, 0, `built`);
 
   // --- prefix sum query ---
   const qi = input.queryIdx;
   let sum = 0;
   let i = qi;
   const qpath = new Set<number>();
-  frame(new Set(), qi, `prefixSum(${qi}): sum a[1..${qi}] by hopping down via i −= lowbit(i).`, 4, `query`);
+  frame(new Set(), qi, `prefixSum(${qi}): sum a[1..${qi}] by hopping down via i −= lowbit(i).`, 3, `query`);
   while (i > 0) {
     sum += bit[i];
     qpath.add(i);
@@ -75,7 +75,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const delta = input.updateDelta;
   let k = ui;
   const upath = new Set<number>();
-  frame(new Set(), ui, `update(${ui}, +${delta}): add ${delta} to a[${ui}], climbing via i += lowbit(i).`, 7, `update`);
+  frame(new Set(), ui, `update(${ui}, +${delta}): add ${delta} to a[${ui}], climbing via i += lowbit(i).`, 1, `update`);
   while (k <= n) {
     bit[k] += delta;
     upath.add(k);
@@ -83,7 +83,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     k += lowbit(k);
     ops++;
   }
-  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 1, `done`);
+  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 0, `done`);
   return steps;
 }
 

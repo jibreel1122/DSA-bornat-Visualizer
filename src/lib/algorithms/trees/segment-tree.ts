@@ -143,7 +143,7 @@ const mod: AlgorithmModule<TreeFrame, Input> = {
     "    if node range inside [l,r]: return node.sum",
     "    return query(left) + query(right)",
     "  update(node, i, v): fix the leaf, recompute sums upward",
-    "  return (queries & updates run in O(log n))",
+    "  return the built tree",
   ],
   code: {
     pseudocode: `build(lo,hi): if lo==hi: sum=a[lo]

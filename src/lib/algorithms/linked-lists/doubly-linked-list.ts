@@ -97,7 +97,7 @@ function generate(input: Input): Step<ListFrame>[] {
     const st: Record<string, CellState> = {};
     for (let k = 0; k <= i; k++) st[order[k].id] = "visited";
     st[order[i].id] = "active";
-    frame(st, `Traverse forward via next pointers: visit ${order[i].value}.`, 8);
+    frame(st, `Traverse forward via next pointers: visit ${order[i].value}.`, 7);
   }
 
   const done: Record<string, CellState> = {};

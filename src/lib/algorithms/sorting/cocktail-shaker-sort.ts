@@ -22,7 +22,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     swapped = false;
     for (let i = lo; i < hi; i++) {
       comparisons++;
-      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + 1]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, codeLine: 2, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + 1]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, codeLine: 3, counters: c() });
       if (a[i] > a[i + 1]) {
         [a[i], a[i + 1]] = [a[i + 1], a[i]];
         swaps++;
@@ -31,17 +31,17 @@ function generate(input: Input): Step<ArrayFrame>[] {
       }
     }
     hi--;
-    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Largest is parked at the right end; shrink upper bound.`, codeLine: 4, counters: c() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Largest is parked at the right end; shrink upper bound.`, codeLine: 3, counters: c() });
     if (!swapped) break;
     swapped = false;
     for (let i = hi; i > lo; i--) {
       comparisons++;
-      steps.push({ frame: arrayFrame(a, { [i - 1]: "compare", [i]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, codeLine: 5, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i - 1]: "compare", [i]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, codeLine: 4, counters: c() });
       if (a[i - 1] > a[i]) {
         [a[i - 1], a[i]] = [a[i], a[i - 1]];
         swaps++;
         swapped = true;
-        steps.push({ frame: arrayFrame(a, { [i - 1]: "swap", [i]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — smaller bubbles left.`, codeLine: 6, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i - 1]: "swap", [i]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — smaller bubbles left.`, codeLine: 4, counters: c() });
       }
     }
     lo++;

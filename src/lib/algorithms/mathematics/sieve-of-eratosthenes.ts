@@ -43,7 +43,7 @@ function generate(input: Input): Step<GridFrame>[] {
     const frame = buildGrid(states);
     frame.aux = [{ label: "Primes", values: primesFound() }];
     frame.note = `sieving up to ${n}`;
-    steps.push({ frame, description, codeLine, counters: { operations, primes: primesFound().length } });
+    steps.push({ frame, description, codeLine, counters: { operations, candidates: primesFound().length } });
   };
 
   pushSnap({}, `Sieve of Eratosthenes: list 2..${n}, then cross out multiples of each prime.`, 0);

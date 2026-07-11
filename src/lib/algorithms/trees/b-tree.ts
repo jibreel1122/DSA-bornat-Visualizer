@@ -106,7 +106,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     }
     return h;
   })();
-  toFrame(done, `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`, 0, `final B-tree`);
+  toFrame(done, `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`, 7, `final B-tree`);
   return steps;
 }
 
@@ -131,6 +131,7 @@ const mod: AlgorithmModule<TreeFrame, Input> = {
     "procedure insertNonFull(node, key)",
     "  if node is a leaf: put key in sorted order",
     "  else: find child; if child full: splitChild; descend",
+    "  // every leaf remains at the same depth",
   ],
   code: {
     pseudocode: `insert(key):

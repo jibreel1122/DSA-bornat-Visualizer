@@ -28,7 +28,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     prev = curr;
     curr += step0;
     if (prev >= n) {
-      snap({}, null, `Jumped past the end — ${target} is not present.`, 4);
+      snap({}, null, `Jumped past the end — ${target} is not present.`, 5);
       return steps;
     }
   }
@@ -39,7 +39,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     comparisons++;
     snap({ [i]: "active" }, { from: prev, to: Math.min(curr, n) - 1 }, `Check a[${i}] = ${a[i]}.`, 3, [{ index: i, label: "i" }]);
     if (a[i] === target) {
-      snap({ [i]: "found" }, { from: prev, to: Math.min(curr, n) - 1 }, `Found ${target} at index ${i} in ${comparisons} comparisons.`, 5);
+      snap({ [i]: "found" }, { from: prev, to: Math.min(curr, n) - 1 }, `Found ${target} at index ${i} in ${comparisons} comparisons.`, 4);
       return steps;
     }
     if (a[i] > target) break;
