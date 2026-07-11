@@ -16,7 +16,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
 
   const fmtSet = (arr: (string | number)[]) => `{${arr.join(", ")}}`;
 
-  const snap = (topState: CallStackItem["state"], description: string, codeLine: number): void => {
+  const snap = (topState: CallStackItem["state"], description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -30,12 +30,18 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `powerSet([${items.join(", ")}]) — at each element, branch into "exclude it" and "include it".`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { calls, subsets: output.length },
     });
   };
 
-  snap(undefined, `Generate the power set of [${items.join(", ")}]: 2^${n} = ${2 ** n} subsets, by deciding include/exclude for each element in turn.`, 0);
+  snap(
+    undefined,
+    `Generate the power set of [${items.join(", ")}]: 2^${n} = ${2 ** n} subsets, by deciding include/exclude for each element in turn.`,
+    0,
+    `ولّد مجموعة القوى لـ [${items.join(", ")}]: 2^${n} = ${2 ** n} مجموعة جزئية، بتحديد الإدراج/الاستبعاد لكل عنصر بالتتابع.`,
+  );
 
   const recurse = (i: number): void => {
     if (truncated) return;
@@ -44,19 +50,34 @@ function generate(input: Input): Step<CallStackFrame>[] {
     stack.push({ id, label: `decide(${i})`, detail: fmtSet(current), state: "active" });
     if (i === n) {
       output.push(fmtSet(current));
-      snap("found", `All ${n} elements decided → record subset ${fmtSet(current)}.`, 2);
+      snap(
+        "found",
+        `All ${n} elements decided → record subset ${fmtSet(current)}.`,
+        2,
+        `تقرر مصير جميع العناصر الـ ${n} ← سجّل المجموعة الجزئية ${fmtSet(current)}.`,
+      );
       stack.pop();
       return;
     }
     const item = items[i];
 
     // branch 1: exclude items[i]
-    snap("active", `At index ${i} (element ${item}): branch 1 — EXCLUDE it.`, 3);
+    snap(
+      "active",
+      `At index ${i} (element ${item}): branch 1 — EXCLUDE it.`,
+      3,
+      `عند الفهرس ${i} (العنصر ${item}): الفرع 1 — استبعده.`,
+    );
     recurse(i + 1);
 
     // branch 2: include items[i]
     current.push(item);
-    snap("swap", `At index ${i} (element ${item}): branch 2 — INCLUDE it → current = ${fmtSet(current)}.`, 4);
+    snap(
+      "swap",
+      `At index ${i} (element ${item}): branch 2 — INCLUDE it → current = ${fmtSet(current)}.`,
+      4,
+      `عند الفهرس ${i} (العنصر ${item}): الفرع 2 — أدرجه ← current = ${fmtSet(current)}.`,
+    );
     recurse(i + 1);
     current.pop();
 
@@ -65,17 +86,25 @@ function generate(input: Input): Step<CallStackFrame>[] {
 
   recurse(0);
   stack.length = 0;
-  snap(undefined, `Done. All ${output.length} subsets: ${output.join(", ")}.`, 5);
+  snap(
+    undefined,
+    `Done. All ${output.length} subsets: ${output.join(", ")}.`,
+    5,
+    `انتهى. جميع المجموعات الجزئية الـ ${output.length}: ${output.join(", ")}.`,
+  );
   return steps;
 }
 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "power-set",
   title: "Power Set (Subsets by Recursion)",
+  titleAr: "مجموعة القوى (المجموعات الجزئية عوديًا)",
   category: "recursion",
   difficulty: "Intermediate",
   tags: ["recursion", "backtracking", "subsets", "combinatorics", "O(2^n)"],
+  tagsAr: ["العودية", "التراجع", "مجموعات جزئية", "توافيقيات", "O(2^n)"],
   summary: "Generates every subset of a set by recursively branching into 'include this element' and 'exclude it' at each position.",
+  summaryAr: "يولّد كل المجموعات الجزئية لمجموعة عبر التفرع عوديًا بين 'إدراج هذا العنصر' و'استبعاده' عند كل موضع.",
   renderer: "callstack",
   pseudocode: [
     "procedure powerSet(items, i, current)",
@@ -246,6 +275,61 @@ This "include/exclude" recursion pattern is one of the most important templates 
       { question: "After the include branch, the code must…", options: ["Do nothing else", "Pop the just-added element off current (backtrack)", "Sort current", "Clear the whole output list"], answer: 1, explanation: "Without popping, the excluded-branch calls at the same level would see a corrupted current subset." },
       { question: "Power set generation and permutation generation both run in…", options: ["The same O(2ⁿ) time", "Different classes: O(2ⁿ) vs O(n!)", "O(n log n) each", "O(n) each"], answer: 1, explanation: "There are 2ⁿ subsets but n! permutations — very different growth rates for even modest n." },
       { question: "The include/exclude recursion template is the direct ancestor of…", options: ["Binary search", "Subset-sum and 0/1 knapsack recursions", "Merge sort", "Dijkstra's algorithm"], answer: 1, explanation: "Those problems add pruning (skip branches that can't reach the target) to this same per-element in/out skeleton." },
+    ],
+  },
+  contentAr: {
+    overview: `مجموعة القوى لمجموعة ذات n عنصر تحتوي كل المجموعات الجزئية الممكنة البالغ عددها 2ⁿ، بما فيها المجموعة الخالية والمجموعة الكاملة نفسها. أنظف طريقة لتوليدها هي قرار ثنائي لكل عنصر: لكل عنصر بالتتابع، استكشف عوديًا الفرع الذي يُستبعد فيه والفرع الذي يُدرَج فيه. بعد n قرارًا من هذا النوع، تقابل كل ورقة في شجرة العودية مجموعة جزئية فريدة واحدة — وبالضبط 2ⁿ توليفة من "داخل" أو "خارج" لكل عنصر.
+
+نمط العودية "إدراج/استبعاد" هذا هو أحد أهم القوالب في تصميم الخوارزميات: نفس الهيكل (التفرع على قرار ثنائي لكل عنصر، العودية، ثم التراجع) يقوم عليه حقيبة الظهر 0/1 ومجموع المجموعة الجزئية والكثير من مسائل البحث التوافيقي الأخرى — مجموعة القوى هي ببساطة النسخة بلا تقليم، إذ يُستكشف كل فرع دائمًا.`,
+    howItWorks: [
+      "اعمل عودية على الفهرس i مع المجموعة الجزئية الحالية: decide(i, current).",
+      "الحالة الأساسية: عندما يصل i إلى n (تقرر مصير كل العناصر)، سجّل نسخة من current كمجموعة جزئية كاملة واحدة.",
+      "الحالة العودية: اعمل عودية أولًا على decide(i+1, current) دون إضافة items[i] — فرع 'الاستبعاد'.",
+      "ثم ادفع items[i] إلى current، واعمل عودية على decide(i+1, current) — فرع 'الإدراج' — ثم أخرجه مرة أخرى بعد ذلك (تراجع).",
+      "كل مسار من الجذر إلى الورقة يتخذ بالضبط n قرار إدراج/استبعاد، فيولّد كل المجموعات الجزئية الـ 2ⁿ.",
+    ],
+    complexity: {
+      time: { best: "O(2ⁿ)", average: "O(2ⁿ)", worst: "O(2ⁿ)" },
+      space: "O(n) recursion depth, O(2ⁿ·n) to store all output subsets",
+      notes: "يوجد إثبات بأن عدد المجموعات الجزئية هو 2ⁿ، فأي خوارزمية تولّدها جميعًا هي Θ(2ⁿ) على الأقل؛ وهذه العودية تحقق هذا الحد بالضبط دون أي عمل مهدور.",
+    },
+    applications: [
+      "تعداد الحلول المرشحة في حقيبة الظهر 0/1 ومجموع المجموعة الجزئية ومسائل التقسيم",
+      "اختيار مجموعة السمات في تعلم الآلة (تجربة كل توليفات السمات عند n صغيرة)",
+      "توليد كل توليفات الفرق/المجموعات الممكنة من مجموعة صغيرة",
+      "اختبار كل توليفات الإعدادات المنطقية في البرمجيات (أعلام الميزات)",
+    ],
+    advantages: [
+      "بنية عودية بسيطة ومتماثلة — سهلة الإثبات والتكييف",
+      "تطابق مباشر مع عدد المجموعات الجزئية 2ⁿ دون أي استدعاءات عودية مهدورة",
+      "قالب الإدراج/الاستبعاد يعمم فورًا على أشكال مقلَّمة/مقيَّدة (مجموع المجموعة الجزئية، حقيبة الظهر)",
+    ],
+    disadvantages: [
+      "أسي — عملي فقط عند n صغيرة (تقريبًا n ≤ 20-25 قبل أن يصبح 2ⁿ كبيرًا جدًا)",
+      "بلا تقليم: يولّد كل مجموعة جزئية حتى لو كان بعضها فقط يحقق خاصية مستهدفة",
+      "تخزين كل المجموعات الجزئية الـ 2ⁿ قد يستهلك ذاكرة كبيرة حتى عند n متوسطة",
+    ],
+    commonMistakes: [
+      "نسيان الإخراج/التراجع بعد فرع الإدراج، مما يُفسد المجموعة الجزئية الحالية للفروع اللاحقة.",
+      "دفع نسخة بدلًا من مرجع من current عند تسجيل الناتج (التعديلات اللاحقة تُفسد حينها المجموعات الجزئية المسجَّلة سابقًا).",
+      "الخلط بين هذا وبين التباديل — ترتيب مجموعة القوى داخل المجموعة الجزئية لا يهم، بخلاف التباديل.",
+      "افتراض أن نهج القناع الثنائي (bitmask) التكراري (التكرار من 0 إلى 2ⁿ−1) مختلف جوهريًا — إنه نفس قرارات الإدراج/الاستبعاد، لكن مُرمَّزة كبتات بدل العودية.",
+    ],
+    interviewQuestions: [
+      "لماذا يحتوي مجموعة القوى بالضبط على 2ⁿ عنصر؟",
+      "اشرح قالب عودية الإدراج/الاستبعاد وكيف يُعمَّم على مجموع المجموعة الجزئية.",
+      "كيف تولّد مجموعة القوى تكراريًا باستخدام أقنعة ثنائية من 0 إلى 2ⁿ−1؟",
+      "كيف يقارَن التعقيد الزمني لهذه العودية بتوليد التباديل (n! مقابل 2ⁿ)؟",
+      "كيف تعدّل هذا لإخراج فقط المجموعات الجزئية التي مجموعها يساوي قيمة مستهدفة؟",
+    ],
+    summary:
+      "توليد مجموعة القوى يعمل عودية على كل عنصر، متفرعًا بين 'الاستبعاد' و'الإدراج' عند كل موضع، بحيث يكون كل مسار من الجذر إلى الورقة توليفة فريدة من قرارات داخل/خارج — بالضبط 2ⁿ مجموعة جزئية. يعمل في الزمن الأمثل Θ(2ⁿ) لتوليد كل المجموعات الجزئية، وهيكله إدراج/استبعاد هو السلف المباشر لعوديتي مجموع المجموعة الجزئية وحقيبة الظهر 0/1.",
+    quiz: [
+      { question: "مجموعة ذات n عنصر تحتوي على كم مجموعة جزئية؟", options: ["n", "n!", "2ⁿ", "n²"], answer: 2, explanation: "كل عنصر إما داخل المجموعة الجزئية أو خارجها باستقلالية — خياران لكل عنصر، وعدد العناصر n." },
+      { question: "الفرعان في العودية عند كل عنصر يمثلان…", options: ["الابن الأيسر والأيمن في شجرة بحث ثنائية", "استبعاد العنصر وإدراجه", "المرتَّب وغير المرتَّب", "الحالة الأساسية والحالة العودية فقط"], answer: 1, explanation: "كل عنصر يأخذ قرار داخل/خارج ثنائيًا، فيولّد الفرعين عند كل مستوى عودي." },
+      { question: "بعد فرع الإدراج، يجب على الكود أن…", options: ["لا يفعل شيئًا آخر", "يُخرج العنصر المُضاف للتو من current (تراجع)", "يرتّب current", "يمسح قائمة الناتج بأكملها"], answer: 1, explanation: "دون الإخراج، ستَرى استدعاءات فرع الاستبعاد عند نفس المستوى مجموعة جزئية حالية فاسدة." },
+      { question: "توليد مجموعة القوى وتوليد التباديل كلاهما يعمل في…", options: ["نفس الزمن O(2ⁿ)", "فئتين مختلفتين: O(2ⁿ) مقابل O(n!)", "O(n log n) لكل منهما", "O(n) لكل منهما"], answer: 1, explanation: "توجد 2ⁿ مجموعة جزئية لكن n! تبديلة — معدلا نمو مختلفان جدًا حتى عند n متوسطة." },
+      { question: "قالب عودية الإدراج/الاستبعاد هو السلف المباشر لـ…", options: ["البحث الثنائي", "عوديتي مجموع المجموعة الجزئية وحقيبة الظهر 0/1", "الترتيب بالدمج", "خوارزمية دايكسترا"], answer: 1, explanation: "تلك المسائل تضيف تقليمًا (تخطي الفروع التي لا يمكنها بلوغ الهدف) إلى نفس هيكل الداخل/الخارج لكل عنصر." },
     ],
   },
   inputFields: [{ key: "items", label: "Elements (distinct)", placeholder: "A, B, C", help: "2–10 distinct symbols or numbers (2^n subsets — 10 elements = 1024 subsets).", list: true }],

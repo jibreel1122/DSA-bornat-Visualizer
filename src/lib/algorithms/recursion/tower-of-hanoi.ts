@@ -21,28 +21,44 @@ function generate(input: Input): Step<CallStackFrame>[] {
     { label: "Peg C", values: [...pegs.C] },
   ];
 
-  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"]) => {
+  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"], descriptionAr?: string) => {
     const shown = stack.map((s, i) => ({ ...s, state: i === stack.length - 1 ? topState ?? s.state : s.state }));
     steps.push({
       frame: { stack: shown, aux: pegRows(), note: `${moves} move${moves === 1 ? "" : "s"} of ${2 ** n - 1}` },
       description,
+      descriptionAr,
       codeLine,
       counters: { moves, calls },
     });
   };
 
-  snap(`Solve Tower of Hanoi for ${n} disks: move the whole stack from A to C.`, 0);
+  snap(
+    `Solve Tower of Hanoi for ${n} disks: move the whole stack from A to C.`,
+    0,
+    undefined,
+    `حلّ لغز أبراج هانوي بعدد ${n} أقراص: انقل الكومة بأكملها من A إلى C.`,
+  );
 
   const hanoi = (k: number, from: "A" | "B" | "C", to: "A" | "B" | "C", via: "A" | "B" | "C") => {
     calls++;
     const id = `h${uid++}`;
     stack.push({ id, label: `hanoi(${k}, ${from}→${to})`, detail: `via ${via}`, state: "active" });
-    snap(`Call hanoi(${k}, ${from}→${to}) using ${via} as spare.`, 1);
+    snap(
+      `Call hanoi(${k}, ${from}→${to}) using ${via} as spare.`,
+      1,
+      undefined,
+      `استدعِ hanoi(${k}, ${from}→${to}) باستخدام ${via} كقطب احتياطي.`,
+    );
     if (k === 1) {
       const disk = pegs[from].pop()!;
       pegs[to].push(disk);
       moves++;
-      snap(`Base case: move disk ${disk} from ${from} to ${to}.`, 2, "found");
+      snap(
+        `Base case: move disk ${disk} from ${from} to ${to}.`,
+        2,
+        "found",
+        `الحالة الأساسية: انقل القرص ${disk} من ${from} إلى ${to}.`,
+      );
       stack.pop();
       return;
     }
@@ -50,24 +66,32 @@ function generate(input: Input): Step<CallStackFrame>[] {
     const disk = pegs[from].pop()!;
     pegs[to].push(disk);
     moves++;
-    snap(`Move disk ${disk} from ${from} to ${to}.`, 4, "found");
+    snap(`Move disk ${disk} from ${from} to ${to}.`, 4, "found", `انقل القرص ${disk} من ${from} إلى ${to}.`);
     hanoi(k - 1, via, to, from);
     stack.pop();
-    snap(`hanoi(${k}, ${from}→${to}) done.`, 5, "sorted");
+    snap(`hanoi(${k}, ${from}→${to}) done.`, 5, "sorted", `اكتمل hanoi(${k}, ${from}→${to}).`);
   };
 
   hanoi(n, "A", "C", "B");
-  snap(`Solved in ${moves} moves — exactly 2^${n} − 1.`, 6);
+  snap(
+    `Solved in ${moves} moves — exactly 2^${n} − 1.`,
+    6,
+    undefined,
+    `حُلّ اللغز في ${moves} حركة — أي بالضبط 2^${n} − 1.`,
+  );
   return steps;
 }
 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "tower-of-hanoi",
   title: "Tower of Hanoi",
+  titleAr: "أبراج هانوي",
   category: "recursion",
   difficulty: "Intermediate",
   tags: ["recursion", "divide & conquer", "exponential"],
+  tagsAr: ["العودية", "فرّق تسد", "أسي"],
   summary: "Moves a stack of disks between pegs one at a time, never placing a larger disk on a smaller one.",
+  summaryAr: "ينقل كومة من الأقراص بين أقطاب، قرصًا واحدًا في كل مرة، دون وضع قرص أكبر فوق قرص أصغر منه.",
   renderer: "callstack",
   pseudocode: [
     "procedure hanoi(n, from, to, via)",
@@ -213,6 +237,60 @@ Its elegant recursive solution is the reason it appears in every algorithms cour
       { question: "The recursion depth for n disks is…", options: ["O(1)", "O(log n)", "O(n)", "O(2ⁿ)"], answer: 2, explanation: "Each level reduces n by one, so the deepest chain of calls is n." },
       { question: "The Tower of Hanoi move sequence corresponds to which encoding?", options: ["Binary counting", "Gray code", "Huffman code", "Run-length encoding"], answer: 1, explanation: "The disk moved at each step follows the reflected binary (Gray) code pattern." },
       { question: "Why is the puzzle impractical for large n?", options: ["It needs O(n²) memory", "The number of moves grows exponentially", "It has no solution", "It requires sorting"], answer: 1, explanation: "2ⁿ − 1 moves becomes astronomically large as n grows." },
+    ],
+  },
+  contentAr: {
+    overview: `أبراج هانوي لغز كلاسيكي: انقل كومة من n قرصًا من قطب المصدر إلى قطب الوجهة، قرصًا واحدًا في كل مرة، دون وضع قرص أكبر فوق قرص أصغر منه، باستخدام قطب ثالث كمخزن مؤقت.
+
+حلّه العودي الأنيق هو السبب في ظهوره في كل مقرر خوارزميات. لنقل n قرصًا من A إلى C: انقل أولًا الأقراص العلوية n−1 بعيدًا إلى B، ثم انقل القرص الأكبر مباشرة إلى C، ثم انقل الأقراص n−1 من B إلى C. كل مسألة فرعية هي نفس اللغز بقرص واحد أقل — توضيح مثالي للعودية ومكدس الاستدعاءات.`,
+    howItWorks: [
+      "لنقل n قرصًا من المصدر إلى الوجهة باستخدام قطب احتياطي:",
+      "انقل عوديًا الأقراص العلوية n−1 من المصدر إلى القطب الاحتياطي.",
+      "انقل القرص الأكبر الوحيد مباشرة من المصدر إلى الوجهة.",
+      "انقل عوديًا الأقراص n−1 من القطب الاحتياطي إلى الوجهة.",
+      "الحالة الأساسية (n = 1) هي نقلة مباشرة واحدة.",
+    ],
+    complexity: {
+      time: { best: "O(2ⁿ)", average: "O(2ⁿ)", worst: "O(2ⁿ)" },
+      space: "O(n)",
+      notes: "عدد الحركات يساوي بالضبط 2ⁿ − 1، وهو مثبَت أنه الأمثل. عمق العودية (مساحة مكدس الاستدعاءات) هو O(n).",
+    },
+    applications: [
+      "تدريس العودية ومكدس الاستدعاءات وأسلوب فرّق تسد",
+      "قياس أداء العودية وسلوك المكدس",
+      "نمذجة أنظمة تدوير النسخ الاحتياطية (استراتيجية النسخ الاحتياطي 'أبراج هانوي')",
+      "توليد متتاليات ترميز غراي (نمط الحركة يقابل رموز غراي)",
+    ],
+    advantages: [
+      "صياغة عودية أنيقة وبسيطة",
+      "عدد حركات مثبَت أنه الأمثل (2ⁿ − 1)",
+      "توضيح واضح لتفكيك المسألة إلى مسائل فرعية",
+    ],
+    disadvantages: [
+      "عدد الحركات أسي — غير عملي عند n كبيرة",
+      "عمق العودية يزداد مع n (استهلاك المكدس)",
+      "ليس حسابًا عمليًا، بل هو غالبًا تعليمي",
+    ],
+    commonMistakes: [
+      "تبديل دوري الوجهة والقطب الاحتياطي في الاستدعاءات العودية.",
+      "وضع النقلة المباشرة قبل الاستدعاء العودي الأول.",
+      "نسيان الحالة الأساسية، مما يسبب عودية لا نهائية.",
+      "توقع حل متعدد الحدود — الحد 2ⁿ − 1 هو الأمثل بالفعل.",
+    ],
+    interviewQuestions: [
+      "أثبِت أن 2ⁿ − 1 حركة ضرورية وكافية.",
+      "اكتب حلًا تكراريًا واشرح خدعة تماثل الأقطاب (peg-parity).",
+      "كيف ترتبط متتالية الحركات برموز غراي؟",
+      "ما أقصى عمق للعودية عند n قرصًا؟",
+    ],
+    summary:
+      "أبراج هانوي ينقل n قرصًا بين الأقطاب عبر نقل الأقراص العلوية n−1 عوديًا، ثم نقل الأكبر، ثم إعادة الباقي — بالضبط 2ⁿ − 1 حركة. وهو المثال التعليمي الأمثل للعودية ومكدس الاستدعاءات.",
+    quiz: [
+      { question: "الحد الأدنى لعدد الحركات لحل أبراج هانوي بعدد n قرصًا هو…", options: ["n", "n²", "2ⁿ − 1", "n log n"], answer: 2, explanation: "كل قرص إضافي يُضاعف العمل زائد حركة واحدة للقرص الأكبر." },
+      { question: "عند نقل n قرصًا من A إلى C، إلى أين تذهب الأقراص العلوية n−1 أولًا؟", options: ["مباشرة إلى C", "إلى القطب الاحتياطي B", "لا تتحرك", "تُقسَم بين B و C"], answer: 1, explanation: "يجب ركنها على القطب الاحتياطي حتى يتمكن القرص الأكبر من الذهاب إلى C." },
+      { question: "عمق العودية عند n قرصًا هو…", options: ["O(1)", "O(log n)", "O(n)", "O(2ⁿ)"], answer: 2, explanation: "كل مستوى يُنقص n بمقدار واحد، فأطول سلسلة استدعاءات تساوي n." },
+      { question: "متتالية حركات أبراج هانوي تقابل أي ترميز؟", options: ["العد الثنائي", "رمز غراي (Gray code)", "ترميز هفمان", "ترميز طول التشغيل"], answer: 1, explanation: "القرص المنقول في كل خطوة يتبع نمط الترميز الثنائي المنعكس (غراي)." },
+      { question: "لماذا يكون اللغز غير عملي عند n كبيرة؟", options: ["يحتاج ذاكرة O(n²)", "عدد الحركات ينمو أسيًا", "لا يوجد له حل", "يتطلب ترتيبًا"], answer: 1, explanation: "عدد الحركات 2ⁿ − 1 يصبح كبيرًا فلكيًا مع ازدياد n." },
     ],
   },
   inputFields: [{ key: "disks", label: "Number of disks", placeholder: "3", help: "1–10 disks (moves = 2ⁿ − 1; 10 disks = 1023 moves)." }],
