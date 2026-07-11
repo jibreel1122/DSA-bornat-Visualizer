@@ -41,7 +41,7 @@ export function makeOpenAddressingGenerate(
 
     const live = () => table.filter((v) => v !== null && v !== TOMBSTONE).length;
 
-    const frame = (states: Record<number, CellState>, description: string, codeLine: number): void => {
+    const frame = (states: Record<number, CellState>, description: string, codeLine: number, descriptionAr?: string): void => {
       steps.push({
         frame: {
           chained: false,
@@ -59,12 +59,18 @@ export function makeOpenAddressingGenerate(
           note: introNote(m),
         },
         description,
+        descriptionAr,
         codeLine,
         counters: { items: live(), collisions, probes },
       });
     };
 
-    frame({}, `Open addressing: all keys live in the table itself. On collision, follow the probe sequence to the next slot. "×" marks a tombstone (deleted slot).`, 0);
+    frame(
+      {},
+      `Open addressing: all keys live in the table itself. On collision, follow the probe sequence to the next slot. "×" marks a tombstone (deleted slot).`,
+      0,
+      `العنونة المفتوحة: تُخزَّن كل المفاتيح داخل الجدول نفسه. عند التصادم، اتبع تسلسل السبر إلى الخانة التالية. الرمز "×" يمثل شاهد قبر (خانة محذوفة).`,
+    );
 
     for (const op of input.ops) {
       if (op.kind === "insert") {
@@ -75,13 +81,23 @@ export function makeOpenAddressingGenerate(
           const s = probe(op.key, i, m);
           const v = table[s];
           if (v !== null && v !== TOMBSTONE && v === op.key) {
-            frame({ [s]: "found" }, `insert(${op.key}): probe ${i} → slot ${s} already holds ${op.key} — no duplicates, done.`, 1);
+            frame(
+              { [s]: "found" },
+              `insert(${op.key}): probe ${i} → slot ${s} already holds ${op.key} — no duplicates, done.`,
+              1,
+              `insert(${op.key}): السبر ${i} ← الخانة ${s} تحتوي بالفعل على ${op.key} — لا تكرار، انتهى.`,
+            );
             placed = true;
             break;
           }
           if (v === null) {
             const target = firstTomb >= 0 ? firstTomb : s;
-            frame({ [s]: "active" }, `insert(${op.key}): probe ${i} → ${probeLabel(op.key, i, m)} = ${s} is empty.`, 1);
+            frame(
+              { [s]: "active" },
+              `insert(${op.key}): probe ${i} → ${probeLabel(op.key, i, m)} = ${s} is empty.`,
+              1,
+              `insert(${op.key}): السبر ${i} ← ${probeLabel(op.key, i, m)} = ${s} فارغة.`,
+            );
             table[target] = op.key;
             frame(
               { [target]: "found" },
@@ -89,24 +105,47 @@ export function makeOpenAddressingGenerate(
                 ? `Reuse the earlier tombstone at slot ${target} — store ${op.key} there.`
                 : `Store ${op.key} at slot ${s}.`,
               2,
+              firstTomb >= 0
+                ? `أعِد استخدام شاهد القبر السابق في الخانة ${target} — خزّن ${op.key} هناك.`
+                : `خزّن ${op.key} في الخانة ${s}.`,
             );
             placed = true;
             break;
           }
           if (v === TOMBSTONE) {
             if (firstTomb < 0) firstTomb = s;
-            frame({ [s]: "compare" }, `insert(${op.key}): probe ${i} → slot ${s} is a tombstone — remember it, but keep probing (the key might exist further along).`, 3);
+            frame(
+              { [s]: "compare" },
+              `insert(${op.key}): probe ${i} → slot ${s} is a tombstone — remember it, but keep probing (the key might exist further along).`,
+              3,
+              `insert(${op.key}): السبر ${i} ← الخانة ${s} شاهد قبر — تذكّرها، لكن واصل السبر (فقد يوجد المفتاح لاحقًا).`,
+            );
             continue;
           }
           collisions++;
-          frame({ [s]: "swap" }, `insert(${op.key}): probe ${i} → ${probeLabel(op.key, i, m)} = ${s} holds ${v} — collision, try the next probe.`, 3);
+          frame(
+            { [s]: "swap" },
+            `insert(${op.key}): probe ${i} → ${probeLabel(op.key, i, m)} = ${s} holds ${v} — collision, try the next probe.`,
+            3,
+            `insert(${op.key}): السبر ${i} ← ${probeLabel(op.key, i, m)} = ${s} تحتوي على ${v} — تصادم، جرّب السبر التالي.`,
+          );
         }
         if (!placed) {
           if (firstTomb >= 0) {
             table[firstTomb] = op.key;
-            frame({ [firstTomb]: "found" }, `Probe sequence exhausted — store ${op.key} in the remembered tombstone at slot ${firstTomb}.`, 2);
+            frame(
+              { [firstTomb]: "found" },
+              `Probe sequence exhausted — store ${op.key} in the remembered tombstone at slot ${firstTomb}.`,
+              2,
+              `انتهى تسلسل السبر — خزّن ${op.key} في شاهد القبر الذي تم تذكّره عند الخانة ${firstTomb}.`,
+            );
           } else {
-            frame({}, `insert(${op.key}) FAILED: probe sequence exhausted (${m} probes) — table effectively full for this key.`, 4);
+            frame(
+              {},
+              `insert(${op.key}) FAILED: probe sequence exhausted (${m} probes) — table effectively full for this key.`,
+              4,
+              `فشل insert(${op.key}): انتهى تسلسل السبر (${m} عملية سبر) — الجدول ممتلئ فعليًا بالنسبة لهذا المفتاح.`,
+            );
           }
         }
       } else if (op.kind === "search") {
@@ -116,12 +155,22 @@ export function makeOpenAddressingGenerate(
           const s = probe(op.key, i, m);
           const v = table[s];
           if (v === null) {
-            frame({ [s]: "discarded" }, `search(${op.key}): probe ${i} → slot ${s} is empty — ${op.key} cannot be further along. Not found.`, 5);
+            frame(
+              { [s]: "discarded" },
+              `search(${op.key}): probe ${i} → slot ${s} is empty — ${op.key} cannot be further along. Not found.`,
+              5,
+              `search(${op.key}): السبر ${i} ← الخانة ${s} فارغة — لا يمكن أن يكون ${op.key} أبعد من ذلك. غير موجود.`,
+            );
             outcome = "missing";
             break;
           }
           if (v === op.key) {
-            frame({ [s]: "found" }, `search(${op.key}): probe ${i} → slot ${s} holds ${op.key}. Found!`, 6);
+            frame(
+              { [s]: "found" },
+              `search(${op.key}): probe ${i} → slot ${s} holds ${op.key}. Found!`,
+              6,
+              `search(${op.key}): السبر ${i} ← الخانة ${s} تحتوي على ${op.key}. تم العثور عليه!`,
+            );
             outcome = "found";
             break;
           }
@@ -131,9 +180,18 @@ export function makeOpenAddressingGenerate(
               ? `search(${op.key}): probe ${i} → slot ${s} is a tombstone — must keep probing past it.`
               : `search(${op.key}): probe ${i} → slot ${s} holds ${v} ≠ ${op.key} — keep probing.`,
             7,
+            v === TOMBSTONE
+              ? `search(${op.key}): السبر ${i} ← الخانة ${s} شاهد قبر — يجب مواصلة السبر متجاوزًا إياها.`
+              : `search(${op.key}): السبر ${i} ← الخانة ${s} تحتوي على ${v} ≠ ${op.key} — واصل السبر.`,
           );
         }
-        if (!outcome) frame({}, `search(${op.key}): all ${m} probes used — not found.`, 5);
+        if (!outcome)
+          frame(
+            {},
+            `search(${op.key}): all ${m} probes used — not found.`,
+            5,
+            `search(${op.key}): استُخدمت جميع عمليات السبر الـ${m} — غير موجود.`,
+          );
       } else {
         let done = false;
         for (let i = 0; i < m; i++) {
@@ -141,23 +199,49 @@ export function makeOpenAddressingGenerate(
           const s = probe(op.key, i, m);
           const v = table[s];
           if (v === null) {
-            frame({ [s]: "discarded" }, `delete(${op.key}): probe ${i} → slot ${s} is empty — ${op.key} is not in the table.`, 8);
+            frame(
+              { [s]: "discarded" },
+              `delete(${op.key}): probe ${i} → slot ${s} is empty — ${op.key} is not in the table.`,
+              8,
+              `delete(${op.key}): السبر ${i} ← الخانة ${s} فارغة — ${op.key} غير موجود في الجدول.`,
+            );
             done = true;
             break;
           }
           if (v === op.key) {
             table[s] = TOMBSTONE;
-            frame({ [s]: "swap" }, `delete(${op.key}): found at slot ${s} — replace with a tombstone (NOT empty, or later probe chains would break).`, 9);
+            frame(
+              { [s]: "swap" },
+              `delete(${op.key}): found at slot ${s} — replace with a tombstone (NOT empty, or later probe chains would break).`,
+              9,
+              `delete(${op.key}): وُجد في الخانة ${s} — استبدله بشاهد قبر (وليس بخانة فارغة، وإلا لانكسرت سلاسل السبر اللاحقة).`,
+            );
             done = true;
             break;
           }
-          frame({ [s]: "compare" }, `delete(${op.key}): probe ${i} → slot ${s} ${v === TOMBSTONE ? "is a tombstone" : `holds ${v}`} — keep probing.`, 8);
+          frame(
+            { [s]: "compare" },
+            `delete(${op.key}): probe ${i} → slot ${s} ${v === TOMBSTONE ? "is a tombstone" : `holds ${v}`} — keep probing.`,
+            8,
+            `delete(${op.key}): السبر ${i} ← الخانة ${s} ${v === TOMBSTONE ? "شاهد قبر" : `تحتوي على ${v}`} — واصل السبر.`,
+          );
         }
-        if (!done) frame({}, `delete(${op.key}): all ${m} probes used — not found.`, 8);
+        if (!done)
+          frame(
+            {},
+            `delete(${op.key}): all ${m} probes used — not found.`,
+            8,
+            `delete(${op.key}): استُخدمت جميع عمليات السبر الـ${m} — غير موجود.`,
+          );
       }
     }
 
-    frame({}, `Done. ${live()} live keys in ${m} slots (α = ${(live() / m).toFixed(2)}), ${collisions} collisions, ${probes} probes total.`, 10);
+    frame(
+      {},
+      `Done. ${live()} live keys in ${m} slots (α = ${(live() / m).toFixed(2)}), ${collisions} collisions, ${probes} probes total.`,
+      10,
+      `انتهى. ${live()} مفتاحًا حيًّا في ${m} خانة (α = ${(live() / m).toFixed(2)})، ${collisions} تصادمًا، ${probes} عملية سبر إجمالًا.`,
+    );
     return steps;
   };
 }
@@ -208,10 +292,13 @@ export const OA_FIELDS = [
 const mod: AlgorithmModule<HashFrame, OAInput> = {
   slug: "linear-probing",
   title: "Hash Table — Linear Probing",
+  titleAr: "جدول التجزئة — السبر الخطي",
   category: "hashing",
   difficulty: "Intermediate",
   tags: ["hash table", "open addressing", "linear probing", "tombstones"],
+  tagsAr: ["جدول تجزئة", "عنونة مفتوحة", "سبر خطي", "شواهد قبور"],
   summary: "Resolves collisions by scanning forward one slot at a time until a free cell is found — simple and cache-friendly, but prone to clustering.",
+  summaryAr: "يحل التصادمات بالمسح إلى الأمام خانة واحدة في كل مرة حتى يُعثر على خانة حرة — أسلوب بسيط وودود مع ذاكرة التخزين المؤقت، لكنه عرضة للتكتل.",
   renderer: "hash",
   pseudocode: [
     "structure: table[0..m-1], probe hᵢ(k) = (h(k) + i) mod m",
@@ -575,6 +662,61 @@ Linear probing is beloved in practice for its cache behavior — consecutive slo
       { question: "Deleting a key must leave a tombstone because…", options: ["It looks nicer", "An empty slot would falsely terminate searches for keys stored beyond it", "Memory can't be freed", "Tombstones speed up inserts"], answer: 1, explanation: "Searches stop at truly empty slots, so emptying a mid-chain slot would hide later keys." },
       { question: "A search can safely stop when it hits…", options: ["A tombstone", "Any occupied slot", "A truly empty slot", "Slot 0"], answer: 2, explanation: "An empty slot proves the key was never placed further along its probe sequence; tombstones must be skipped." },
       { question: "As load factor α → 1, expected probes for linear probing…", options: ["Stay constant", "Grow roughly like 1/(1−α) — they explode", "Decrease", "Equal exactly 2"], answer: 1, explanation: "Clustering makes performance collapse near a full table, which is why implementations resize early." },
+    ],
+  },
+  contentAr: {
+    overview: `تخزّن العنونة المفتوحة كل مفتاح مباشرة داخل مصفوفة الجدول — بلا قوائم مترابطة. عندما يتجزأ مفتاحان إلى نفس الخانة، يحل الجدول التصادم بالسبر: تجربة تسلسل محدد من الخانات البديلة حتى تظهر خانة حرة. السبر الخطي هو أبسط تسلسل: تقدّم خانة واحدة فقط في كل مرة، مع الالتفاف عند نهاية الجدول، أي hᵢ(k) = (h(k) + i) mod m.
+
+يحظى السبر الخطي بشعبية عملية بفضل سلوكه مع ذاكرة التخزين المؤقت — الخانات المتتالية تتشارك أسطر ذاكرة التخزين المؤقت (Cache Lines)، فيصبح السبر شبه مجاني على العتاد الحديث. ونقطة ضعفه هي التكتل الأولي: تُشكّل الخانات المشغولة سلاسل متتالية، وأي مفتاح يتجزأ إلى أي مكان داخل سلسلة يجب أن يعبرها حتى نهايتها، ما يجعل السلاسل تنمو أسرع كلما طالت. يتدهور الأداء بشدة مع اقتراب معامل التحميل من 1، لذا تُعيد التطبيقات الحقيقية التحجيم عند α يقارب 0.5–0.7. يحتاج الحذف أيضًا إلى عناية: إفراغ خانة قد يكسر سلاسل السبر المارة عبرها، لذا تصبح الخانات المحذوفة شواهد قبور يجب على عمليات البحث تجاوزها.`,
+    howItWorks: [
+      "تجزّأ المفتاح إلى خانة أصلية h(k) = k mod m.",
+      "الإدراج: اسبر h(k)، h(k)+1، h(k)+2، … (mod m) حتى تظهر خانة فارغة أو شاهد قبر؛ خزّن المفتاح هناك.",
+      "البحث: اتبع التسلسل نفسه — تطابق يعني العثور عليه؛ خانة فارغة حقًا تثبت غياب المفتاح؛ يجب تجاوز شواهد القبور لا معاملتها كخانات فارغة.",
+      "الحذف: اعثر على المفتاح، ثم استبدله بعلامة شاهد قبر بدلًا من إفراغ الخانة.",
+      "أعد التحجيم (أعد تجزئة كل شيء في جدول أكبر) عندما يرتفع معامل التحميل α — عادة فوق ~0.7.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1/(1−α))", worst: "O(n)" },
+      space: "O(m)",
+      notes: "متوسط عمليات السبر ≈ ½(1 + 1/(1−α)) للبحث الناجح تحت التجزئة المنتظمة — ممتاز عند α أقل من نحو 0.7، وكارثي بالقرب من α = 1. أسوأ حالة هي تكتل عملاق واحد: O(n) لكل عملية.",
+    },
+    applications: [
+      "خرائط تجزئة ودودة مع ذاكرة التخزين المؤقت للمعالج (مثل عائلة hashbrown/SwissTable في Rust، وقاموس Python الذي يستخدم العنونة المفتوحة)",
+      "الأنظمة محدودة الذاكرة التي لا تحتمل مؤشرات لكل عقدة",
+      "جداول العتاد والأنظمة المدمجة حيث يُمنع التخصيص الديناميكي",
+      "عمليات الربط (Joins) والتجميع عالية الأداء في قواعد البيانات",
+    ],
+    advantages: [
+      "محلية ذاكرة تخزين مؤقت ممتازة — عمليات السبر المتتالية تلامس ذاكرة متجاورة",
+      "بلا عبء مؤشرات أو تخصيص لكل مفتاح (كل شيء في مصفوفة مسطحة واحدة)",
+      "سهل التنفيذ، وقابل للتسلسل (Serialization) بلا تعقيد",
+    ],
+    disadvantages: [
+      "التكتل الأولي: تتضخم سلاسل الخانات المشغولة الطويلة مع نمو α",
+      "تترك عمليات الحذف شواهد قبور تُضعف عمليات البحث حتى إعادة التجزئة",
+      "ينهار الأداء عندما يقترب الجدول من الامتلاء — يجب إعادة التحجيم استباقيًا",
+    ],
+    commonMistakes: [
+      "الحذف بإفراغ الخانة — هذا يكسر كل سلسلة سبر مرت عبرها؛ استخدم شاهد قبر بدلًا من ذلك.",
+      "إيقاف البحث عند شاهد قبر كأنه خانة فارغة (ما يفوّت مفاتيح مخزنة بعده).",
+      "ترك معامل التحميل يصل إلى 1 — تدخل عمليات الإدراج في حلقة لا نهائية أو تفشل؛ أعد التحجيم عند α ≈ 0.7.",
+      "أثناء الإدراج، وضع المفتاح في أول شاهد قبر دون إتمام السبر أولًا للتحقق من عدم تخزين المفتاح مسبقًا لاحقًا (ما يُنشئ تكرارات).",
+    ],
+    interviewQuestions: [
+      "ما هو التكتل الأولي، ولماذا يعاني منه السبر الخطي؟",
+      "لماذا تُعد شواهد القبور ضرورية للحذف في العنونة المفتوحة؟",
+      "اشتق العدد المتوقع لعمليات السبر كدالة في معامل التحميل α.",
+      "لماذا يكون السبر الخطي أسرع غالبًا من السلاسل المنفصلة عمليًا رغم التكتل؟",
+      "متى ينبغي أن يُعاد تحجيم الجدول، وماذا يحدث لشواهد القبور أثناء إعادة التجزئة؟",
+    ],
+    summary:
+      "يحل السبر الخطي التصادمات بالمسح إلى الأمام خانة واحدة في كل مرة — ودود مع ذاكرة التخزين المؤقت وخالٍ من المؤشرات، مقابل تكتل أولي مع نمو معامل التحميل. يجب أن تترك عمليات الحذف شواهد قبور حتى تبقى سلاسل السبر سليمة، وإعادة التحجيم عند α ≈ 0.7 تُبقي العدد المتوقع لعمليات السبر عند O(1).",
+    quiz: [
+      { question: "تسلسل السبر في السبر الخطي هو…", options: ["h(k)، h(k)·2، h(k)·4، …", "(h(k) + i) mod m لـ i = 0, 1, 2, …", "خانات عشوائية", "(h(k) + i²) mod m"], answer: 1, explanation: "يتقدم ببساطة خانة واحدة في كل مرة، مع الالتفاف حول الجدول." },
+      { question: "التكتل الأولي يعني…", options: ["تتكتل المفاتيح حسب القيمة", "تنمو سلاسل الخانات المشغولة المتتالية وتندمج، ما يطيل عمليات السبر", "الخانة الأولى ممتلئة دائمًا", "تتكرر قيم التجزئة"], answer: 1, explanation: "أي مفتاح يهبط داخل سلسلة يجب أن يسير حتى نهايتها — فالسلاسل الأطول تلتقط مفاتيح أكثر وتنمو أسرع." },
+      { question: "يجب أن يترك حذف المفتاح شاهد قبر لأن…", options: ["ذلك يبدو أجمل", "الخانة الفارغة ستُنهي البحث زورًا عن مفاتيح مخزنة بعدها", "لا يمكن تحرير الذاكرة", "شواهد القبور تُسرّع الإدراج"], answer: 1, explanation: "يتوقف البحث عند الخانات الفارغة حقًا، فإفراغ خانة في منتصف السلسلة سيُخفي مفاتيح لاحقة." },
+      { question: "يمكن للبحث أن يتوقف بأمان عندما يصادف…", options: ["شاهد قبر", "أي خانة مشغولة", "خانة فارغة حقًا", "الخانة رقم 0"], answer: 2, explanation: "الخانة الفارغة تثبت أن المفتاح لم يُوضع أبدًا في موضع لاحق من تسلسل سبره؛ يجب تجاوز شواهد القبور." },
+      { question: "مع اقتراب معامل التحميل α من 1، فإن عدد عمليات السبر المتوقع في السبر الخطي…", options: ["يبقى ثابتًا", "ينمو تقريبًا كـ 1/(1−α) — أي ينفجر", "يتناقص", "يساوي 2 بالضبط"], answer: 1, explanation: "يتسبب التكتل في انهيار الأداء بالقرب من امتلاء الجدول، لهذا تُعيد التطبيقات التحجيم مبكرًا." },
     ],
   },
   inputFields: OA_FIELDS,

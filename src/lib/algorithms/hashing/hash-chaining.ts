@@ -17,6 +17,7 @@ function generate(input: Input): Step<HashFrame>[] {
     itemStates: Record<string, CellState>,
     description: string,
     codeLine: number,
+    descriptionAr?: string,
   ): void => {
     steps.push({
       frame: {
@@ -29,49 +30,50 @@ function generate(input: Input): Step<HashFrame>[] {
         aux: [{ label: "Load α", values: [`${count()}/${m} = ${(count() / m).toFixed(2)}`] }],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { items: count(), collisions, comparisons },
     });
   };
 
-  frame({}, {}, `Separate chaining: each bucket holds a list. h(k) = k mod ${m}.`, 0);
+  frame({}, {}, `Separate chaining: each bucket holds a list. h(k) = k mod ${m}.`, 0, `السلاسل المنفصلة: كل دلو (Bucket) يحمل قائمة. h(k) = k mod ${m}.`);
 
   for (const op of input.ops) {
     const h = ((op.key % m) + m) % m;
     if (op.kind === "insert") {
-      frame({ [h]: "active" }, {}, `insert(${op.key}): h(${op.key}) = ${op.key} mod ${m} = ${h}.`, 1);
+      frame({ [h]: "active" }, {}, `insert(${op.key}): h(${op.key}) = ${op.key} mod ${m} = ${h}.`, 1, `insert(${op.key}): h(${op.key}) = ${op.key} mod ${m} = ${h}.`);
       if (buckets[h].length > 0) {
         collisions++;
-        frame({ [h]: "compare" }, {}, `Bucket ${h} is occupied — collision. Append to its chain.`, 2);
+        frame({ [h]: "compare" }, {}, `Bucket ${h} is occupied — collision. Append to its chain.`, 2, `الدلو ${h} مشغول — تصادم. أضِف العنصر إلى سلسلته.`);
       }
       if (!buckets[h].includes(op.key)) buckets[h].push(op.key);
-      frame({ [h]: "active" }, { [`${h}:${op.key}`]: "found" }, `Added ${op.key} to bucket ${h}.`, 3);
+      frame({ [h]: "active" }, { [`${h}:${op.key}`]: "found" }, `Added ${op.key} to bucket ${h}.`, 3, `أُضيف ${op.key} إلى الدلو ${h}.`);
     } else if (op.kind === "search") {
-      frame({ [h]: "active" }, {}, `search(${op.key}): look in bucket ${h}.`, 4);
+      frame({ [h]: "active" }, {}, `search(${op.key}): look in bucket ${h}.`, 4, `search(${op.key}): ابحث في الدلو ${h}.`);
       let found = false;
       for (const k of buckets[h]) {
         comparisons++;
         if (k === op.key) {
           found = true;
-          frame({ [h]: "active" }, { [`${h}:${k}`]: "found" }, `Found ${op.key} in bucket ${h}.`, 5);
+          frame({ [h]: "active" }, { [`${h}:${k}`]: "found" }, `Found ${op.key} in bucket ${h}.`, 5, `عُثر على ${op.key} في الدلو ${h}.`);
           break;
         }
-        frame({ [h]: "active" }, { [`${h}:${k}`]: "compare" }, `${k} ≠ ${op.key}, keep scanning the chain.`, 5);
+        frame({ [h]: "active" }, { [`${h}:${k}`]: "compare" }, `${k} ≠ ${op.key}, keep scanning the chain.`, 5, `${k} ≠ ${op.key}، واصل مسح السلسلة.`);
       }
-      if (!found) frame({ [h]: "discarded" }, {}, `${op.key} is not in bucket ${h} — not found.`, 6);
+      if (!found) frame({ [h]: "discarded" }, {}, `${op.key} is not in bucket ${h} — not found.`, 6, `${op.key} غير موجود في الدلو ${h} — لم يُعثر عليه.`);
     } else {
-      frame({ [h]: "active" }, {}, `delete(${op.key}): find it in bucket ${h}.`, 7);
+      frame({ [h]: "active" }, {}, `delete(${op.key}): find it in bucket ${h}.`, 7, `delete(${op.key}): ابحث عنه في الدلو ${h}.`);
       const idx = buckets[h].indexOf(op.key);
       if (idx >= 0) {
-        frame({ [h]: "active" }, { [`${h}:${op.key}`]: "swap" }, `Remove ${op.key} from bucket ${h}.`, 8);
+        frame({ [h]: "active" }, { [`${h}:${op.key}`]: "swap" }, `Remove ${op.key} from bucket ${h}.`, 8, `أزِل ${op.key} من الدلو ${h}.`);
         buckets[h].splice(idx, 1);
-        frame({ [h]: "active" }, {}, `Deleted ${op.key}.`, 8);
+        frame({ [h]: "active" }, {}, `Deleted ${op.key}.`, 8, `حُذف ${op.key}.`);
       } else {
-        frame({ [h]: "discarded" }, {}, `${op.key} not present — nothing to delete.`, 9);
+        frame({ [h]: "discarded" }, {}, `${op.key} not present — nothing to delete.`, 9, `${op.key} غير موجود — لا شيء لحذفه.`);
       }
     }
   }
-  frame({}, {}, `Done. ${count()} keys stored across ${m} buckets (load factor ${(count() / m).toFixed(2)}).`, 10);
+  frame({}, {}, `Done. ${count()} keys stored across ${m} buckets (load factor ${(count() / m).toFixed(2)}).`, 10, `انتهى. ${count()} مفتاحًا مخزّنًا عبر ${m} دلو (معامل التحميل ${(count() / m).toFixed(2)}).`);
   return steps;
 }
 
@@ -98,10 +100,13 @@ function randomOps(level: number, rng: { int: (a: number, b: number) => number; 
 const mod: AlgorithmModule<HashFrame, Input> = {
   slug: "hash-chaining",
   title: "Hash Table — Separate Chaining",
+  titleAr: "جدول التجزئة — السلاسل المنفصلة",
   category: "hashing",
   difficulty: "Intermediate",
   tags: ["hash table", "chaining", "collision resolution", "O(1) average"],
+  tagsAr: ["جدول تجزئة", "السلاسل المنفصلة", "حل التصادمات", "O(1) في المتوسط"],
   summary: "Resolves hash collisions by storing colliding keys in a per-bucket linked list.",
+  summaryAr: "يحل تصادمات التجزئة بتخزين المفاتيح المتصادمة في قائمة مترابطة خاصة بكل دلو.",
   renderer: "hash",
   pseudocode: [
     "structure HashTable with buckets[0..m-1]",
@@ -284,6 +289,63 @@ Performance hinges on the load factor α = n/m (keys per bucket). With a good ha
       { question: "Average-case time for search with chaining is…", options: ["O(1 + α)", "O(log n)", "O(n)", "O(n²)"], answer: 0, explanation: "You hash to a bucket (O(1)) then scan its chain of expected length α." },
       { question: "The worst-case time for search occurs when…", options: ["The table is empty", "All keys hash to one bucket", "α is small", "m is prime"], answer: 1, explanation: "A single long chain forces an O(n) scan." },
       { question: "An advantage of chaining over open addressing is…", options: ["Better cache locality", "The table can't overflow and deletion is simple", "Less memory", "No hash function needed"], answer: 1, explanation: "Chains grow freely and removing a key just unlinks it — no tombstones." },
+    ],
+  },
+  contentAr: {
+    overview: `يخزّن جدول التجزئة المفاتيح في مصفوفة من الدلاء (Buckets)، مستخدمًا دالة تجزئة لتعيين كل مفتاح إلى فهرس دلو — هنا الدالة البسيطة h(k) = k mod m. الوعد هو بحث بمتوسط O(1)، لكن مفتاحين مختلفين قد يتجزّآن إلى نفس الدلو، وهذا ما يسمى تصادمًا. تحل السلاسل المنفصلة هذه المشكلة بجعل كل دلو قائمة: تتعايش المفاتيح المتصادمة ببساطة في سلسلة الدلو نفسه.
+
+يعتمد الأداء على معامل التحميل α = n/m (عدد المفاتيح لكل دلو). مع دالة تجزئة جيدة وα صغير (قريب من 1)، تبقى السلاسل قصيرة، وتكون عمليات الإدراج والبحث والحذف كلها O(1) في المتوسط. ومع تزايد α، تطول السلاسل وتتدهور العمليات نحو O(n).`,
+    howItWorks: [
+      "احسب فهرس الدلو h = k mod m.",
+      "الإدراج: أضِف المفتاح إلى سلسلة الدلو h (يُعد تصادمًا إذا كان الدلو غير فارغ).",
+      "البحث: تجزّأ إلى الدلو h، ثم امسح سلسلته بحثًا عن المفتاح.",
+      "الحذف: تجزّأ إلى الدلو h، ثم أزل المفتاح من السلسلة.",
+      "حافظ على معامل التحميل α = n/m صغيرًا (أعد التحجيم عند تزايده) لتبقى السلاسل قصيرة.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1 + α)", worst: "O(n)" },
+      space: "O(n + m)",
+      notes: "العمليات في المتوسط O(1 + α) مع معامل تحميل α = n/m. أسوأ حالة O(n) عندما تتصادم كل المفاتيح في دلو واحد. المساحة O(n) للمفاتيح إضافة إلى O(m) لمصفوفة الدلاء.",
+    },
+    applications: [
+      "تطبيق القواميس والخرائط (Maps) والمجموعات (Sets)",
+      "فهرسة قواعد البيانات والذاكرة المؤقتة (Caches)",
+      "إزالة التكرار وعدّ التكرارات",
+      "جداول الرموز في المترجمات والمفسرات",
+    ],
+    advantages: [
+      "معالجة بسيطة وقوية للتصادمات",
+      "يتدهور الأداء بسلاسة مع ارتفاع معامل التحميل (بلا تكتل)",
+      "الجدول لا 'يمتلئ' أبدًا — السلاسل تنمو فحسب",
+      "الحذف مباشر (بلا شواهد قبور)",
+    ],
+    disadvantages: [
+      "ذاكرة إضافية لعقد القائمة/المؤشرات",
+      "محلية ذاكرة تخزين مؤقت (Cache) ضعيفة مقارنة بالعنونة المفتوحة",
+      "ينهار الأداء إلى O(n) مع دالة تجزئة سيئة",
+      "يتطلب إعادة التحجيم للحفاظ على معامل تحميل محدود",
+    ],
+    commonMistakes: [
+      "استخدام دالة تجزئة سيئة تُكدّس المفاتيح في عدد قليل من الدلاء.",
+      "ترك معامل التحميل ينمو دون حدود بلا إعادة تحجيم.",
+      "اختيار حجم جدول m يشترك في عوامل مع المفاتيح (يُفضَّل عدد أولي).",
+      "نسيان معالجة سياسة المفاتيح المكررة عند الإدراج.",
+    ],
+    interviewQuestions: [
+      "كيف يؤثر معامل التحميل على زمن تشغيل السلاسل المنفصلة؟",
+      "قارن بين السلاسل المنفصلة والعنونة المفتوحة.",
+      "لماذا تُفضَّل أحجام الجداول الأولية غالبًا؟",
+      "كيف ومتى ينبغي أن يُعاد تحجيم جدول التجزئة؟",
+      "ما الذي يجعل دالة التجزئة جيدة؟",
+    ],
+    summary:
+      "تحل السلاسل المنفصلة تصادمات التجزئة بتخزين المفاتيح المتصادمة في قائمة خاصة بكل دلو، ما يمنح عمليات بمتوسط O(1 + α) حيث α = n/m هو معامل التحميل. يتدهور أداؤها بسلاسة ويتم الحذف فيها بنظافة، مقابل ذاكرة إضافية للمؤشرات ومحلية ذاكرة تخزين مؤقت أضعف من العنونة المفتوحة.",
+    quiz: [
+      { question: "في السلاسل المنفصلة، يُحل التصادم عن طريق…", options: ["إعادة تجزئة كل شيء", "تخزين المفاتيح المتصادمة في قائمة الدلو نفسه", "سبر الخانة التالية", "تجاهل المفتاح"], answer: 1, explanation: "كل دلو هو سلسلة تحمل جميع المفاتيح التي تتجزأ إليه." },
+      { question: "معامل التحميل α يساوي…", options: ["m / n", "n / m", "n · m", "n − m"], answer: 1, explanation: "α هو عدد المفاتيح n مقسومًا على عدد الدلاء m." },
+      { question: "زمن الحالة المتوسطة للبحث في السلاسل المنفصلة هو…", options: ["O(1 + α)", "O(log n)", "O(n)", "O(n²)"], answer: 0, explanation: "تتجزأ إلى دلو (O(1))، ثم تمسح سلسلته التي يبلغ طولها المتوقع α." },
+      { question: "تحدث أسوأ حالة زمنية للبحث عندما…", options: ["يكون الجدول فارغًا", "تتجزأ كل المفاتيح إلى دلو واحد", "يكون α صغيرًا", "يكون m عددًا أوليًا"], answer: 1, explanation: "سلسلة واحدة طويلة تفرض مسحًا بزمن O(n)." },
+      { question: "من مزايا السلاسل المنفصلة مقارنة بالعنونة المفتوحة…", options: ["محلية ذاكرة تخزين مؤقت أفضل", "الجدول لا يفيض والحذف بسيط", "ذاكرة أقل", "لا حاجة إلى دالة تجزئة"], answer: 1, explanation: "تنمو السلاسل بحرية، وإزالة المفتاح تعني فك ربطه فقط — بلا شواهد قبور." },
     ],
   },
   inputFields: [
