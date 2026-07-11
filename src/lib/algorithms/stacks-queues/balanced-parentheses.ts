@@ -20,6 +20,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
     description: string,
     codeLine: number,
     failed = false,
+    descriptionAr?: string,
   ): void => {
     const items: CallStackItem[] = stack.map((e, i) => ({
       id: e.id,
@@ -38,43 +39,79 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `scanning "${s}"  ·  cursor at index ${pos < 0 ? "—" : pos}`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { pushes, pops },
     });
   };
 
-  frame(undefined, -1, `Check if brackets are balanced. Push every opening bracket; match each closing bracket with the stack top.`, 0);
+  frame(
+    undefined,
+    -1,
+    `Check if brackets are balanced. Push every opening bracket; match each closing bracket with the stack top.`,
+    0,
+    false,
+    `تحقّق مما إذا كانت الأقواس متوازنة. ادفع كل قوس فتح؛ وطابِق كل قوس إغلاق مع قمة المكدس.`,
+  );
 
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (OPEN.has(ch)) {
       stack.push({ id: `b${idc++}`, ch, pos: i });
       pushes++;
-      frame("active", i, `'${ch}' is an opening bracket → push it onto the stack.`, 2);
+      frame("active", i, `'${ch}' is an opening bracket → push it onto the stack.`, 2, false, `'${ch}' قوس فتح ← ادفعه إلى المكدس.`);
     } else if (ch in PAIRS) {
       if (stack.length === 0) {
-        frame(undefined, i, `'${ch}' has no matching opener — the stack is empty. ✗ Not balanced.`, 5, true);
+        frame(
+          undefined,
+          i,
+          `'${ch}' has no matching opener — the stack is empty. ✗ Not balanced.`,
+          5,
+          true,
+          `'${ch}' ليس له قوس فتح مطابق — المكدس فارغ. ✗ غير متوازنة.`,
+        );
         return steps;
       }
       const top = stack[stack.length - 1];
       if (top.ch === PAIRS[ch]) {
-        frame("found", i, `'${ch}' matches the top '${top.ch}' → pop it. Good.`, 4);
+        frame("found", i, `'${ch}' matches the top '${top.ch}' → pop it. Good.`, 4, false, `'${ch}' يطابق القمة '${top.ch}' ← أخرِجها. جيد.`);
         stack.pop();
         pops++;
-        frame(undefined, i, `Popped '${top.ch}'. Continue scanning.`, 4);
+        frame(undefined, i, `Popped '${top.ch}'. Continue scanning.`, 4, false, `أُخرِج '${top.ch}'. تابِع المسح.`);
       } else {
-        frame("swap", i, `'${ch}' expects '${PAIRS[ch]}' but the top is '${top.ch}' — mismatch. ✗ Not balanced.`, 6, true);
+        frame(
+          "swap",
+          i,
+          `'${ch}' expects '${PAIRS[ch]}' but the top is '${top.ch}' — mismatch. ✗ Not balanced.`,
+          6,
+          true,
+          `'${ch}' يتوقّع '${PAIRS[ch]}' لكن القمة هي '${top.ch}' — عدم تطابق. ✗ غير متوازنة.`,
+        );
         return steps;
       }
     } else {
-      frame(undefined, i, `'${ch}' is not a bracket — ignore it.`, 1);
+      frame(undefined, i, `'${ch}' is not a bracket — ignore it.`, 1, false, `'${ch}' ليس قوسًا — تجاهله.`);
     }
   }
 
   if (stack.length === 0) {
-    frame(undefined, s.length - 1, `End of string and the stack is empty → every bracket matched. ✓ Balanced!`, 7);
+    frame(
+      undefined,
+      s.length - 1,
+      `End of string and the stack is empty → every bracket matched. ✓ Balanced!`,
+      7,
+      false,
+      `نهاية السلسلة والمكدس فارغ ← كل قوس تطابق. ✓ متوازنة!`,
+    );
   } else {
-    frame("swap", s.length - 1, `End of string but ${stack.length} opening bracket(s) remain unmatched. ✗ Not balanced.`, 7, true);
+    frame(
+      "swap",
+      s.length - 1,
+      `End of string but ${stack.length} opening bracket(s) remain unmatched. ✗ Not balanced.`,
+      7,
+      true,
+      `نهاية السلسلة لكن يتبقى ${stack.length} قوس فتح دون مطابقة. ✗ غير متوازنة.`,
+    );
   }
   return steps;
 }
@@ -98,10 +135,13 @@ function randomInput(level: number): Input {
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "balanced-parentheses",
   title: "Balanced Parentheses",
+  titleAr: "الأقواس المتوازنة",
   category: "stacks-queues",
   difficulty: "Beginner",
   tags: ["stack", "matching", "validation", "brackets"],
+  tagsAr: ["مكدس", "مطابقة", "تحقّق", "أقواس"],
   summary: "Uses a stack to verify that every opening bracket has a correctly ordered matching closing bracket.",
+  summaryAr: "يستخدم مكدسًا للتحقق من أن لكل قوس فتح قوس إغلاق مطابقًا مرتّبًا بشكل صحيح.",
   renderer: "callstack",
   pseudocode: [
     "procedure isBalanced(s)",
@@ -303,6 +343,62 @@ A stack captures exactly the "last opened, first closed" discipline (LIFO). Scan
       { question: "The string '([)]' is…", options: ["Balanced", "Not balanced (brackets overlap)", "Empty", "Undefined"], answer: 1, explanation: "The brackets interleave instead of nesting, so it fails." },
       { question: "After scanning, a balanced string leaves the stack…", options: ["Full", "Empty", "With one element", "Reversed"], answer: 1, explanation: "Every opener must have been matched and popped." },
       { question: "The time complexity is…", options: ["O(1)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "Each character is processed once with constant work." },
+    ],
+  },
+  contentAr: {
+    overview: `التحقق من توازن الأقواس هو التطبيق الكلاسيكي للمكدس. تعبير مثل "{[()]}" متوازن لأن لكل قوس فتح قوس إغلاق مطابقًا من النوع نفسه، مُغلَقًا بالترتيب الصحيح (آخر ما فُتح هو أول ما يُغلَق). أما "([)]" فليس متوازنًا — إذ تتداخل الأقواس بدلًا من أن تتعشّش.
+
+يجسّد المكدس بالضبط مبدأ "آخر ما فُتح هو أول ما يُغلَق" (LIFO). امسح السلسلة من اليسار إلى اليمين: ادفع كل قوس فتح، وعندما تصادف قوس إغلاق فيجب أن يطابق آخر قوس فتح مدفوع — أي قمة المكدس الحالية. فإن طابق أخرِجه؛ وإن لم يطابق (أو كان المكدس فارغًا) فالسلسلة غير متوازنة. وبعد المسح يجب أن يكون المكدس فارغًا؛ فأي أقواس فتح متبقية تعني أن بعض الأقواس لم يُغلَق أبدًا.`,
+    howItWorks: [
+      "أنشئ مكدسًا فارغًا وامسح السلسلة محرفًا واحدًا في كل مرة.",
+      "عند رؤية قوس فتح ( [ {، ادفعه إلى المكدس.",
+      "عند رؤية قوس إغلاق، افحص المكدس: يجب أن يكون غير فارغ وأن تكون قمته قوس الفتح المطابق.",
+      "إن طابقت القمة فأخرِجها؛ وإلا فالسلسلة غير متوازنة فورًا.",
+      "بعد المسح، تكون السلسلة متوازنة فقط إذا كان المكدس فارغًا.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n)", worst: "O(n)" },
+      space: "O(n)",
+      notes: "يؤدي مسح واحد عملًا بزمن O(1) لكل محرف. قد ينمو المكدس إلى O(n) في أسوأ حالة (كلها أقواس فتح)، مما يعطي مساحة O(n).",
+    },
+    applications: [
+      "التحقق النحوي في المُصرِّفات والمُفسِّرات",
+      "التحقق من التعابير ووسوم JSON و XML/HTML",
+      "مطابقة الأقواس والتدقيق في المحررات",
+      "تقييم التعابير الحسابية وتحويلها",
+    ],
+    advantages: [
+      "خوارزمية بسيطة بزمن خطي وبمرور واحد",
+      "تُنمذِج البنية المتداخلة بطبيعتها عبر LIFO",
+      "تفشل سريعًا عند أول عدم تطابق",
+      "تمتد بسهولة إلى أنواع أقواس متعددة",
+    ],
+    disadvantages: [
+      "تحتاج مساحة مساعدة بمقدار O(n) للمكدس",
+      "تتحقق من البنية فقط، لا من الصحة الدلالية",
+      "تتطلب عناية في التعامل مع المحارف غير القوسية",
+    ],
+    commonMistakes: [
+      "نسيان التحقق من أن المكدس غير فارغ قبل الإخراج عند قوس إغلاق.",
+      "عدم التأكد من أن المكدس فارغ في النهاية (أقواس فتح متبقية).",
+      "مطابقة أعداد الأقواس فقط مع تجاهل النوع والترتيب (يفشل على '([)]').",
+      "استخدام طابور بدلًا من مكدس، مما يفقد تعشيش LIFO.",
+    ],
+    interviewQuestions: [
+      "لماذا تتطلب هذه المسألة مكدسًا بدلًا من عدّاد؟",
+      "كيف تمدّها لتتعامل مع ثلاثة أنواع من الأقواس في آنٍ واحد؟",
+      "كيف تُبلِغ عن موضع أول عدم تطابق؟",
+      "هل يمكنك التحقق من التوازن بمساحة O(1) إذا كان هناك نوع واحد من الأقواس فقط؟",
+      "كيف يرتبط هذا بتقييم التعابير باستخدام مكدس؟",
+    ],
+    summary:
+      "التحقق من توازن الأقواس يدفع أقواس الفتح ويطابق كل قوس إغلاق مع قمة المكدس، مؤكِّدًا أن المكدس فارغ في النهاية. ويعمل بزمن O(n) ومساحة O(n)، وهو التوضيح الكلاسيكي لسلوك LIFO في المكدس.",
+    quiz: [
+      { question: "أي هيكل بيانات يتحقق من الأقواس المتداخلة؟", options: ["طابور", "مكدس", "كومة", "جدول تجزئة"], answer: 1, explanation: "ترتيب LIFO في المكدس يطابق قاعدة آخر ما فُتح هو أول ما يُغلَق." },
+      { question: "عند رؤية قوس إغلاق، تقارنه بـ…", options: ["قاع المكدس", "قمة المكدس", "المحرف التالي", "عدّاد"], answer: 1, explanation: "يجب أن يطابق آخر قوس فتح مدفوع الموجود في القمة." },
+      { question: "السلسلة '([)]' هي…", options: ["متوازنة", "غير متوازنة (الأقواس متشابكة)", "فارغة", "غير معرَّفة"], answer: 1, explanation: "تتشابك الأقواس بدلًا من أن تتعشّش، فتفشل." },
+      { question: "بعد المسح، تترك السلسلة المتوازنة المكدس…", options: ["ممتلئًا", "فارغًا", "بعنصر واحد", "معكوسًا"], answer: 1, explanation: "لا بد أن كل قوس فتح قد طُوبِق وأُخرِج." },
+      { question: "التعقيد الزمني هو…", options: ["O(1)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "يُعالَج كل محرف مرة واحدة بعمل ثابت." },
     ],
   },
   inputFields: [

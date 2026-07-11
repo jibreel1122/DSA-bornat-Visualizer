@@ -11,7 +11,7 @@ function generate(input: Input): Step<ListFrame>[] {
   let dequeues = 0;
   let uid = 0;
 
-  const frame = (states: Record<string, CellState>, description: string, codeLine: number): void => {
+  const frame = (states: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string): void => {
     const nodes = items.map((it) => ({ id: it.id, value: it.value }));
     const links = items.slice(1).map((it, i) => ({ from: items[i].id, to: it.id, kind: "next" as const }));
     const pointers: { nodeId: string | null; label: string }[] = [];
@@ -22,36 +22,42 @@ function generate(input: Input): Step<ListFrame>[] {
     steps.push({
       frame: { nodes, links, pointers, states: { ...states }, aux: [{ label: "Dequeued", values: [...output] }] },
       description,
+      descriptionAr,
       codeLine,
       counters: { size: items.length, enqueues, dequeues },
     });
   };
 
-  frame({}, `A queue is FIFO: items leave from the front in the order they arrived at the rear.`, 0);
+  frame(
+    {},
+    `A queue is FIFO: items leave from the front in the order they arrived at the rear.`,
+    0,
+    `الطابور يعمل بمبدأ FIFO: تغادر العناصر من المقدمة بنفس ترتيب وصولها إلى المؤخرة.`,
+  );
 
   for (const op of input.ops) {
     if (op.kind === "enqueue") {
       const node = { id: `q${uid++}`, value: op.value! };
       items.push(node);
       enqueues++;
-      frame({ [node.id]: "active" }, `enqueue(${op.value}) — added at the rear.`, 1);
+      frame({ [node.id]: "active" }, `enqueue(${op.value}) — added at the rear.`, 1, `enqueue(${op.value}) — أُضيف في المؤخرة.`);
     } else if (op.kind === "dequeue") {
       if (items.length === 0) {
-        frame({}, `dequeue() on empty queue — underflow!`, 2);
+        frame({}, `dequeue() on empty queue — underflow!`, 2, `dequeue() على طابور فارغ — تجاوز سفلي (underflow)!`);
       } else {
         const removed = items[0];
-        frame({ [removed.id]: "swap" }, `dequeue() removes the front item ${removed.value}.`, 2);
+        frame({ [removed.id]: "swap" }, `dequeue() removes the front item ${removed.value}.`, 2, `dequeue() يزيل عنصر المقدمة ${removed.value}.`);
         items.shift();
         dequeues++;
         output.push(removed.value);
-        frame({}, `Removed ${removed.value}; the next item is now at the front.`, 3);
+        frame({}, `Removed ${removed.value}; the next item is now at the front.`, 3, `أُزيل ${removed.value}؛ أصبح العنصر التالي الآن في المقدمة.`);
       }
     } else {
-      if (items.length === 0) frame({}, `front() on empty queue — nothing there.`, 4);
-      else frame({ [items[0].id]: "found" }, `front() reads ${items[0].value} without removing it.`, 4);
+      if (items.length === 0) frame({}, `front() on empty queue — nothing there.`, 4, `front() على طابور فارغ — لا شيء هناك.`);
+      else frame({ [items[0].id]: "found" }, `front() reads ${items[0].value} without removing it.`, 4, `front() يقرأ ${items[0].value} دون إزالته.`);
     }
   }
-  frame({}, `Done. Queue holds ${items.length} item(s).`, 5);
+  frame({}, `Done. Queue holds ${items.length} item(s).`, 5, `تم. يحتوي الطابور على ${items.length} عنصر.`);
   return steps;
 }
 
@@ -77,10 +83,13 @@ function randomOps(level: number, rng: { int: (a: number, b: number) => number; 
 const mod: AlgorithmModule<ListFrame, Input> = {
   slug: "queue-operations",
   title: "Queue (FIFO)",
+  titleAr: "الطابور (FIFO)",
   category: "stacks-queues",
   difficulty: "Beginner",
   tags: ["queue", "FIFO", "O(1) operations"],
+  tagsAr: ["طابور", "FIFO", "عمليات O(1)"],
   summary: "A first-in-first-out structure supporting enqueue at the rear and dequeue from the front in O(1).",
+  summaryAr: "هيكل يعمل بمبدأ الوارد أولًا يخرج أولًا يدعم الإضافة (enqueue) في المؤخرة والإزالة (dequeue) من المقدمة بزمن O(1).",
   renderer: "list",
   pseudocode: [
     "structure Queue (FIFO)",
@@ -209,6 +218,62 @@ Its core operations — enqueue (add at rear), dequeue (remove from front), and 
       { question: "Which algorithm relies on a queue?", options: ["Depth-first search", "Breadth-first search", "Quicksort", "Binary search"], answer: 1, explanation: "BFS uses a FIFO queue to visit nodes in increasing distance order." },
       { question: "A naive array-based dequeue that shifts elements is…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 2, explanation: "Shifting all remaining elements left costs O(n); a circular buffer avoids this." },
       { question: "Which structure gives O(1) enqueue and dequeue?", options: ["Sorted array", "Circular buffer or linked list", "Binary tree", "Hash table"], answer: 1, explanation: "Both maintain front/rear pointers for constant-time ends." },
+    ],
+  },
+  contentAr: {
+    overview: `الطابور هيكل خطي بوصول يعمل بمبدأ الوارد أولًا يخرج أولًا (FIFO): تُضاف العناصر من طرف (المؤخرة) وتُزال من الطرف الآخر (المقدمة)، فتغادر بنفس ترتيب وصولها. تخيّل صفًا عند صندوق الدفع — أول من ينضم هو أول من يُخدَم.
+
+عملياته الأساسية — الإضافة enqueue (في المؤخرة) والإزالة dequeue (من المقدمة) وقراءة المقدمة front — جميعها بزمن O(1) عند الاعتماد على قائمة مترابطة أو مخزن حلقي. تُنمذِج الطوابير أي موقف يجب فيه حفظ ترتيب الوصول، من جدولة المهام إلى البحث بالعرض أولًا.`,
+    howItWorks: [
+      "enqueue(x) يُلحِق x في مؤخرة الطابور.",
+      "dequeue() يزيل عنصر المقدمة ويعيده.",
+      "front() يعيد عنصر المقدمة دون إزالته.",
+      "لأن الإضافة والإزالة تحدثان عند طرفين متقابلين، يُحفَظ ترتيب الوصول.",
+      "المخزن الحلقي أو القائمة المترابطة يُبقيان كلا الطرفين بزمن O(1).",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1)", worst: "O(1)" },
+      space: "O(n)",
+      notes: "الإضافة enqueue والإزالة dequeue وقراءة المقدمة front بزمن O(1) مع قائمة مترابطة أو مصفوفة حلقية. (المصفوفة الساذجة التي تُزيح فيها الإزالة العناصر تكلّف O(n) لكل إزالة.)",
+    },
+    applications: [
+      "البحث بالعرض أولًا واجتياز المستويات",
+      "جدولة المعالج/المهام وطوابير الأعمال",
+      "التخزين المؤقت في التدفّقات والطابعات والدخل/الخرج",
+      "خطوط أنابيب المنتِج–المستهلِك وطوابير الرسائل",
+    ],
+    advantages: [
+      "إضافة وإزالة بزمن O(1) مع مخزن دعم مناسب",
+      "يحفظ ترتيب الوصول (العدالة)",
+      "دلالات بسيطة ومفهومة جيدًا",
+      "أساس للبحث بالعرض أولًا والجدولة",
+    ],
+    disadvantages: [
+      "المقدمة والمؤخرة وحدهما متاحتان — لا وصول عشوائي",
+      "التنفيذ الساذج بمصفوفة يعطي إزالة بزمن O(n)",
+      "المخازن الحلقية ثابتة الحجم قد تفيض",
+    ],
+    commonMistakes: [
+      "الإزالة من طابور فارغ (تجاوز سفلي) دون التحقق.",
+      "استخدام إزاحة المصفوفة للإزالة، مما يجعلها O(n) بدلًا من O(1).",
+      "الخلط بين طرفي المقدمة/المؤخرة (FIFO) وقمة المكدس الوحيدة (LIFO).",
+      "أخطاء الانزياح بمقدار واحد في الالتفاف عند تنفيذ المخزن الحلقي.",
+    ],
+    interviewQuestions: [
+      "كيف تُنفّذ طابورًا باستخدام مكدسين؟",
+      "لماذا يحتاج البحث بالعرض أولًا إلى طابور بدلًا من مكدس؟",
+      "كيف يحقق المخزن الحلقي إضافة وإزالة بزمن O(1)؟",
+      "نفّذ طابورًا بعمليات O(1) باستخدام قائمة مترابطة أحادية.",
+      "ما الفرق بين الطابور والطابور الثنائي (deque)؟",
+    ],
+    summary:
+      "الطابور هيكل يعمل بمبدأ FIFO بإضافة بزمن O(1) في المؤخرة وإزالة من المقدمة، مع حفظ ترتيب الوصول. وبالاعتماد على قائمة مترابطة أو مخزن حلقي، يقود البحث بالعرض أولًا والجدولة والتخزين المؤقت حيثما يهمّ الترتيب.",
+    quiz: [
+      { question: "الطابور يتبع أي نظام ترتيب؟", options: ["LIFO", "FIFO", "الأولوية", "عشوائي"], answer: 1, explanation: "الوارد أولًا يخرج أولًا: تغادر العناصر بترتيب الوصول." },
+      { question: "الإضافة والإزالة تعملان على…", options: ["الطرف نفسه", "طرفين متقابلين (المؤخرة والمقدمة)", "المنتصف", "مواضع عشوائية"], answer: 1, explanation: "تحدث الإضافة في المؤخرة والإزالة في المقدمة." },
+      { question: "أي خوارزمية تعتمد على طابور؟", options: ["البحث بالعمق أولًا", "البحث بالعرض أولًا", "الترتيب السريع", "البحث الثنائي"], answer: 1, explanation: "يستخدم البحث بالعرض أولًا طابور FIFO لزيارة العُقد بترتيب تصاعدي للمسافة." },
+      { question: "الإزالة الساذجة القائمة على مصفوفة والتي تُزيح العناصر هي…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 2, explanation: "إزاحة كل العناصر المتبقية إلى اليسار تكلّف O(n)؛ والمخزن الحلقي يتجنب ذلك." },
+      { question: "أي هيكل يعطي إضافة وإزالة بزمن O(1)؟", options: ["مصفوفة مرتبة", "مخزن حلقي أو قائمة مترابطة", "شجرة ثنائية", "جدول تجزئة"], answer: 1, explanation: "كلاهما يحتفظ بمؤشري المقدمة/المؤخرة لأطراف بزمن ثابت." },
     ],
   },
   inputFields: [

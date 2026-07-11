@@ -11,7 +11,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   const stack: { id: string; val: number; min: number }[] = [];
   let idc = 0;
 
-  const frame = (topState: "active" | "found" | "swap" | undefined, description: string, codeLine: number): void => {
+  const frame = (topState: "active" | "found" | "swap" | undefined, description: string, codeLine: number, descriptionAr?: string): void => {
     const items: CallStackItem[] = stack.map((e, i) => ({
       id: e.id,
       label: String(e.val),
@@ -26,12 +26,18 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `each cell caches the minimum of everything at or below it → getMin() is O(1)`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { pushes, pops },
     });
   };
 
-  frame(undefined, `A min-stack supports push, pop, and getMin all in O(1) by storing a running minimum alongside each value.`, 0);
+  frame(
+    undefined,
+    `A min-stack supports push, pop, and getMin all in O(1) by storing a running minimum alongside each value.`,
+    0,
+    `يدعم min-stack عمليات push و pop و getMin جميعها بزمن O(1) عبر تخزين قيمة صغرى جارية بجانب كل قيمة.`,
+  );
 
   for (const v of input.values) {
     const min = stack.length === 0 ? v : Math.min(v, stack[stack.length - 1].min);
@@ -43,15 +49,28 @@ function generate(input: Input): Step<CallStackFrame>[] {
         ? `push(${v}): stack was empty, so min = ${v}.`
         : `push(${v}): min = min(${v}, previous min ${stack[stack.length - 2].min}) = ${min}.`,
       2,
+      stack.length === 1
+        ? `push(${v}): كان المكدس فارغًا، لذا min = ${v}.`
+        : `push(${v}): min = min(${v}, القيمة الصغرى السابقة ${stack[stack.length - 2].min}) = ${min}.`,
     );
   }
 
-  frame("found", `getMin() reads the top's cached minimum: ${stack.length ? stack[stack.length - 1].min : "—"} — no scan needed.`, 5);
+  frame(
+    "found",
+    `getMin() reads the top's cached minimum: ${stack.length ? stack[stack.length - 1].min : "—"} — no scan needed.`,
+    5,
+    `getMin() يقرأ القيمة الصغرى المخزَّنة في القمة: ${stack.length ? stack[stack.length - 1].min : "—"} — دون الحاجة إلى مسح.`,
+  );
 
   const times = Math.min(input.popCount, stack.length);
   for (let p = 0; p < times; p++) {
     const top = stack[stack.length - 1];
-    frame("swap", `pop(): remove ${top.val}. The new minimum is simply the next cell's cached value.`, 3);
+    frame(
+      "swap",
+      `pop(): remove ${top.val}. The new minimum is simply the next cell's cached value.`,
+      3,
+      `pop(): أزِل ${top.val}. القيمة الصغرى الجديدة هي ببساطة القيمة المخزَّنة في الخلية التالية.`,
+    );
     stack.pop();
     pops++;
     frame(
@@ -60,10 +79,18 @@ function generate(input: Input): Step<CallStackFrame>[] {
         ? `Popped ${top.val}. getMin() is now ${stack[stack.length - 1].min} instantly.`
         : `Popped ${top.val}. The stack is empty.`,
       3,
+      stack.length
+        ? `أُخرِج ${top.val}. أصبحت getMin() الآن ${stack[stack.length - 1].min} فورًا.`
+        : `أُخرِج ${top.val}. أصبح المكدس فارغًا.`,
     );
   }
 
-  frame(undefined, `Done. Every push/pop/getMin ran in O(1) thanks to the cached minimums.`, 6);
+  frame(
+    undefined,
+    `Done. Every push/pop/getMin ran in O(1) thanks to the cached minimums.`,
+    6,
+    `تم. جرت كل عمليات push/pop/getMin بزمن O(1) بفضل القيم الصغرى المخزَّنة.`,
+  );
   return steps;
 }
 
@@ -76,10 +103,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "min-stack",
   title: "Min-Stack (O(1) minimum)",
+  titleAr: "المكدس الأصغري (أصغر قيمة بزمن O(1))",
   category: "stacks-queues",
   difficulty: "Intermediate",
   tags: ["stack", "design", "O(1)", "auxiliary"],
+  tagsAr: ["مكدس", "تصميم", "O(1)", "مساعد"],
   summary: "A stack that also returns its minimum in O(1) by caching a running minimum with every pushed value.",
+  summaryAr: "مكدس يعيد أيضًا أصغر قيمة فيه بزمن O(1) عبر تخزين قيمة صغرى جارية مع كل قيمة مدفوعة.",
   renderer: "callstack",
   pseudocode: [
     "structure MinStack",
@@ -262,6 +292,62 @@ The key insight is that the minimum of a stack changes only at push and pop, in 
       { question: "Why store a min with every entry instead of one variable?", options: ["To save space", "So popping restores the correct previous minimum", "For faster pushes", "It isn't necessary"], answer: 1, explanation: "A single variable can't recover the prior minimum after a pop." },
       { question: "The extra space used is…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 2, explanation: "Each of the n entries caches an extra minimum value." },
       { question: "getMin after popping the current minimum returns…", options: ["An error", "The cached min of the new top", "Zero", "The popped value"], answer: 1, explanation: "The new top already stores the minimum of everything below it." },
+    ],
+  },
+  contentAr: {
+    overview: `المكدس الأصغري مكدس يستطيع، إضافة إلى عمليات push و pop و top المعتادة، أن يعيد أصغر عنصر مخزَّن حاليًا — كل ذلك بزمن O(1). النهج الساذج بمسح المكدس بحثًا عن القيمة الصغرى عند الطلب يكون O(n)؛ والحيلة هي حساب القيمة الصغرى مسبقًا وتخزينها أثناء التقدّم.
+
+الفكرة الجوهرية أن القيمة الصغرى للمكدس تتغيّر فقط عند الدفع والإخراج، بطريقة متداخلة تمامًا. فكل عنصر يخزّن ليس قيمته فحسب بل أيضًا القيمة الصغرى لكل عنصر عنده أو تحته. عند الدفع تكون القيمة الصغرى الجديدة ببساطة min(القيمة الجديدة، القيمة الصغرى للقمة السابقة). وعند الإخراج تُستعاد القيمة الصغرى السابقة تلقائيًا — فهي مخزَّنة في العنصر الذي أصبح الآن في القمة. ولأن كل عملية تقرأ أو تكتب في القمة فقط، فجميعها بزمن ثابت، على حساب عدد صحيح إضافي واحد لكل عنصر.`,
+    howItWorks: [
+      "خزّن كل عنصر في المكدس كزوج: القيمة والقيمة الصغرى عنده أو تحته.",
+      "عند push(v): احسب m = v إذا كان المكدس فارغًا، وإلا min(v, القيمة الصغرى للقمة الحالية).",
+      "ادفع الزوج {value: v, min: m}.",
+      "getMin() تعيد ببساطة القيمة الصغرى المخزَّنة في عنصر القمة — دون مسح.",
+      "عند pop()، تكشف إزالة القمة تلقائيًا القيمة الصغرى السابقة الصحيحة تحتها.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1)", worst: "O(1)" },
+      space: "O(n)",
+      notes: "كل عملية (push/pop/top/getMin) بزمن O(1). القيمة الصغرى المخزَّنة الإضافية تضاعف حجم التخزين لكل عنصر لكنها تُبقي المساحة عند O(n). ومن البدائل الاحتفاظ بـ'مكدس أصغري' منفصل ينمو فقط عند ظهور قيم صغرى جديدة.",
+    },
+    applications: [
+      "مسائل القيمة الصغرى في نافذة منزلقة / امتداد أسعار الأسهم",
+      "تنفيذ طابور أصغري من مكدسين أصغريين",
+      "أنظمة التراجع التي يجب أن تُبلِغ عن قيمة قصوى جارية",
+      "سؤال تصميم هياكل بيانات كلاسيكي في المقابلات",
+    ],
+    advantages: [
+      "استرجاع القيمة الصغرى بزمن ثابت",
+      "تبقى جميع عمليات المكدس الأخرى بزمن O(1)",
+      "سهل التنفيذ بقيمة مقترنة",
+      "يتعامل مع القيم المكرَّرة والسالبة بطبيعته",
+    ],
+    disadvantages: [
+      "ذاكرة إضافية بمقدار O(n) للقيم الصغرى المخزَّنة",
+      "يتتبّع القيمة الصغرى فقط (يلزم هيكل منفصل للقيمة الكبرى)",
+      "مسك دفاتر أكثر قليلًا من المكدس العادي",
+    ],
+    commonMistakes: [
+      "إعادة حساب القيمة الصغرى بالمسح، مما يجعل getMin بزمن O(n).",
+      "تخزين متغيّر أصغري واحد، وهو ما ينهار بعد إخراج القيمة الصغرى الحالية.",
+      "نسيان حالة المكدس الفارغ عند أول دفع.",
+      "عدم استعادة القيمة الصغرى السابقة بشكل صحيح عند الإخراج.",
+    ],
+    interviewQuestions: [
+      "كيف تحقق getMin بزمن O(1) دون مسح المكدس؟",
+      "لماذا يفشل متغيّر أصغري واحد، وكيف يصلح ذلك التخزين لكل عنصر؟",
+      "كيف تدعم أيضًا getMax في آنٍ واحد؟",
+      "كيف تبني طابورًا أصغريًا باستخدام مكدسين أصغريين؟",
+      "هل يمكنك تقليل المساحة الإضافية عندما تتشارك عمليات دفع كثيرة القيمة الصغرى نفسها؟",
+    ],
+    summary:
+      "المكدس الأصغري يخزّن، مع كل قيمة مدفوعة، القيمة الصغرى لكل العناصر عندها أو تحتها، فتصبح push و pop و top و getMin جميعها بزمن O(1). يقايض عددًا صحيحًا إضافيًا واحدًا لكل عنصر باستعلامات قيمة صغرى بزمن ثابت، وهو سؤال أساسي في تصميم هياكل البيانات.",
+    quiz: [
+      { question: "المكدس الأصغري يعيد قيمته الصغرى بزمن…", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: 2, explanation: "القيمة الصغرى مخزَّنة، لذا تُقرأ بزمن ثابت." },
+      { question: "عند push(v)، تكون القيمة الصغرى المخزَّنة…", options: ["دائمًا v", "min(v, القيمة الصغرى للقمة السابقة)", "المتوسط العام", "v + القيمة الصغرى السابقة"], answer: 1, explanation: "هي الأصغر بين v والقيمة الصغرى تحتها." },
+      { question: "لماذا تُخزَّن قيمة صغرى مع كل عنصر بدلًا من متغيّر واحد؟", options: ["لتوفير المساحة", "كي يستعيد الإخراج القيمة الصغرى السابقة الصحيحة", "لدفع أسرع", "ليس ضروريًا"], answer: 1, explanation: "المتغيّر الواحد لا يستطيع استعادة القيمة الصغرى السابقة بعد الإخراج." },
+      { question: "المساحة الإضافية المستخدمة هي…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 2, explanation: "كل عنصر من العناصر n يخزّن قيمة صغرى إضافية." },
+      { question: "getMin بعد إخراج القيمة الصغرى الحالية تعيد…", options: ["خطأ", "القيمة الصغرى المخزَّنة في القمة الجديدة", "صفرًا", "القيمة المُخرَجة"], answer: 1, explanation: "القمة الجديدة تخزّن أصلًا القيمة الصغرى لكل ما تحتها." },
     ],
   },
   inputFields: [

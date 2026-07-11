@@ -11,39 +11,54 @@ function generate(input: Input): Step<CallStackFrame>[] {
   let pops = 0;
   let uid = 0;
 
-  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"]) => {
+  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"], descriptionAr?: string) => {
     const shown = stack.map((s, i) => ({ ...s, state: i === stack.length - 1 ? topState ?? s.state : s.state }));
-    steps.push({ frame: { stack: shown, output: [...output] }, description, codeLine, counters: { size: stack.length, pushes, pops } });
+    steps.push({ frame: { stack: shown, output: [...output] }, description, descriptionAr, codeLine, counters: { size: stack.length, pushes, pops } });
   };
 
-  snap(`A stack is LIFO: the last item pushed is the first popped.`, 0);
+  snap(
+    `A stack is LIFO: the last item pushed is the first popped.`,
+    0,
+    undefined,
+    `المكدس يعمل بمبدأ LIFO: آخر عنصر يُدفَع هو أول عنصر يُخرَج.`,
+  );
 
   for (const op of input.ops) {
     if (op.kind === "push") {
       stack.push({ id: `s${uid++}`, label: String(op.value), state: "active" });
       pushes++;
-      snap(`push(${op.value}) — new item goes on top.`, 1, "active");
+      snap(`push(${op.value}) — new item goes on top.`, 1, "active", `push(${op.value}) — العنصر الجديد يوضع في القمة.`);
     } else if (op.kind === "pop") {
       if (stack.length === 0) {
-        snap(`pop() on empty stack — underflow!`, 2, "special");
+        snap(`pop() on empty stack — underflow!`, 2, "special", `pop() على مكدس فارغ — تجاوز سفلي (underflow)!`);
       } else {
         const top = stack[stack.length - 1];
         top.state = "swap";
-        snap(`pop() removes the top item ${top.label}.`, 2, "swap");
+        snap(`pop() removes the top item ${top.label}.`, 2, "swap", `pop() يزيل العنصر العلوي ${top.label}.`);
         stack.pop();
         pops++;
         output.push(top.label);
-        snap(`Removed ${top.label}. It is now the most recent output.`, 3);
+        snap(`Removed ${top.label}. It is now the most recent output.`, 3, undefined, `أُزيل ${top.label}. أصبح الآن أحدث خرج.`);
       }
     } else {
       if (stack.length === 0) {
-        snap(`peek() on empty stack — nothing to see.`, 4, "special");
+        snap(`peek() on empty stack — nothing to see.`, 4, "special", `peek() على مكدس فارغ — لا شيء لرؤيته.`);
       } else {
-        snap(`peek() reads the top item ${stack[stack.length - 1].label} without removing it.`, 4, "found");
+        snap(
+          `peek() reads the top item ${stack[stack.length - 1].label} without removing it.`,
+          4,
+          "found",
+          `peek() يقرأ العنصر العلوي ${stack[stack.length - 1].label} دون إزالته.`,
+        );
       }
     }
   }
-  snap(`All operations complete. Stack holds ${stack.length} item(s).`, 5);
+  snap(
+    `All operations complete. Stack holds ${stack.length} item(s).`,
+    5,
+    undefined,
+    `اكتملت جميع العمليات. يحتوي المكدس على ${stack.length} عنصر.`,
+  );
   return steps;
 }
 
@@ -69,10 +84,13 @@ function randomOps(level: number, rng: { int: (a: number, b: number) => number; 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "stack-operations",
   title: "Stack (LIFO)",
+  titleAr: "المكدس (LIFO)",
   category: "stacks-queues",
   difficulty: "Beginner",
   tags: ["stack", "LIFO", "O(1) operations"],
+  tagsAr: ["مكدس", "LIFO", "عمليات O(1)"],
   summary: "A last-in-first-out structure supporting push, pop, and peek — each in O(1).",
+  summaryAr: "هيكل يعمل بمبدأ الوارد أخيرًا يخرج أولًا يدعم الدفع (push) والإخراج (pop) والاطلاع (peek) — كل منها بزمن O(1).",
   renderer: "callstack",
   pseudocode: [
     "structure Stack (LIFO)",
@@ -199,6 +217,62 @@ Its three core operations — push (add to top), pop (remove from top), and peek
       { question: "Which operation reads the top without removing it?", options: ["pop", "peek", "push", "poll"], answer: 1, explanation: "peek (or top) inspects the top element in place." },
       { question: "Which problem is a natural fit for a stack?", options: ["Level-order tree traversal", "Matching nested parentheses", "Shortest path", "Round-robin scheduling"], answer: 1, explanation: "Nested/balanced structure maps directly onto LIFO push/pop." },
       { question: "Popping an empty stack causes…", options: ["An overflow", "An underflow", "A resize", "Nothing"], answer: 1, explanation: "Removing from an empty stack is an underflow condition to guard against." },
+    ],
+  },
+  contentAr: {
+    overview: `المكدس هيكل بيانات خطي بوصول يعمل بمبدأ الوارد أخيرًا يخرج أولًا (LIFO): لا يمكنك إضافة العناصر أو إزالتها إلا من طرف واحد يُسمى القمة. تخيّل كومة من الأطباق — تضع طبقًا جديدًا في الأعلى وتأخذ الطبق العلوي؛ ولا تسحب أبدًا من المنتصف.
+
+عملياته الأساسية الثلاث — الدفع push (الإضافة إلى القمة) والإخراج pop (الإزالة من القمة) والاطلاع peek (قراءة القمة) — جميعها بزمن O(1). هذا الوصول المقيّد هو بالضبط ما يجعل المكدسات مفيدة جدًا لعكس الترتيب وتتبّع البنية المتداخلة وتنفيذ العودية عبر مكدس الاستدعاءات.`,
+    howItWorks: [
+      "push(x) يضع x في قمة المكدس، فيصبح القمة الجديدة.",
+      "pop() يزيل العنصر العلوي الحالي ويعيده.",
+      "peek() يعيد العنصر العلوي دون إزالته.",
+      "isEmpty() يبيّن ما إذا كان المكدس يحتوي على أي عناصر.",
+      "لأن القمة وحدها هي المتاحة، فإن أحدث عنصر مُضاف يكون دائمًا أول ما يُزال.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1)", worst: "O(1)" },
+      space: "O(n)",
+      notes: "الدفع push والإخراج pop والاطلاع peek جميعها O(1) (بزمن مُستهلَك O(1) عند الاعتماد على مصفوفة ديناميكية). المساحة O(n) لتخزين n عنصرًا.",
+    },
+    applications: [
+      "إدارة استدعاءات الدوال (مكدس الاستدعاءات) والعودية",
+      "سجل التراجع/الإعادة في المحررات",
+      "تقييم التعابير ومطابقة الأقواس",
+      "التراجع والبحث بالعمق أولًا والرجوع للخلف في المتصفح",
+    ],
+    advantages: [
+      "جميع العمليات الأساسية بزمن O(1)",
+      "سهل التنفيذ بمصفوفة أو قائمة مترابطة",
+      "ملائم بطبيعته للمسائل المتداخلة والعودية ومسائل LIFO",
+      "عبء قليل ويمكن التنبؤ به",
+    ],
+    disadvantages: [
+      "العنصر العلوي وحده هو المتاح — لا وصول عشوائي",
+      "البحث يتطلب إخراج كل شيء (O(n))",
+      "الاعتماد على مصفوفة ثابتة الحجم قد يسبب فيضانًا؛ والمصفوفات الديناميكية تضيف تكلفة إعادة التحجيم",
+    ],
+    commonMistakes: [
+      "إخراج أو الاطلاع على مكدس فارغ (تجاوز سفلي) دون التحقق أولًا.",
+      "الخلط بين دلالات المكدس (LIFO) والطابور (FIFO).",
+      "افتراض وجود وصول عشوائي إلى العناصر الوسطى.",
+      "نسيان تحديث مؤشر/فهرس القمة عند الدفع أو الإخراج.",
+    ],
+    interviewQuestions: [
+      "كيف تُنفّذ طابورًا باستخدام مكدسين؟",
+      "استخدم مكدسًا للتحقق من توازن الأقواس في تعبير ما.",
+      "كيف يُنفّذ مكدس الاستدعاءات عودية الدوال؟",
+      "صمّم مكدسًا يعيد أيضًا أصغر قيمة فيه بزمن O(1) (min-stack).",
+      "قيّم تعبيرًا بالترميز اللاحق (RPN) باستخدام مكدس.",
+    ],
+    summary:
+      "المكدس هيكل يعمل بمبدأ LIFO بعمليات دفع وإخراج واطلاع بزمن O(1)، ولا يكشف سوى قمته. وهو يشغّل العودية (مكدس الاستدعاءات) وسجل التراجع وتحليل التعابير والتراجع — في كل موضع يجب فيه معالجة أحدث عنصر أولًا.",
+    quiz: [
+      { question: "المكدس يتبع أي نظام ترتيب؟", options: ["FIFO", "LIFO", "الأولوية", "عشوائي"], answer: 1, explanation: "الوارد أخيرًا يخرج أولًا: آخر عنصر مدفوع هو أول ما يُخرَج." },
+      { question: "ما التعقيد الزمني للدفع والإخراج؟", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 0, explanation: "كلاهما يعمل على القمة فقط، بزمن ثابت." },
+      { question: "أي عملية تقرأ القمة دون إزالتها؟", options: ["pop", "peek", "push", "poll"], answer: 1, explanation: "peek (أو top) تفحص العنصر العلوي في مكانه." },
+      { question: "أي مسألة تناسب المكدس بطبيعتها؟", options: ["اجتياز الشجرة بترتيب المستويات", "مطابقة الأقواس المتداخلة", "أقصر مسار", "الجدولة الدورية"], answer: 1, explanation: "البنية المتداخلة/المتوازنة تنطبق مباشرة على دفع/إخراج LIFO." },
+      { question: "إخراج عنصر من مكدس فارغ يسبب…", options: ["فيضانًا علويًا", "تجاوزًا سفليًا", "إعادة تحجيم", "لا شيء"], answer: 1, explanation: "الإزالة من مكدس فارغ حالة تجاوز سفلي يجب التحقق منها." },
     ],
   },
   inputFields: [

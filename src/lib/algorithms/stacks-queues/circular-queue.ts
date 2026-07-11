@@ -19,7 +19,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     return s;
   };
 
-  const frame = (changed: number | null, changeState: CellState, description: string, codeLine: number): void => {
+  const frame = (changed: number | null, changeState: CellState, description: string, codeLine: number, descriptionAr?: string): void => {
     const occ = occupied();
     const states: Record<number, CellState> = {};
     for (let i = 0; i < cap; i++) states[i] = occ.has(i) ? "sorted" : "discarded";
@@ -41,17 +41,30 @@ function generate(input: Input): Step<ArrayFrame>[] {
         note: `circular queue — indices wrap with modulo ${cap}`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { enqueues: enq, dequeues: deq },
     });
   };
 
-  frame(null, "active", `A circular queue reuses a fixed array of ${cap} slots; front and rear wrap around with modulo arithmetic.`, 0);
+  frame(
+    null,
+    "active",
+    `A circular queue reuses a fixed array of ${cap} slots; front and rear wrap around with modulo arithmetic.`,
+    0,
+    `الطابور الحلقي يعيد استخدام مصفوفة ثابتة من ${cap} خانة؛ وتلتفّ المقدمة والمؤخرة باستخدام حساب باقي القسمة.`,
+  );
 
   for (const op of input.ops) {
     if (op.kind === "enqueue") {
       if (size === cap) {
-        frame(rear % cap, "swap", `enqueue(${op.value}): the queue is FULL (size ${size} = capacity ${cap}) — rejected.`, 3);
+        frame(
+          rear % cap,
+          "swap",
+          `enqueue(${op.value}): the queue is FULL (size ${size} = capacity ${cap}) — rejected.`,
+          3,
+          `enqueue(${op.value}): الطابور ممتلئ (الحجم ${size} = السعة ${cap}) — مرفوض.`,
+        );
         continue;
       }
       buf[rear] = op.value;
@@ -59,10 +72,16 @@ function generate(input: Input): Step<ArrayFrame>[] {
       rear = (rear + 1) % cap;
       size++;
       enq++;
-      frame(writeAt, "found", `enqueue(${op.value}): write at index ${writeAt}, then rear = (${writeAt} + 1) mod ${cap} = ${rear}.`, 2);
+      frame(
+        writeAt,
+        "found",
+        `enqueue(${op.value}): write at index ${writeAt}, then rear = (${writeAt} + 1) mod ${cap} = ${rear}.`,
+        2,
+        `enqueue(${op.value}): اكتب عند الفهرس ${writeAt}، ثم rear = (${writeAt} + 1) mod ${cap} = ${rear}.`,
+      );
     } else {
       if (size === 0) {
-        frame(null, "swap", `dequeue(): the queue is EMPTY — nothing to remove.`, 6);
+        frame(null, "swap", `dequeue(): the queue is EMPTY — nothing to remove.`, 6, `dequeue(): الطابور فارغ — لا شيء لإزالته.`);
         continue;
       }
       const removed = buf[front];
@@ -70,13 +89,25 @@ function generate(input: Input): Step<ArrayFrame>[] {
       front = (front + 1) % cap;
       size--;
       deq++;
-      frame(readAt, "compare", `dequeue(): read ${removed} from index ${readAt}, then front = (${readAt} + 1) mod ${cap} = ${front}.`, 5);
+      frame(
+        readAt,
+        "compare",
+        `dequeue(): read ${removed} from index ${readAt}, then front = (${readAt} + 1) mod ${cap} = ${front}.`,
+        5,
+        `dequeue(): اقرأ ${removed} من الفهرس ${readAt}، ثم front = (${readAt} + 1) mod ${cap} = ${front}.`,
+      );
     }
   }
 
   const contents: number[] = [];
   for (let k = 0; k < size; k++) contents.push(buf[(front + k) % cap]);
-  frame(null, "active", `Done. Queue holds ${size} item(s) front→rear: [${contents.join(", ") || "empty"}].`, 7);
+  frame(
+    null,
+    "active",
+    `Done. Queue holds ${size} item(s) front→rear: [${contents.join(", ") || "empty"}].`,
+    7,
+    `تم. يحتوي الطابور على ${size} عنصر من المقدمة إلى المؤخرة: [${contents.join(", ") || "empty"}].`,
+  );
   return steps;
 }
 
@@ -96,10 +127,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "circular-queue",
   title: "Circular Queue (Ring Buffer)",
+  titleAr: "الطابور الحلقي (مخزن حلقي)",
   category: "stacks-queues",
   difficulty: "Intermediate",
   tags: ["queue", "ring buffer", "modulo", "fixed capacity"],
+  tagsAr: ["طابور", "مخزن حلقي", "باقي القسمة", "سعة ثابتة"],
   summary: "A fixed-size queue whose front and rear indices wrap around with modulo arithmetic, reusing freed slots.",
+  summaryAr: "طابور ثابت الحجم تلتفّ فيه فهارس المقدمة والمؤخرة باستخدام حساب باقي القسمة، فيعيد استخدام الخانات المحرَّرة.",
   renderer: "array",
   pseudocode: [
     "structure CircularQueue(capacity)",
@@ -348,6 +382,63 @@ Two indices drive it: front points at the next element to remove, and rear at th
       { question: "The main problem it solves versus a naive array queue is…", options: ["Sorting elements", "Reusing freed front slots instead of wasting them", "Growing without limit", "Finding the minimum"], answer: 1, explanation: "Wrap-around reclaims the slots vacated by dequeues." },
       { question: "When front == rear, the queue could be…", options: ["Only full", "Only empty", "Either full or empty (needs a size/flag)", "Corrupted"], answer: 2, explanation: "A size counter or a spare slot disambiguates the two states." },
       { question: "A circular queue's capacity is…", options: ["Unbounded", "Fixed at creation", "Always 2", "Equal to the number of dequeues"], answer: 1, explanation: "Ring buffers use a fixed, pre-allocated array." },
+    ],
+  },
+  contentAr: {
+    overview: `الطابور الحلقي (أو المخزن الحلقي) طابور FIFO ثابت السعة يعيد استخدام تخزينه بمعاملة المصفوفة الأساسية كأن طرفيها متّصلان في دائرة. الطابور الساذج القائم على مصفوفة يهدر المساحة: فبعد عدة عمليات إزالة تزحف المقدمة إلى الأمام وتصبح خانات المقدمة غير قابلة للاستخدام بشكل دائم رغم أنها فارغة. ويحلّ الطابور الحلقي ذلك بالتفاف فهرسَي المقدمة والمؤخرة عائدَين إلى 0 باستخدام حساب باقي القسمة بمجرد بلوغهما النهاية.
+
+يقوده فهرسان: المقدمة تشير إلى العنصر التالي المراد إزالته، والمؤخرة إلى الخانة الحرة التالية المراد الكتابة فيها. الإضافة تكتب عند المؤخرة وتتقدّم rear = (rear + 1) mod capacity؛ والإزالة تقرأ عند المقدمة وتتقدّم المقدمة بالمثل. ويميّز عدّاد الحجم (أو خانة فارغة احتياطية) حالة الامتلاء عن حالة الفراغ، لأن front == rear قد يعني أيًّا منهما. وجميع العمليات بزمن O(1)، ولهذا تشغّل المخازن الحلقية الدخل/الخرج المتدفّق ومخازن الصوت وطوابير المنتِج–المستهلِك المحدودة.`,
+    howItWorks: [
+      "خصّص مصفوفة ثابتة من `capacity` خانة واضبط front = rear = size = 0.",
+      "enqueue(v): إذا ساوى الحجم السعة فالطابور ممتلئ — ارفض؛ وإلا اكتب buf[rear] = v.",
+      "تقدّم rear = (rear + 1) mod capacity وزِد الحجم.",
+      "dequeue(): إذا كان الحجم 0 فالطابور فارغ — ارفض؛ وإلا اقرأ buf[front].",
+      "تقدّم front = (front + 1) mod capacity وأنقِص الحجم؛ وتُعاد الخانة المحرَّرة في عمليات الإضافة اللاحقة.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(1)", worst: "O(1)" },
+      space: "O(capacity)",
+      notes: "الإضافة والإزالة بزمن ثابت — دون إزاحة العناصر. المساحة ثابتة عند السعة المختارة. ويلزم عدّاد للحجم (أو التضحية بخانة واحدة) للتمييز بين الممتلئ والفارغ.",
+    },
+    applications: [
+      "مخازن التدفّق والدخل/الخرج (الصوت والفيديو وحزم الشبكة)",
+      "طوابير المنتِج–المستهلِك / المهام المحدودة",
+      "مخازن لوحة المفاتيح والأحداث في أنظمة التشغيل",
+      "النافذة المنزلقة والجدولة الدورية",
+    ],
+    advantages: [
+      "إضافة وإزالة بزمن O(1) دون إزاحة العناصر",
+      "يعيد استخدام الخانات المحرَّرة — لا مساحة مهدورة في المقدمة",
+      "بصمة ذاكرة ثابتة ويمكن التنبؤ بها",
+      "مثالي لأحمال العمل المتدفّقة المحدودة",
+    ],
+    disadvantages: [
+      "سعة ثابتة — لا يمكن أن تنمو دون إعادة تخصيص",
+      "الغموض بين الممتلئ والفارغ يحتاج عدّاد حجم أو خانة احتياطية",
+      "حساب الفهارس (باقي القسمة والالتفاف) يسهل الخطأ فيه",
+      "يجب تقرير سياسة الكتابة فوق الموجود أو الحجب عند الامتلاء",
+    ],
+    commonMistakes: [
+      "الخلط بين حالتَي الامتلاء والفراغ عندما front == rear.",
+      "نسيان باقي القسمة، فتتجاوز الفهارس نهاية المصفوفة.",
+      "عدم رفض (أو معالجة) الإضافة على طابور ممتلئ / الإزالة على طابور فارغ.",
+      "خطأ في عدّ الحجم بعد الالتفاف.",
+    ],
+    interviewQuestions: [
+      "كيف تميّز الطابور الحلقي الممتلئ عن الفارغ؟",
+      "لماذا الطابور الحلقي أفضل من إزاحة العناصر في طابور مصفوفة؟",
+      "كيف تنفّذه دون حقل حجم (باستخدام خانة احتياطية)؟",
+      "كيف تدعم المخازن الحلقية طوابير منتِج واحد/مستهلك واحد دون أقفال؟",
+      "ما خيارات السياسة المتاحة عند الإضافة إلى مخزن ممتلئ؟",
+    ],
+    summary:
+      "الطابور الحلقي طابور FIFO ثابت الحجم يلتفّ بفهرسَي المقدمة والمؤخرة باستخدام حساب باقي القسمة لإعادة استخدام الخانات المحرَّرة، مانحًا إضافة وإزالة بزمن O(1) دون إزاحة. ويحلّ عدّاد الحجم الغموض بين الممتلئ والفارغ، مما يجعله مثاليًا لمخازن التدفّق المحدودة.",
+    quiz: [
+      { question: "يتقدّم الطابور الحلقي بفهارسه باستخدام…", options: ["قفزات عشوائية", "باقي القسمة على السعة", "المضاعفة", "البحث الثنائي"], answer: 1, explanation: "‏(index + 1) mod capacity يلتفّ عائدًا إلى البداية." },
+      { question: "الإضافة والإزالة على طابور حلقي هما…", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: 2, explanation: "لا تُزاح أي عناصر؛ تتحرك الفهارس فقط." },
+      { question: "المشكلة الرئيسية التي يحلّها مقابل الطابور الساذج القائم على مصفوفة هي…", options: ["ترتيب العناصر", "إعادة استخدام خانات المقدمة المحرَّرة بدلًا من هدرها", "النمو بلا حد", "إيجاد القيمة الصغرى"], answer: 1, explanation: "الالتفاف يستعيد الخانات التي أخلتها عمليات الإزالة." },
+      { question: "عندما front == rear، قد يكون الطابور…", options: ["ممتلئًا فقط", "فارغًا فقط", "ممتلئًا أو فارغًا (يحتاج حجمًا/راية)", "تالفًا"], answer: 2, explanation: "عدّاد الحجم أو خانة احتياطية يزيل الغموض بين الحالتين." },
+      { question: "سعة الطابور الحلقي…", options: ["غير محدودة", "ثابتة عند الإنشاء", "دائمًا 2", "تساوي عدد عمليات الإزالة"], answer: 1, explanation: "تستخدم المخازن الحلقية مصفوفة ثابتة مخصَّصة مسبقًا." },
     ],
   },
   inputFields: [
