@@ -94,7 +94,7 @@ export function ChipListInput({
           <span
             key={i}
             className={cn(
-              "group inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 py-0.5 pl-2.5 pr-1 text-xs font-medium tabular-nums",
+              "group inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 py-0.5 ps-2.5 pe-1 text-xs font-medium tabular-nums",
             )}
           >
             {tok}

@@ -60,7 +60,7 @@ export function CalcInspector({
       <div className="font-medium">
         {layer === net.layerSizes.length - 1 ? t("nn.layerOutput") : t("nn.layerHidden", { n: layer })}{" "}
         {t("nn.neuronHash", { index: index + 1 })}
-        <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{act.label}</span>
+        <span className="ms-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{act.label}</span>
       </div>
 
       <div>

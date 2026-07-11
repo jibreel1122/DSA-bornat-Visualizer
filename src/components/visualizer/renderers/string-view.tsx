@@ -31,7 +31,8 @@ export function StringView({ frame }: { frame: StringFrame }) {
     <div className="relative flex h-full w-full flex-col p-4">
       <FrameNote note={frame.note} />
       <div className="flex min-h-0 flex-1 flex-col items-start justify-center gap-2 overflow-x-auto px-2">
-        <div className="mx-auto flex flex-col gap-1.5">
+        {/* dir="ltr": index/char alignment across text+pattern rows must not reverse under RTL */}
+        <div className="mx-auto flex flex-col gap-1.5" dir="ltr">
           {/* indices */}
           <div className="flex gap-[3px]">
             {Array.from({ length: cols }, (_, i) => (

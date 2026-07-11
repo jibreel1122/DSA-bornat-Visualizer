@@ -30,9 +30,9 @@ export function Hero({ algoCount }: { algoCount: number }) {
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 hero-grid" />
-      <div className="pointer-events-none absolute -left-24 top-0 size-96 rounded-full bg-primary/20 blur-3xl animate-float" />
+      <div className="pointer-events-none absolute -start-24 top-0 size-96 rounded-full bg-primary/20 blur-3xl animate-float" />
       <div
-        className="pointer-events-none absolute -right-24 top-32 size-96 rounded-full bg-fuchsia-500/15 blur-3xl animate-float"
+        className="pointer-events-none absolute -end-24 top-32 size-96 rounded-full bg-fuchsia-500/15 blur-3xl animate-float"
         style={{ animationDelay: "1.5s" }}
       />
 
@@ -156,7 +156,7 @@ export function CategoryShowcase() {
                     <c.icon className="size-5" />
                   </span>
                   <h3 className="font-semibold transition-colors group-hover:text-primary">{c.short}</h3>
-                  <ArrowRight className="ml-auto size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                  <ArrowRight className="ms-auto size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{c.description}</p>
               </Card>
@@ -175,6 +175,7 @@ export function FinalCta() {
       <motion.div {...fadeUp} transition={{ duration: 0.4 }}>
         <Card className="relative overflow-hidden p-10 text-center sm:p-16">
           <div className="pointer-events-none absolute inset-0 hero-grid opacity-60" />
+          {/* physical: left-1/2 + -translate-x-1/2 is a centering pair; translate-x doesn't flip under RTL so start-1/2 would miscenter this blob */}
           <div className="pointer-events-none absolute left-1/2 top-0 size-72 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
           <div className="relative">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("home.ctaTitle")}</h2>

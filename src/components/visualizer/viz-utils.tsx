@@ -58,7 +58,7 @@ export function AuxRows({ rows, className }: { rows?: AuxRow[]; className?: stri
 export function FrameNote({ note }: { note?: string }) {
   if (!note) return null;
   return (
-    <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[70%] rounded-lg bg-popover/80 px-2.5 py-1.5 text-xs text-muted-foreground backdrop-blur">
+    <div className="pointer-events-none absolute start-3 top-3 z-10 max-w-[70%] rounded-lg bg-popover/80 px-2.5 py-1.5 text-xs text-muted-foreground backdrop-blur">
       {note}
     </div>
   );

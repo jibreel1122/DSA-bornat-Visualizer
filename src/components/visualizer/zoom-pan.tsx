@@ -65,7 +65,7 @@ export const ZoomPan = React.forwardRef<
         {children}
       </div>
 
-      <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-xl border border-border bg-popover/85 p-1 shadow-sm backdrop-blur">
+      <div className="absolute bottom-3 end-3 z-10 flex items-center gap-1 rounded-xl border border-border bg-popover/85 p-1 shadow-sm backdrop-blur">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon-sm" onClick={() => zoom(-0.25)} aria-label={t("shell.zoomOut")}>

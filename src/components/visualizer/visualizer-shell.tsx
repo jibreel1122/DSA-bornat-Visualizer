@@ -554,7 +554,7 @@ export function VisualizerShell({
 
         {/* narration */}
         <div className="border-t border-border bg-muted/30 px-4 py-2.5 text-sm">
-          <span className="mr-2 rounded-md bg-primary/12 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary tabular-nums">
+          <span className="me-2 rounded-md bg-primary/12 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary tabular-nums">
             {steps.length === 0 ? "—" : `${player.cursor + 1}/${steps.length}`}
           </span>
           {step?.description ?? t("shell.generateToBegin")}
@@ -590,6 +590,7 @@ export function VisualizerShell({
                 aria-label={player.playing ? t("shell.pause") : t("shell.play")}
                 className="mx-1 rounded-full shadow-lg shadow-primary/30"
               >
+                {/* physical: optical nudge for the Play triangle's fixed geometry (icon never mirrors under RTL) */}
                 {player.playing ? <Pause /> : <Play className="ml-0.5" />}
               </Button>
               <IconBtn label={t("shell.next")} onClick={player.next} disabled={player.atEnd}>
@@ -749,7 +750,7 @@ export function VisualizerShell({
             <Redo2 />
           </IconBtn>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ms-auto flex items-center gap-1.5">
             <IconBtn label={t("shell.saveState")} onClick={saveLocal}>
               <Save />
             </IconBtn>

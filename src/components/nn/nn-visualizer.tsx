@@ -262,7 +262,7 @@ export function NNVisualizer() {
             <Slider value={[lr]} min={0.01} max={5} step={0.01} onValueChange={([v]) => setLr(v)} className="w-40" />
           </Field>
 
-          <div className="ml-auto flex items-end gap-1.5">
+          <div className="ms-auto flex items-end gap-1.5">
             <Button onClick={() => setPlaying((p) => !p)} className="rounded-full shadow-lg shadow-primary/30">
               {playing ? <><Pause /> {t("nn.pause")}</> : <><Play /> {t("nn.train")}</>}
             </Button>
@@ -302,7 +302,7 @@ export function NNVisualizer() {
               <Minus /> {t("nn.layer")}
             </Button>
           </div>
-          <div className="ml-auto flex items-center gap-4 text-sm">
+          <div className="ms-auto flex items-center gap-4 text-sm">
             <Stat label={t("nn.epoch")} value={String(epoch)} />
             <Stat label={t("nn.loss")} value={loss.toFixed(4)} accent />
           </div>
@@ -378,7 +378,7 @@ export function NNVisualizer() {
               <Button
                 variant={customMode ? "secondary" : "ghost"}
                 size="sm"
-                className="ml-1"
+                className="ms-1"
                 onClick={() => (customMode ? setCustomMode(false) : enterCustomMode())}
               >
                 {customMode ? t("nn.useSamplePicker") : t("shell.customInput")}
@@ -447,7 +447,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="text-right">
+    <div className="text-end">
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`font-mono text-lg font-bold tabular-nums ${accent ? "gradient-text" : ""}`}>{value}</div>
     </div>

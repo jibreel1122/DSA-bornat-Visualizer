@@ -117,7 +117,7 @@ export function QuizPanel({ slug, quiz }: { slug: string; quiz: QuizQuestion[] }
                     onClick={() => pick(i)}
                     disabled={picked !== null}
                     className={cn(
-                      "flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-left text-sm transition-all",
+                      "flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-start text-sm transition-all",
                       picked === null && "cursor-pointer hover:border-primary/50 hover:bg-accent",
                       picked !== null && isAnswer && "border-emerald-500/60 bg-emerald-500/10",
                       picked !== null && isPicked && !isAnswer && "border-rose-500/60 bg-rose-500/10",
