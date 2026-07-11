@@ -18,7 +18,7 @@ function generate(input: Input): Step<ListFrame>[] {
     return out;
   };
 
-  const frame = (states: Record<string, CellState>, description: string, codeLine: number): void => {
+  const frame = (states: Record<string, CellState>, description: string, codeLine: number, descriptionAr: string): void => {
     const head = order[0]?.id ?? null;
     const tail = order[order.length - 1]?.id ?? null;
     const pointers = [
@@ -35,12 +35,18 @@ function generate(input: Input): Step<ListFrame>[] {
         note: `doubly linked list — each node stores prev and next`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { nodes: order.length, linkOps },
     });
   };
 
-  frame({}, `A doubly linked list starts empty. Every node keeps a prev and a next pointer.`, 0);
+  frame(
+    {},
+    `A doubly linked list starts empty. Every node keeps a prev and a next pointer.`,
+    0,
+    `تبدأ القائمة المترابطة المزدوجة فارغة. كل عقدة تحتفظ بمؤشرَي prev وnext.`,
+  );
 
   // 1. Build by inserting at the tail.
   for (const v of input.values) {
@@ -54,6 +60,9 @@ function generate(input: Input): Step<ListFrame>[] {
         ? `insertTail(${v}): link new node's prev → ${prevTail.value} and ${prevTail.value}.next → ${v}.`
         : `insertTail(${v}): list was empty, so ${v} becomes both head and tail.`,
       2,
+      prevTail
+        ? `insertTail(${v}): اربط prev للعقدة الجديدة → ${prevTail.value} و${prevTail.value}.next → ${v}.`
+        : `insertTail(${v}): كانت القائمة فارغة، لذا تصبح ${v} الرأس والذيل معًا.`,
     );
   }
 
@@ -67,6 +76,7 @@ function generate(input: Input): Step<ListFrame>[] {
       { [node.id]: "active", ...(oldHead ? { [oldHead.id]: "compare" } : {}) },
       `insertHead(${input.insertHead}): new node's next → ${oldHead?.value}, ${oldHead?.value}.prev → ${input.insertHead}. It becomes the new head.`,
       4,
+      `insertHead(${input.insertHead}): اجعل next للعقدة الجديدة → ${oldHead?.value}، و${oldHead?.value}.prev → ${input.insertHead}. تصبح هي الرأس الجديد.`,
     );
   }
 
@@ -81,6 +91,7 @@ function generate(input: Input): Step<ListFrame>[] {
         { [target.id]: "swap", ...(before ? { [before.id]: "compare" } : {}), ...(after ? { [after.id]: "compare" } : {}) },
         `delete(${input.deleteValue}): found the node. Re-link ${before ? before.value : "null"} ↔ ${after ? after.value : "null"} to bypass it.`,
         6,
+        `delete(${input.deleteValue}): تم العثور على العقدة. أعد ربط ${before ? before.value : "null"} ↔ ${after ? after.value : "null"} لتجاوزها.`,
       );
       order.splice(idx, 1);
       linkOps += (before ? 1 : 0) + (after ? 1 : 0);
@@ -88,6 +99,7 @@ function generate(input: Input): Step<ListFrame>[] {
         { ...(before ? { [before.id]: "sorted" } : {}), ...(after ? { [after.id]: "sorted" } : {}) },
         `Node ${input.deleteValue} removed. Its neighbors now point directly to each other.`,
         7,
+        `تمت إزالة العقدة ${input.deleteValue}. أصبح جاراها يشيران إلى بعضهما مباشرة.`,
       );
     }
   }
@@ -97,12 +109,17 @@ function generate(input: Input): Step<ListFrame>[] {
     const st: Record<string, CellState> = {};
     for (let k = 0; k <= i; k++) st[order[k].id] = "visited";
     st[order[i].id] = "active";
-    frame(st, `Traverse forward via next pointers: visit ${order[i].value}.`, 7);
+    frame(st, `Traverse forward via next pointers: visit ${order[i].value}.`, 7, `اجتياز أمامي عبر مؤشرات next: زيارة ${order[i].value}.`);
   }
 
   const done: Record<string, CellState> = {};
   order.forEach((n) => (done[n.id] = "found"));
-  frame(done, `Final list: [${order.map((n) => n.value).join(" ⇄ ")}]. It can be walked forward or backward.`, 8);
+  frame(
+    done,
+    `Final list: [${order.map((n) => n.value).join(" ⇄ ")}]. It can be walked forward or backward.`,
+    8,
+    `القائمة النهائية: [${order.map((n) => n.value).join(" ⇄ ")}]. يمكن اجتيازها للأمام أو للخلف.`,
+  );
   return steps;
 }
 
@@ -115,10 +132,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<ListFrame, Input> = {
   slug: "doubly-linked-list",
   title: "Doubly Linked List",
+  titleAr: "القائمة المترابطة المزدوجة",
   category: "linked-lists",
   difficulty: "Beginner",
   tags: ["linked list", "doubly linked", "pointers", "data structure"],
+  tagsAr: ["قائمة مترابطة", "مزدوجة الارتباط", "مؤشرات", "هيكل بيانات"],
   summary: "Demonstrates a doubly linked list's core operations: insert at head/tail and delete, with two-way prev/next pointers.",
+  summaryAr: "توضّح العمليات الأساسية للقائمة المترابطة المزدوجة: الإدراج عند الرأس/الذيل والحذف، باستخدام مؤشرَي prev وnext ثنائيَي الاتجاه.",
   renderer: "list",
   pseudocode: [
     "structure DoublyLinkedList",
@@ -334,6 +354,63 @@ The trade-off is one extra pointer per node (more memory) and more links to main
       { question: "The main cost over a singly linked list is…", options: ["Slower traversal", "An extra pointer (memory) per node", "It cannot be searched", "No tail access"], answer: 1, explanation: "Each node needs a second pointer, adding memory and update work." },
       { question: "When deleting the tail node you must also…", options: ["Reverse the list", "Update the tail reference to prev", "Rebuild all links", "Nothing"], answer: 1, explanation: "The tail pointer must move back to the previous node." },
       { question: "A doubly linked list is a natural fit for…", options: ["Binary search", "An LRU cache with O(1) removals", "Hashing", "Heap sort"], answer: 1, explanation: "O(1) node removal and reinsertion make LRU eviction efficient." },
+    ],
+  },
+  contentAr: {
+    overview: `القائمة المترابطة المزدوجة (DLL) هي هيكل خطي تحمل فيه كل عقدة قيمة بالإضافة إلى مؤشرين: next (إلى تاليها) وprev (إلى سابقتها). ولأن كل عقدة تعرف كلا جارَيها، يمكن اجتياز القائمة في أي من الاتجاهين، ويمكن حذف عقدة في زمن O(1) بمجرد الحصول على مرجع لها — دون الحاجة إلى السير من الرأس لإيجاد العقدة السابقة كما في القائمة المترابطة الأحادية.
+
+المقابل هو مؤشر إضافي واحد لكل عقدة (ذاكرة أكبر) ومزيد من الروابط التي يجب صيانتها في كل إدراج وحذف. تتيح مراجع الرأس والذيل الدفع والسحب من كلا الطرفين في زمن ثابت، ولهذا تقوم القوائم المترابطة المزدوجة بدعم الطوابير ثنائية الاتجاه (deques) وذاكرات LRU المؤقتة والعديد من هياكل التحرير والتراجع. يبني هذا التصور القائمة عبر الإدراج عند الذيل، ثم يضيف عقدة عند الرأس، ثم يحذف عقدة بإعادة ربط جارَيها، ثم يجتاز القائمة لإظهار الاجتياز ثنائي الاتجاه.`,
+    howItWorks: [
+      "تخزّن كل عقدة القيمة ومؤشر prev ومؤشر next؛ وتتتبّع القائمة الرأس (head) والذيل (tail).",
+      "insertTail: اجعل prev للعقدة الجديدة يشير إلى الذيل القديم، وnext للذيل القديم يشير إلى العقدة الجديدة، ثم حرّك tail.",
+      "insertHead: اجعل next للعقدة الجديدة يشير إلى الرأس القديم، وprev للرأس القديم يشير إلى العقدة الجديدة، ثم حرّك head.",
+      "delete(node): اضبط node.prev.next = node.next وnode.next.prev = node.prev (مع معالجة الأطراف الفارغة).",
+      "اجتز للأمام باتباع next حتى null، أو للخلف باتباع prev حتى null.",
+    ],
+    complexity: {
+      time: { best: "O(1) insert/delete at a known node", average: "O(n) search", worst: "O(n) search" },
+      space: "O(n)",
+      notes: "الإدراج والحذف عند الرأس أو الذيل أو عقدة معروفة يتم في زمن O(1). أما إيجاد عقدة عشوائية بالقيمة فيبقى O(n). تحمل كل عقدة مؤشرًا إضافيًا واحدًا مقارنة بالقائمة المترابطة الأحادية.",
+    },
+    applications: [
+      "الطوابير ثنائية الاتجاه (deques) بدفع وسحب O(1) من كلا الطرفين",
+      "قوائم إخلاء ذاكرة LRU المؤقتة (النقل إلى المقدمة / الإزالة في O(1))",
+      "سجل تصفح المتصفح وأكوام التراجع/الإعادة",
+      "البنية الداخلية للعديد من قوائم مكتبات اللغات القياسية",
+    ],
+    advantages: [
+      "اجتياز ثنائي الاتجاه (للأمام وللخلف)",
+      "حذف عقدة معروفة في O(1) دون البحث عن العقدة السابقة",
+      "إدراج/إزالة O(1) عند كلا الطرفين بفضل مؤشرَي الرأس والذيل",
+      "يبسّط الخوارزميات التي يجب أن تتحرك للخلف",
+    ],
+    disadvantages: [
+      "ذاكرة إضافية للمؤشر الثاني في كل عقدة",
+      "تحديثات مؤشرات أكثر في كل عملية (أسهل للخطأ)",
+      "ما زال إيجاد عقدة بالقيمة يستغرق O(n)",
+      "محلية ذاكرة تخزين مؤقت (cache) أضعف مقارنة بالمصفوفات",
+    ],
+    commonMistakes: [
+      "تحديث next فقط (أو prev فقط) وترك الرابط المعاكس قديمًا.",
+      "نسيان تحديث head/tail عند حذف العقدة الأولى/الأخيرة.",
+      "الوصول إلى prev أو next لعقدة طرفية دون التحقق من القيمة الفارغة.",
+      "فقدان بقية القائمة بإعادة توصيل المؤشرات بترتيب خاطئ.",
+    ],
+    interviewQuestions: [
+      "كيف يختلف حذف عقدة معروفة بين القائمة المترابطة الأحادية والمزدوجة؟",
+      "كيف تنفّذ ذاكرة LRU المؤقتة باستخدام قائمة مترابطة مزدوجة وجدول تجزئة؟",
+      "ما هي الحالات الحدّية عند حذف عقدة الرأس أو الذيل؟",
+      "كيف تدعم القائمة المترابطة المزدوجة طابورًا ثنائي الاتجاه بزمن O(1)؟",
+      "ما التكلفة الإضافية التي يفرضها المؤشر الثاني، ومتى تستحق العناء؟",
+    ],
+    summary:
+      "تمنح القائمة المترابطة المزدوجة كل عقدة مؤشرَي prev وnext، مما يتيح الاجتياز ثنائي الاتجاه وحذف عقدة معروفة في O(1). وهي تكلّف مؤشرًا إضافيًا لكل عقدة وإعادة ربط أكثر عناية، وتقوم عليها الطوابير ثنائية الاتجاه وذاكرات LRU وسجلات التراجع.",
+    quiz: [
+      { question: "ماذا تخزّن كل عقدة في القائمة المترابطة المزدوجة؟", options: ["مؤشر next فقط", "القيمة بالإضافة إلى مؤشرَي prev وnext", "القيمة بالإضافة إلى فهرس", "قيمتان"], answer: 1, explanation: "يُحتفظ بمؤشر للسابق وآخر للتالي معًا." },
+      { question: "حذف عقدة معروفة في القائمة المترابطة المزدوجة يكون…", options: ["O(n)", "O(log n)", "O(1)", "O(n²)"], answer: 2, explanation: "بوجود prev، يمكن إعادة ربط الجارَين مباشرة في زمن ثابت." },
+      { question: "التكلفة الأساسية مقارنة بالقائمة المترابطة الأحادية هي…", options: ["اجتياز أبطأ", "مؤشر إضافي (ذاكرة) لكل عقدة", "لا يمكن البحث فيها", "لا وصول إلى الذيل"], answer: 1, explanation: "تحتاج كل عقدة مؤشرًا ثانيًا، مما يضيف ذاكرة وعمل تحديث." },
+      { question: "عند حذف عقدة الذيل يجب أيضًا…", options: ["عكس القائمة", "تحديث مؤشر الذيل ليشير إلى prev", "إعادة بناء كل الروابط", "لا شيء"], answer: 1, explanation: "يجب أن يتراجع مؤشر الذيل إلى العقدة السابقة." },
+      { question: "القائمة المترابطة المزدوجة مناسبة بشكل طبيعي لـ…", options: ["البحث الثنائي", "ذاكرة LRU المؤقتة بإزالات O(1)", "التجزئة", "الترتيب الكومي"], answer: 1, explanation: "إزالة العقدة وإعادة إدراجها في O(1) تجعل إخلاء LRU فعّالًا." },
     ],
   },
   inputFields: [

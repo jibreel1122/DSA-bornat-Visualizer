@@ -21,6 +21,7 @@ function generate(input: Input): Step<ListFrame>[] {
     states: Record<string, CellState>,
     description: string,
     codeLine: number,
+    descriptionAr: string,
   ): void => {
     // build links from current next map
     const links = nodes
@@ -34,29 +35,70 @@ function generate(input: Input): Step<ListFrame>[] {
     steps.push({
       frame: { nodes: nodes.map((n) => ({ ...n })), links, pointers, states: { ...states } },
       description,
+      descriptionAr,
       codeLine,
       counters: { pointerMoves, linkFlips },
     });
   };
 
-  frame(null, nodes[0]?.id ?? null, null, {}, `Reverse the list iteratively with three pointers: prev, curr, next.`, 0);
+  frame(
+    null,
+    nodes[0]?.id ?? null,
+    null,
+    {},
+    `Reverse the list iteratively with three pointers: prev, curr, next.`,
+    0,
+    `اعكس القائمة تكراريًا باستخدام ثلاثة مؤشرات: prev وcurr وnext.`,
+  );
 
   let prev: string | null = null;
   let cur: string | null = nodes[0]?.id ?? null;
   while (cur) {
     const nxt: string | null = next.get(cur) ?? null;
-    frame(prev, cur, nxt, { [cur]: "active" }, `Save next = ${nxt ? nodeVal(nodes, nxt) : "null"} before we overwrite curr's link.`, 2);
+    frame(
+      prev,
+      cur,
+      nxt,
+      { [cur]: "active" },
+      `Save next = ${nxt ? nodeVal(nodes, nxt) : "null"} before we overwrite curr's link.`,
+      2,
+      `احفظ next = ${nxt ? nodeVal(nodes, nxt) : "null"} قبل أن نستبدل رابط curr.`,
+    );
     next.set(cur, prev);
     linkFlips++;
-    frame(prev, cur, nxt, { [cur]: "swap", ...(prev ? { [prev]: "sorted" } : {}) }, `Point curr (${nodeVal(nodes, cur)}) back to prev (${prev ? nodeVal(nodes, prev) : "null"}).`, 3);
+    frame(
+      prev,
+      cur,
+      nxt,
+      { [cur]: "swap", ...(prev ? { [prev]: "sorted" } : {}) },
+      `Point curr (${nodeVal(nodes, cur)}) back to prev (${prev ? nodeVal(nodes, prev) : "null"}).`,
+      3,
+      `اجعل curr (${nodeVal(nodes, cur)}) يشير إلى الخلف نحو prev (${prev ? nodeVal(nodes, prev) : "null"}).`,
+    );
     prev = cur;
     cur = nxt;
     pointerMoves++;
-    frame(prev, cur, cur ? (next.get(cur) ?? null) : null, prev ? { [prev]: "sorted" } : {}, `Advance: prev = ${nodeVal(nodes, prev)}, curr = ${cur ? nodeVal(nodes, cur) : "null"}.`, 4);
+    frame(
+      prev,
+      cur,
+      cur ? (next.get(cur) ?? null) : null,
+      prev ? { [prev]: "sorted" } : {},
+      `Advance: prev = ${nodeVal(nodes, prev)}, curr = ${cur ? nodeVal(nodes, cur) : "null"}.`,
+      4,
+      `تقدّم: prev = ${nodeVal(nodes, prev)}، curr = ${cur ? nodeVal(nodes, cur) : "null"}.`,
+    );
   }
   const done: Record<string, CellState> = {};
   nodes.forEach((n) => (done[n.id] = "found"));
-  frame(prev, null, null, done, `Done! New head is ${prev ? nodeVal(nodes, prev) : "null"}. The list is reversed.`, 5);
+  frame(
+    prev,
+    null,
+    null,
+    done,
+    `Done! New head is ${prev ? nodeVal(nodes, prev) : "null"}. The list is reversed.`,
+    5,
+    `انتهينا! الرأس الجديد هو ${prev ? nodeVal(nodes, prev) : "null"}. القائمة معكوسة الآن.`,
+  );
   return steps;
 }
 
@@ -67,10 +109,13 @@ function nodeVal(nodes: { id: string; value: number }[], id: string): number | s
 const mod: AlgorithmModule<ListFrame, Input> = {
   slug: "reverse-linked-list",
   title: "Reverse a Linked List",
+  titleAr: "عكس قائمة مترابطة",
   category: "linked-lists",
   difficulty: "Beginner",
   tags: ["linked list", "pointers", "in-place", "O(n)"],
+  tagsAr: ["قائمة مترابطة", "مؤشرات", "في المكان", "O(n)"],
   summary: "Reverses a singly linked list in place by flipping each node's next pointer using three pointers.",
+  summaryAr: "تعكس قائمة مترابطة أحادية الاتجاه في المكان بقلب مؤشر next لكل عقدة باستخدام ثلاثة مؤشرات.",
   renderer: "list",
   pseudocode: [
     "procedure reverse(head)",
@@ -254,6 +299,62 @@ The standard iterative solution uses three pointers: prev (the reversed portion 
       { question: "Why must you save curr.next before reversing the link?", options: ["For speed", "Otherwise you lose access to the rest of the list", "To count nodes", "It isn't necessary"], answer: 1, explanation: "Overwriting curr.next without saving would strand the remaining nodes." },
       { question: "After the loop ends, the new head is…", options: ["head", "curr", "prev", "next"], answer: 2, explanation: "prev points to the last node processed, which becomes the new head." },
       { question: "The recursive version's drawback compared to iterative is…", options: ["It's slower asymptotically", "It uses O(n) stack space", "It can't reverse", "It needs extra arrays"], answer: 1, explanation: "Recursion depth equals list length, risking stack overflow." },
+    ],
+  },
+  contentAr: {
+    overview: `عكس قائمة مترابطة أحادية الاتجاه يعني جعل كل عقدة تشير إلى سابقتها بدلاً من تاليتها، بحيث تصبح العقدة الأخيرة هي الرأس الجديد. ولأن كل عقدة تعرف فقط العقدة التالية لها، فإن الحيلة تكمن في اجتياز القائمة مرة واحدة مع إعادة توصيل المؤشرات بعناية دون فقدان بقية القائمة.
+
+يستخدم الحل التكراري القياسي ثلاثة مؤشرات: prev (الجزء المعكوس الذي تم بناؤه حتى الآن)، وcurr (العقدة قيد المعالجة)، وnext (حفظ مؤقت لتالي curr الأصلي). في كل خطوة، تحفظ next، ثم تقلب رابط curr ليشير إلى prev، ثم تقدّم كلا من prev وcurr. عندما تسقط curr خارج نهاية القائمة، يصبح prev هو الرأس الجديد.`,
+    howItWorks: [
+      "ابدأ بـ prev = null و curr = head.",
+      "احفظ next = curr.next حتى لا تفقد بقية القائمة.",
+      "اعكس الرابط: اجعل curr.next = prev.",
+      "قدّم النافذة: prev = curr، ثم curr = next.",
+      "عندما تصبح curr = null، تكون القائمة قد انعكست بالكامل ويكون prev هو الرأس الجديد.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n)", worst: "O(n)" },
+      space: "O(1)",
+      notes: "مرور واحد يزور كل عقدة مرة واحدة ← O(n). يُستخدم ثلاثة مؤشرات فقط ← مساحة O(1). النسخة العودية أيضًا O(n) زمنًا لكنها تحتاج O(n) من مساحة المكدس.",
+    },
+    applications: [
+      "مسألة كلاسيكية في المقابلات والتدريس لتلاعب المؤشرات",
+      "عكس ترتيب الاجتياز دون تخزين إضافي",
+      "لبنة بناء لعكس قوائم فرعية (مثل العكس على مجموعات من k)",
+      "فحوصات المتتاليات المتناظرة (palindrome) على القوائم المترابطة (عكس النصف والمقارنة)",
+    ],
+    advantages: [
+      "في المكان — ذاكرة إضافية O(1)",
+      "مرور خطي واحد فقط",
+      "لا نسخ للبيانات؛ تتغير المؤشرات فقط",
+      "أساس لمسائل أكثر تعقيدًا في إعادة توصيل القوائم",
+    ],
+    disadvantages: [
+      "من السهل الوقوع في أخطاء المؤشرات (فقدان القائمة)",
+      "الشكل العودي يخاطر بفيضان المكدس في القوائم الطويلة",
+      "يعكس الاتجاه فقط؛ لا يساعد في الوصول العشوائي",
+    ],
+    commonMistakes: [
+      "عدم حفظ next قبل استبدال curr.next — مما يفقد بقية القائمة.",
+      "إرجاع head بدلاً من prev كرأس جديد.",
+      "تحديث prev وcurr بترتيب خاطئ.",
+      "نسيان الحالات الحدّية للقائمة الفارغة أو ذات العقدة الواحدة.",
+    ],
+    interviewQuestions: [
+      "اعكس قائمة مترابطة تكراريًا وعوديًا — قارن استخدام الذاكرة بينهما.",
+      "اعكس فقط العقد الواقعة بين الموضعين m وn.",
+      "اعكس قائمة مترابطة على مجموعات من k عقدة.",
+      "استخدم عكس القائمة للتحقق مما إذا كانت القائمة المترابطة متناظرة (palindrome).",
+      "لماذا يُعد مؤشر next المؤقت ضروريًا؟",
+    ],
+    summary:
+      "عكس قائمة مترابطة أحادية الاتجاه يقلب مؤشر next لكل عقدة باستخدام ثلاثة مؤشرات (prev وcurr وnext) في مرور واحد بزمن O(n) ومساحة O(1). إنها تمرين تلاعب المؤشرات الكلاسيكي ولبنة بناء للعديد من مسائل القوائم.",
+    quiz: [
+      { question: "كم عدد المؤشرات التي يستخدمها العكس التكراري القياسي؟", options: ["واحد", "اثنان", "ثلاثة", "أربعة"], answer: 2, explanation: "prev وcurr ومؤشر next مؤقت." },
+      { question: "ما هو التعقيد المكاني للعكس التكراري؟", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 0, explanation: "يُستخدم عدد ثابت من المؤشرات فقط، بغض النظر عن طول القائمة." },
+      { question: "لماذا يجب حفظ curr.next قبل عكس الرابط؟", options: ["من أجل السرعة", "وإلا ستفقد الوصول إلى بقية القائمة", "لعدّ العقد", "ليس ضروريًا"], answer: 1, explanation: "استبدال curr.next دون حفظه سيقطع الوصول إلى بقية العقد." },
+      { question: "بعد انتهاء الحلقة، الرأس الجديد هو…", options: ["head", "curr", "prev", "next"], answer: 2, explanation: "يشير prev إلى آخر عقدة تمت معالجتها، وهي التي تصبح الرأس الجديد." },
+      { question: "عيب النسخة العودية مقارنة بالتكرارية هو…", options: ["أبطأ من حيث التعقيد المقارب", "تستخدم مساحة مكدس O(n)", "لا يمكنها العكس", "تحتاج مصفوفات إضافية"], answer: 1, explanation: "عمق العودية يساوي طول القائمة، مما يخاطر بفيضان المكدس." },
     ],
   },
   inputFields: [{ key: "values", label: "List values (head → tail)", placeholder: "1, 2, 3, 4, 5", help: "2–40 numbers." }],

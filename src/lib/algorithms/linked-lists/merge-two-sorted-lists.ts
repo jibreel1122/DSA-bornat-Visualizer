@@ -22,7 +22,15 @@ function generate(input: Input): Step<ListFrame>[] {
     ];
   };
 
-  const frame = (i: number, j: number, from: "A" | "B" | null, description: string, codeLine: number, done = false): void => {
+  const frame = (
+    i: number,
+    j: number,
+    from: "A" | "B" | null,
+    description: string,
+    codeLine: number,
+    descriptionAr: string,
+    done = false,
+  ): void => {
     const nodes = result.map((v, k) => ({ id: `r${k}`, value: v }));
     const links = nodes.slice(0, -1).map((nd, k) => ({ from: nd.id, to: nodes[k + 1].id, kind: "next" as const }));
     const states: Record<string, CellState> = {};
@@ -38,12 +46,20 @@ function generate(input: Input): Step<ListFrame>[] {
         note: done ? `merged list complete` : `building the merged sorted list`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, appends },
     });
   };
 
-  frame(0, 0, null, `Merge two sorted lists A=[${A.join(", ")}] and B=[${B.join(", ")}] into one sorted list.`, 1);
+  frame(
+    0,
+    0,
+    null,
+    `Merge two sorted lists A=[${A.join(", ")}] and B=[${B.join(", ")}] into one sorted list.`,
+    1,
+    `ادمج قائمتين مرتبتين A=[${A.join(", ")}] وB=[${B.join(", ")}] في قائمة واحدة مرتبة.`,
+  );
 
   let i = 0;
   let j = 0;
@@ -52,29 +68,29 @@ function generate(input: Input): Step<ListFrame>[] {
     if (A[i] <= B[j]) {
       result.push(A[i]);
       appends++;
-      frame(i, j, "A", `A[${i}]=${A[i]} ≤ B[${j}]=${B[j]}: append ${A[i]} from A.`, 3);
+      frame(i, j, "A", `A[${i}]=${A[i]} ≤ B[${j}]=${B[j]}: append ${A[i]} from A.`, 3, `A[${i}]=${A[i]} ≤ B[${j}]=${B[j]}: أضِف ${A[i]} من A.`);
       i++;
     } else {
       result.push(B[j]);
       appends++;
-      frame(i, j, "B", `B[${j}]=${B[j]} < A[${i}]=${A[i]}: append ${B[j]} from B.`, 5);
+      frame(i, j, "B", `B[${j}]=${B[j]} < A[${i}]=${A[i]}: append ${B[j]} from B.`, 5, `B[${j}]=${B[j]} < A[${i}]=${A[i]}: أضِف ${B[j]} من B.`);
       j++;
     }
   }
   while (i < A.length) {
     result.push(A[i]);
     appends++;
-    frame(i, j, "A", `List B is exhausted: append remaining ${A[i]} from A.`, 7);
+    frame(i, j, "A", `List B is exhausted: append remaining ${A[i]} from A.`, 7, `نفدت القائمة B: أضِف الباقي ${A[i]} من A.`);
     i++;
   }
   while (j < B.length) {
     result.push(B[j]);
     appends++;
-    frame(i, j, "B", `List A is exhausted: append remaining ${B[j]} from B.`, 7);
+    frame(i, j, "B", `List A is exhausted: append remaining ${B[j]} from B.`, 7, `نفدت القائمة A: أضِف الباقي ${B[j]} من B.`);
     j++;
   }
 
-  frame(i, j, null, `Done. Merged sorted list: [${result.join(", ")}].`, 8, true);
+  frame(i, j, null, `Done. Merged sorted list: [${result.join(", ")}].`, 8, `انتهينا. القائمة المرتبة المدمجة: [${result.join(", ")}].`, true);
   return steps;
 }
 
@@ -95,10 +111,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<ListFrame, Input> = {
   slug: "merge-two-sorted-lists",
   title: "Merge Two Sorted Lists",
+  titleAr: "دمج قائمتين مرتبتين",
   category: "linked-lists",
   difficulty: "Beginner",
   tags: ["linked list", "two pointers", "merge", "sorted"],
+  tagsAr: ["قائمة مترابطة", "مؤشران", "دمج", "مرتبة"],
   summary: "Merges two sorted linked lists into one sorted list by repeatedly splicing the smaller head node.",
+  summaryAr: "تدمج قائمتين مترابطتين مرتبتين في قائمة واحدة مرتبة بوصل العقدة الأصغر من الرأسين تكرارًا.",
   renderer: "list",
   pseudocode: [
     "procedure merge(a, b)",
@@ -300,6 +319,62 @@ The technique walks both lists in parallel with two pointers. At each step it co
       { question: "Auxiliary space for the in-place merge is…", options: ["O(1)", "O(n)", "O(n + m)", "O(log n)"], answer: 0, explanation: "Existing nodes are relinked; no per-node allocation is needed." },
       { question: "Using ≤ instead of < in the comparison ensures…", options: ["Faster runtime", "Stability for equal keys", "Less memory", "Correct cycle detection"], answer: 1, explanation: "Taking from the first list on ties preserves relative order." },
       { question: "After one list empties, you must…", options: ["Stop immediately", "Attach the remainder of the other list", "Reverse the result", "Restart the merge"], answer: 1, explanation: "The rest of the non-empty list is already sorted and is linked on directly." },
+    ],
+  },
+  contentAr: {
+    overview: `دمج قائمتين مترابطتين مرتبتين ينتج قائمة واحدة مرتبة أيضًا، تحتوي على جميع عقد القائمتين المدخلتين. وهي حجر الأساس في الترتيب بالدمج، ومسألة إحماء مفضّلة في المقابلات لأنها تتطلب توصيلًا دقيقًا للمؤشرات.
+
+تسير التقنية على القائمتين بالتوازي باستخدام مؤشرين. في كل خطوة تقارن العقدتين الأماميتين الحاليتين وتصل الأصغر منهما بذيل النتيجة، ثم تقدّم مؤشر تلك القائمة. عندما تنفد إحدى القائمتين، يُلحق باقي القائمة الأخرى — وهو مرتب بالفعل — برابط واحد. عقدة "وهمية" (dummy) في الرأس تزيل الحاجة لمعالجة أول إلحاق كحالة خاصة، مما يبقي الشيفرة قصيرة وخالية من التفرعات عند الحدود.`,
+    howItWorks: [
+      "أنشئ عقدة رأس وهمية (dummy) ومؤشر tail يبدأ عندها.",
+      "طالما أن كلتا القائمتين غير فارغتين، قارن عقدتيهما الأماميتين.",
+      "صِل العقدة الأصغر بـ tail.next وقدّم مؤشر تلك القائمة.",
+      "حرّك tail إلى الأمام نحو العقدة التي تم إلحاقها للتو.",
+      "عندما تفرغ إحدى القائمتين، صِل بقية القائمة الأخرى؛ ثم أعد dummy.next.",
+    ],
+    complexity: {
+      time: { best: "O(n + m)", average: "O(n + m)", worst: "O(n + m)" },
+      space: "O(1)",
+      notes: "تُزار كل عقدة مرة واحدة. يتم الدمج في المكان بإعادة ربط العقد الموجودة — لا تُخصَّص عقد جديدة (باستثناء العقدة الوهمية)، مما يمنح مساحة مساعدة O(1).",
+    },
+    applications: [
+      "خطوة الدمج في الترتيب بالدمج على القوائم المترابطة",
+      "دمج تدفقات أو ملفات سجلّ مرتبة",
+      "الدمج من نوع k-way (دمج أزواج بشكل متكرر)",
+      "تنفيذات ربط الفرز-الدمج (sort-merge join) في قواعد البيانات",
+    ],
+    advantages: [
+      "زمن خطي في إجمالي عدد العقد",
+      "إعادة ربط في المكان — مساحة إضافية ثابتة",
+      "حيلة الرأس الوهمي تتجنب معالجة العقدة الأولى بشكل معقّد",
+      "مستقر: تحافظ العناصر المتساوية على ترتيبها النسبي",
+    ],
+    disadvantages: [
+      "يتطلب أن تكون المدخلتان مرتبتين مسبقًا",
+      "إعادة ربط المؤشرات عرضة للخطأ إذا لم تُنفَّذ بعناية",
+      "غير قابل للتوازي مباشرة عبر قائمة الخرج الواحدة",
+    ],
+    commonMistakes: [
+      "نسيان إلحاق ذيل القائمة غير الفارغة المتبقي.",
+      "عدم استخدام رأس وهمي، مما يؤدي إلى معالجة معقّدة للعقدة الأولى كحالة خاصة.",
+      "استخدام < بدلاً من ≤ مما يكسر الاستقرار عند تساوي المفاتيح.",
+      "فقدان العقد بالكتابة فوق next قبل تقديم المؤشر.",
+    ],
+    interviewQuestions: [
+      "لماذا تبسّط عقدة الرأس الوهمية عملية الدمج؟",
+      "كيف تدمج k قائمة مرتبة بكفاءة (كومة مقابل دمج ثنائي متكرر)؟",
+      "كيف يُستخدم هذا الدمج داخل الترتيب بالدمج للقوائم المترابطة؟",
+      "لماذا يحافظ استخدام ≤ على الاستقرار؟",
+      "هل يمكنك الدمج بمساحة O(1)، وكيف؟",
+    ],
+    summary:
+      "دمج قائمتين مترابطتين مرتبتين يصل العقدة الأصغر من الرأسين بقائمة النتيجة حتى تنفد إحدى المدخلتين، ثم يلحق الباقي، في زمن O(n + m) ومساحة O(1). يبسّط الرأس الوهمي الحدود، وهو جوهر الترتيب بالدمج على القوائم.",
+    quiz: [
+      { question: "دمج قائمتين مرتبتين بحجمي n وm يستغرق…", options: ["O(n·m)", "O(n + m)", "O(log(n+m))", "O((n+m) log(n+m))"], answer: 1, explanation: "تتم معالجة كل عقدة مرة واحدة بالضبط." },
+      { question: "تُستخدم العقدة الرأس الوهمية من أجل…", options: ["تخزين طول النتيجة", "تجنّب معالجة أول عقدة مُلحَقة كحالة خاصة", "ترتيب القائمتين", "كشف الدورات"], answer: 1, explanation: "تمنح tail نقطة بداية ثابتة قبل وجود أي عقدة حقيقية." },
+      { question: "المساحة المساعدة للدمج في المكان هي…", options: ["O(1)", "O(n)", "O(n + m)", "O(log n)"], answer: 0, explanation: "تتم إعادة ربط العقد الموجودة؛ لا حاجة إلى تخصيص لكل عقدة." },
+      { question: "استخدام ≤ بدلاً من < في المقارنة يضمن…", options: ["زمن تنفيذ أسرع", "الاستقرار عند تساوي المفاتيح", "ذاكرة أقل", "كشفًا صحيحًا للدورات"], answer: 1, explanation: "أخذ العنصر من القائمة الأولى عند التعادل يحافظ على الترتيب النسبي." },
+      { question: "بعد نفاد إحدى القائمتين، يجب أن…", options: ["تتوقف فورًا", "تُلحق بقية القائمة الأخرى", "تعكس النتيجة", "تعيد بدء الدمج"], answer: 1, explanation: "بقية القائمة غير الفارغة مرتبة بالفعل وتُربط مباشرة." },
     ],
   },
   inputFields: [
