@@ -62,6 +62,29 @@ describe.each(ALGORITHMS.map((m) => [m.slug, m] as const))(
       }
     });
 
+    it("Arabic content, when present, is complete and consistent", () => {
+      if (mod.tagsAr) expect(mod.tagsAr.length, "tagsAr aligned with tags").toBe(mod.tags.length);
+      const c = mod.contentAr;
+      if (!c) return;
+      // a translated module must carry the full bilingual surface
+      expect(mod.titleAr?.trim().length, "titleAr").toBeGreaterThan(0);
+      expect(mod.summaryAr?.trim().length, "summaryAr").toBeGreaterThan(0);
+      expect(mod.tagsAr?.length, "tagsAr").toBe(mod.tags.length);
+      expect(c.overview.trim().length).toBeGreaterThan(0);
+      expect(c.summary.trim().length).toBeGreaterThan(0);
+      for (const key of ["howItWorks", "applications", "advantages", "disadvantages", "commonMistakes", "interviewQuestions"] as const)
+        expect(c[key].length, `contentAr.${key}`).toBeGreaterThan(0);
+      expect(c.quiz.length, "quiz count matches English").toBe(mod.content.quiz.length);
+      c.quiz.forEach((q, i) => {
+        expect(q.options.length, `quiz[${i}] options count`).toBe(mod.content.quiz[i].options.length);
+        expect(q.answer, `quiz[${i}] answer index matches English`).toBe(mod.content.quiz[i].answer);
+        expect(q.question.trim().length).toBeGreaterThan(0);
+        expect(q.explanation.trim().length).toBeGreaterThan(0);
+      });
+      expect(c.complexity.time.best).toBeTruthy();
+      expect(c.complexity.space).toBeTruthy();
+    });
+
     for (const level of TEST_LEVELS) {
       for (const seed of SEEDS) {
         describe(`level ${level}, seed ${seed}`, () => {
@@ -96,6 +119,17 @@ describe.each(ALGORITHMS.map((m) => [m.slug, m] as const))(
             const a = mod.generate(mod.defaultInput(level, createRNG(seed)));
             const b = mod.generate(mod.defaultInput(level, createRNG(seed)));
             expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+          });
+
+          it("Arabic narration, when the module is translated, covers every step", () => {
+            if (!mod.contentAr) return;
+            const steps = mod.generate(mod.defaultInput(level, createRNG(seed)));
+            steps.forEach((s, i) => {
+              expect(s.descriptionAr?.trim().length, `step ${i} descriptionAr`).toBeGreaterThan(0);
+              // every dynamic value narrated in English must appear in the Arabic narration
+              for (const n of s.description.match(/-?\d+(?:\.\d+)?/g) ?? [])
+                expect(s.descriptionAr, `step ${i} descriptionAr missing value ${n}`).toContain(n);
+            });
           });
 
           it("counters are cumulative (non-decreasing)", () => {

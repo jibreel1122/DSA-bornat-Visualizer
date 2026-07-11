@@ -42,7 +42,10 @@ export function AlgorithmList({
       return (
         m.title.toLowerCase().includes(q) ||
         m.summary.toLowerCase().includes(q) ||
-        m.tags.some((tag) => tag.toLowerCase().includes(q))
+        m.tags.some((tag) => tag.toLowerCase().includes(q)) ||
+        (m.titleAr?.includes(q) ?? false) ||
+        (m.summaryAr?.includes(q) ?? false) ||
+        (m.tagsAr?.some((tag) => tag.includes(q)) ?? false)
       );
     });
   }, [items, query, difficulty, category]);

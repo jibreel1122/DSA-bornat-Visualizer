@@ -30,7 +30,7 @@
   "settings.appearance": "Appearance",
   "settings.appearanceDesc": "Choose your color theme.",
   "settings.language": "Language",
-  "settings.languageDesc": "Choose English or Arabic. Algorithm names and code stay in English.",
+  "settings.languageDesc": "Choose English or Arabic. Code samples stay in English.",
   "settings.accessibility": "Accessibility",
   "settings.accessibilityDesc": "Make the app more comfortable to use.",
   "settings.reducedMotion": "Reduced motion",

@@ -93,7 +93,7 @@ export function VisualizerShell({
   initialFields?: Record<string, string>;
 }) {
   const { settings } = useSettings();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [level, setLevel] = React.useState<Level>(settings.defaultLevel);
   const [inputOpen, setInputOpen] = React.useState(false);
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
@@ -557,7 +557,7 @@ export function VisualizerShell({
           <span className="me-2 rounded-md bg-primary/12 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary tabular-nums">
             {steps.length === 0 ? "—" : `${player.cursor + 1}/${steps.length}`}
           </span>
-          {step?.description ?? t("shell.generateToBegin")}
+          {step ? (locale === "ar" && step.descriptionAr ? step.descriptionAr : step.description) : t("shell.generateToBegin")}
         </div>
 
         {/* playback */}

@@ -20,9 +20,13 @@ const DIFFICULTY_VARIANT = {
 
 export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?: number }) {
   const { isFavorite, toggle } = useFavorites();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const category = CATEGORY_MAP[meta.category];
   const fav = isFavorite(meta.slug);
+  const ar = locale === "ar";
+  const title = ar && meta.titleAr ? meta.titleAr : meta.title;
+  const summary = ar && meta.summaryAr ? meta.summaryAr : meta.summary;
+  const tags = ar && meta.tagsAr?.length === meta.tags.length ? meta.tagsAr : meta.tags;
 
   return (
     <motion.div
@@ -53,12 +57,12 @@ export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?
             </button>
           </div>
           <h3 className="font-semibold leading-tight tracking-tight transition-colors group-hover:text-primary">
-            {meta.title}
+            {title}
           </h3>
-          <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted-foreground">{meta.summary}</p>
+          <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted-foreground">{summary}</p>
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <Badge variant={DIFFICULTY_VARIANT[meta.difficulty]}>{t(DIFFICULTY_KEY[meta.difficulty])}</Badge>
-            {meta.tags.slice(0, 2).map((tag) => (
+            {tags.slice(0, 2).map((tag) => (
               <Badge key={tag} variant="secondary">
                 {tag}
               </Badge>

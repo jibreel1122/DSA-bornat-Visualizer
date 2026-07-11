@@ -39,8 +39,13 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
   const [initialFields, setInitialFields] = React.useState<Record<string, string> | undefined>();
   const { isFavorite, toggle } = useFavorites();
   const { record } = useHistory();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const category = CATEGORY_MAP[meta.category];
+  const ar = locale === "ar";
+  const content = ar && module?.contentAr ? module.contentAr : module?.content;
+  const title = ar && meta.titleAr ? meta.titleAr : meta.title;
+  const summary = ar && meta.summaryAr ? meta.summaryAr : meta.summary;
+  const tags = ar && meta.tagsAr?.length === meta.tags.length ? meta.tagsAr : meta.tags;
 
   React.useEffect(() => {
     let alive = true;
@@ -74,17 +79,24 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
             {category.title}
           </Link>
           <ChevronRight className="size-3.5" />
-          <span className="text-foreground">{meta.title}</span>
+          <span className="text-foreground">{title}</span>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
-            <p className="mt-1.5 max-w-2xl text-muted-foreground">{meta.summary}</p>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {title}
+              {ar && meta.titleAr && (
+                <span className="ms-3 align-middle text-base font-normal text-muted-foreground" dir="ltr">
+                  {meta.title}
+                </span>
+              )}
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-muted-foreground">{summary}</p>
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               <Badge>{t(DIFFICULTY_KEY[meta.difficulty])}</Badge>
-              {meta.tags.map((t) => (
-                <Badge key={t} variant="secondary">
-                  {t}
+              {tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
                 </Badge>
               ))}
             </div>
@@ -117,7 +129,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
       )}
 
       {/* educational content */}
-      {module && (
+      {module && content && (
         <Tabs defaultValue="theory" className="mt-8">
           <TabsList className="flex h-auto w-full flex-wrap justify-start">
             <TabsTrigger value="theory"><BookOpen /> {t("algo.tabTheory")}</TabsTrigger>
@@ -134,7 +146,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
                 <CardTitle>{t("algo.overview")}</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 text-sm leading-relaxed text-foreground/90">
-                {module.content.overview.split(/\n\n+/).map((p, i) => (
+                {content.overview.split(/\n\n+/).map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </CardContent>
@@ -146,7 +158,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               </CardHeader>
               <CardContent>
                 <ol className="grid gap-2.5 text-sm">
-                  {module.content.howItWorks.map((s, i) => (
+                  {content.howItWorks.map((s, i) => (
                     <li key={i} className="flex gap-3">
                       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/12 font-mono text-xs font-semibold text-primary">
                         {i + 1}
@@ -166,14 +178,14 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <ComplexityStat label={t("algo.best")} value={module.content.complexity.time.best} />
-                  <ComplexityStat label={t("algo.average")} value={module.content.complexity.time.average} />
-                  <ComplexityStat label={t("algo.worst")} value={module.content.complexity.time.worst} />
-                  <ComplexityStat label={t("algo.space")} value={module.content.complexity.space} />
+                  <ComplexityStat label={t("algo.best")} value={content.complexity.time.best} />
+                  <ComplexityStat label={t("algo.average")} value={content.complexity.time.average} />
+                  <ComplexityStat label={t("algo.worst")} value={content.complexity.time.worst} />
+                  <ComplexityStat label={t("algo.space")} value={content.complexity.space} />
                 </div>
-                {module.content.complexity.notes && (
+                {content.complexity.notes && (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {module.content.complexity.notes}
+                    {content.complexity.notes}
                   </p>
                 )}
               </CardContent>
@@ -188,7 +200,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
                 </CardHeader>
                 <CardContent>
                   <ul className="grid gap-2 text-sm">
-                    {module.content.advantages.map((a, i) => (
+                    {content.advantages.map((a, i) => (
                       <li key={i} className="flex gap-2">
                         <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-emerald-500" />
                         {a}
@@ -205,7 +217,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
                 </CardHeader>
                 <CardContent>
                   <ul className="grid gap-2 text-sm">
-                    {module.content.disadvantages.map((d, i) => (
+                    {content.disadvantages.map((d, i) => (
                       <li key={i} className="flex gap-2">
                         <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-rose-500" />
                         {d}
@@ -224,7 +236,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               </CardHeader>
               <CardContent>
                 <ul className="grid gap-2 text-sm">
-                  {module.content.commonMistakes.map((m, i) => (
+                  {content.commonMistakes.map((m, i) => (
                     <li key={i} className="flex gap-2">
                       <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
                       {m}
@@ -239,7 +251,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
                 <CardTitle>{t("algo.summary")}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm leading-relaxed">
-                {module.content.summary}
+                {content.summary}
               </CardContent>
             </Card>
           </TabsContent>
@@ -255,7 +267,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               </CardHeader>
               <CardContent>
                 <ul className="grid gap-2.5 text-sm">
-                  {module.content.applications.map((a, i) => (
+                  {content.applications.map((a, i) => (
                     <li key={i} className="flex gap-3">
                       <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" />
                       {a}
@@ -273,7 +285,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
               </CardHeader>
               <CardContent>
                 <ol className="grid gap-3 text-sm">
-                  {module.content.interviewQuestions.map((q, i) => (
+                  {content.interviewQuestions.map((q, i) => (
                     <li key={i} className="flex gap-3 rounded-xl border border-border p-3">
                       <span className="font-mono text-xs font-semibold text-primary">Q{i + 1}</span>
                       {q}
@@ -285,7 +297,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
           </TabsContent>
 
           <TabsContent value="quiz" className="mt-4">
-            <QuizPanel slug={module.slug} quiz={module.content.quiz} />
+            <QuizPanel slug={module.slug} quiz={content.quiz} />
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">

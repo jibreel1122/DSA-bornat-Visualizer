@@ -77,6 +77,8 @@ export interface Step<F = unknown> {
   frame: F;
   /** One-line narration shown under the canvas. */
   description: string;
+  /** Arabic narration; shown instead of `description` under the Arabic locale. */
+  descriptionAr?: string;
   /** 0-based line index into `pseudocode` to highlight. */
   codeLine?: number;
   /** Counters at this step — usually CUMULATIVE (e.g. { comparisons: 3, swaps: 1 }),
@@ -340,15 +342,23 @@ export type AlgoDifficulty = "Beginner" | "Intermediate" | "Advanced";
 export interface AlgorithmModule<F = unknown, I = unknown> {
   slug: string;
   title: string;
+  /** Arabic title; shown instead of `title` under the Arabic locale. */
+  titleAr?: string;
   category: CategoryId;
   difficulty: AlgoDifficulty;
   tags: string[];
+  /** Arabic tags, index-aligned with `tags`. */
+  tagsAr?: string[];
   /** one-liner for cards and search results */
   summary: string;
+  /** Arabic summary; shown instead of `summary` under the Arabic locale. */
+  summaryAr?: string;
   renderer: RendererKind;
   pseudocode: string[];
   code: Record<Language, string>;
   content: AlgorithmContent;
+  /** Full Arabic educational content; used instead of `content` under the Arabic locale. */
+  contentAr?: AlgorithmContent;
   inputFields: InputField[];
   defaultInput: (level: Level, rng: RNG) => I;
   /** Throws Error with a user-friendly message on invalid input. */
@@ -361,9 +371,15 @@ export interface AlgorithmModule<F = unknown, I = unknown> {
 export interface AlgorithmMeta {
   slug: string;
   title: string;
+  /** Arabic title; shown instead of `title` under the Arabic locale. */
+  titleAr?: string;
   category: CategoryId;
   difficulty: AlgoDifficulty;
   tags: string[];
+  /** Arabic tags, index-aligned with `tags`. */
+  tagsAr?: string[];
   summary: string;
+  /** Arabic summary; shown instead of `summary` under the Arabic locale. */
+  summaryAr?: string;
   renderer: RendererKind;
 }

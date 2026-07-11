@@ -20,7 +20,9 @@ export function CommandPalette({
   const router = useRouter();
   const { favorites } = useFavorites();
   const { history } = useHistory();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const arName = (m: { title: string; titleAr?: string }) =>
+    locale === "ar" && m.titleAr ? m.titleAr : m.title;
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -73,12 +75,12 @@ export function CommandPalette({
                 {favs.map((m) => (
                   <Command.Item
                     key={`fav-${m.slug}`}
-                    value={`fav ${m.title}`}
+                    value={`fav ${m.title} ${m.titleAr ?? ""}`}
                     onSelect={() => go(`/visualizer/${m.slug}`)}
                     className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm data-[selected=true]:bg-accent"
                   >
                     <Star className="size-4 fill-amber-400 text-amber-400" />
-                    {m.title}
+                    {arName(m)}
                     <span className="ms-auto text-xs text-muted-foreground">
                       {CATEGORY_MAP[m.category].short}
                     </span>
@@ -95,12 +97,12 @@ export function CommandPalette({
                 {recent.map((m) => (
                   <Command.Item
                     key={`recent-${m.slug}`}
-                    value={`recent ${m.title}`}
+                    value={`recent ${m.title} ${m.titleAr ?? ""}`}
                     onSelect={() => go(`/visualizer/${m.slug}`)}
                     className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm data-[selected=true]:bg-accent"
                   >
                     <Clock className="size-4 text-muted-foreground" />
-                    {m.title}
+                    {arName(m)}
                   </Command.Item>
                 ))}
               </Command.Group>
@@ -130,11 +132,11 @@ export function CommandPalette({
               {ALGORITHMS.map((m) => (
                 <Command.Item
                   key={m.slug}
-                  value={`${m.title} ${m.tags.join(" ")} ${m.category}`}
+                  value={`${m.title} ${m.titleAr ?? ""} ${m.tags.join(" ")} ${(m.tagsAr ?? []).join(" ")} ${m.category}`}
                   onSelect={() => go(`/visualizer/${m.slug}`)}
                   className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm data-[selected=true]:bg-accent"
                 >
-                  {m.title}
+                  {arName(m)}
                   <span className="ms-auto text-xs text-muted-foreground">
                     {CATEGORY_MAP[m.category].short}
                   </span>
