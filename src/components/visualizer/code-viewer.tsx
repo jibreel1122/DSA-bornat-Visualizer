@@ -72,7 +72,7 @@ export function CodeViewer({ code, slug }: { code: Record<Language, string>; slu
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ms-auto flex items-center gap-1">
           <Button variant="ghost" size="icon-sm" onClick={copy} aria-label={t("shell.copyCode")}>
             {copied ? <Check className="text-emerald-500" /> : <Copy />}
           </Button>

@@ -200,7 +200,7 @@ function GraphBuilderInner() {
           <Button size="sm" variant="ghost" onClick={clearAll}>
             {t("graphBuilder.clear")}
           </Button>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ms-auto flex items-center gap-3">
             <label className="flex items-center gap-1.5 text-xs">
               <Switch checked={directed} onCheckedChange={setDirected} /> {t("graphBuilder.directed")}
             </label>
