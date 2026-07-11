@@ -38,6 +38,7 @@ const TOP_LINKS = [
   { href: "/neural-network", key: "nav.neuralNet" as const },
   { href: "/practice", key: "nav.practice" as const },
   { href: "/playground", key: "nav.playground" as const },
+  { href: "/compare", key: "nav.compare" as const },
   { href: "/docs", key: "nav.docs" as const },
 ];
 

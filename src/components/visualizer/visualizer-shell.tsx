@@ -86,6 +86,7 @@ export function VisualizerShell({
   initialFields,
   liveInput: externalLiveInput,
   showBuilderBar = true,
+  onLiveReady,
 }: {
   module: AlgorithmModule;
   /** optional pre-filled manual input (deep links, playground hand-off) */
@@ -94,6 +95,8 @@ export function VisualizerShell({
   liveInput?: LiveInput;
   /** Set false to hide the inline Insert/Delete/Edit/Search group (CompareShell drives these from a shared bar in synced mode). */
   showBuilderBar?: boolean;
+  /** Reports this panel's own live-input up so a shared bar can broadcast actions to every panel (synced compare mode). */
+  onLiveReady?: (live: LiveInput) => void;
 }) {
   const { settings } = useSettings();
   const { t, locale } = useLocale();
@@ -111,6 +114,11 @@ export function VisualizerShell({
   const live = externalLiveInput ?? ownLiveInput;
   const { level, listFieldKey, searchFieldKey } = live;
   const input = live.input;
+
+  // Report our own live-input up so a shared compare bar can drive every panel.
+  React.useEffect(() => {
+    onLiveReady?.(ownLiveInput);
+  });
 
   // ---- steps ----
   const { steps, error } = React.useMemo((): { steps: Step[]; error: string | null } => {
@@ -504,6 +512,9 @@ export function VisualizerShell({
 
         {/* toolbar */}
         <div className="flex flex-wrap items-center gap-1.5 border-t border-border bg-muted/30 px-4 py-2.5">
+          {/* input-mutation cluster — hidden in synced compare mode, where a shared bar drives every panel */}
+          {showBuilderBar && (
+          <>
           <Select
             value={String(level)}
             onValueChange={(v) => {
@@ -543,7 +554,7 @@ export function VisualizerShell({
           <IconBtn label={t("shell.clearValues")} onClick={live.clearInput}>
             <Eraser />
           </IconBtn>
-          {showBuilderBar && (listFieldKey || searchFieldKey) && (
+          {(listFieldKey || searchFieldKey) && (
             <div className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 p-1">
               {listFieldKey && (
                 <ValuePromptButton
@@ -596,6 +607,8 @@ export function VisualizerShell({
           <IconBtn label={t("shell.redo")} onClick={live.redo} disabled={!canRedo}>
             <Redo2 />
           </IconBtn>
+          </>
+          )}
 
           <div className="ms-auto flex items-center gap-1.5">
             <IconBtn label={t("shell.saveState")} onClick={saveLocal}>

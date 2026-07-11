@@ -5,6 +5,7 @@ import { byCategory } from "@/lib/algorithms";
 import { AlgorithmCard } from "@/components/catalog/algorithm-card";
 import { PageHeader } from "@/components/catalog/page-header";
 import { CategoryVisualizationCount, CategoryEmptyState } from "@/components/catalog/category-chrome";
+import { CompareCta } from "@/components/catalog/compare-cta";
 import type { CategoryId } from "@/lib/engine/types";
 
 export function generateStaticParams() {
@@ -33,6 +34,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <PageHeader icon={info.icon} title={info.title} description={info.description} accent={info.accent}>
         <CategoryVisualizationCount count={items.length} />
+        {items.length >= 2 && <CompareCta category={info.id} />}
       </PageHeader>
 
       {items.length === 0 ? (

@@ -9,6 +9,18 @@ import { isListValue } from "@/components/visualizer/chip-list-input";
 
 const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 
+type HasInputFields = Pick<AlgorithmModule, "inputFields">;
+
+/** The list-shaped field a module's Insert/Delete/Edit actions operate on, if any. */
+export function listFieldKeyOf(module: HasInputFields): string | undefined {
+  return module.inputFields.find((f) => f.list || f.key === "values")?.key;
+}
+
+/** The field a module's Search action writes to, if any. */
+export function searchFieldKeyOf(module: HasInputFields): string | undefined {
+  return module.inputFields.find((f) => f.search || SEARCH_FIELD_KEYS.includes(f.key))?.key;
+}
+
 /**
  * Owns the live-input state for one algorithm: difficulty level, an undo/redo
  * history of datasets, and the insert/delete/edit/search/shuffle/clear actions
@@ -57,14 +69,8 @@ export function useLiveInput<I>(
   const { t } = useLocale();
   const [level, setLevel] = React.useState<Level>(defaultLevel);
 
-  const searchFieldKey = React.useMemo(
-    () => module.inputFields.find((f) => f.search || SEARCH_FIELD_KEYS.includes(f.key))?.key,
-    [module],
-  );
-  const listFieldKey = React.useMemo(
-    () => module.inputFields.find((f) => f.list || f.key === "values")?.key,
-    [module],
-  );
+  const searchFieldKey = React.useMemo(() => searchFieldKeyOf(module), [module]);
+  const listFieldKey = React.useMemo(() => listFieldKeyOf(module), [module]);
 
   const initialInput = React.useMemo(() => {
     if (initialFields) {
