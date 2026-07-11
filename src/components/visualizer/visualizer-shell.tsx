@@ -39,8 +39,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useVisualizerPlayer } from "@/lib/engine/player";
-import { createRNG, randomSeed } from "@/lib/engine/random";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type Level, type Step } from "@/lib/engine/types";
+import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
 import { useLocale } from "@/lib/i18n";
 import { cn, downloadText, readFileAsText } from "@/lib/utils";
@@ -48,7 +48,6 @@ import { RendererSwitch } from "./renderers";
 import { ZoomPan, type ZoomPanHandle } from "./zoom-pan";
 import { StatsPanel } from "./stats-panel";
 import { InputDialog } from "./input-dialog";
-import { isListValue } from "./chip-list-input";
 import { EditPromptButton, ValuePromptButton } from "./value-prompt-button";
 import type { DictKey } from "@/lib/i18n";
 
@@ -57,8 +56,6 @@ interface SavedState {
   fields: Record<string, string>;
   cursor: number;
 }
-
-const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 
 const LEVEL_LABEL_KEYS: Record<Level, DictKey> = {
   1: "shell.level1",
@@ -87,50 +84,33 @@ const SHORTCUTS: { keys: string[]; labelKey: DictKey }[] = [
 export function VisualizerShell({
   module,
   initialFields,
+  liveInput: externalLiveInput,
+  showBuilderBar = true,
 }: {
   module: AlgorithmModule;
   /** optional pre-filled manual input (deep links, playground hand-off) */
   initialFields?: Record<string, string>;
+  /** Provided by CompareShell to drive this panel from shared/synced state; omit for a standalone page. */
+  liveInput?: LiveInput;
+  /** Set false to hide the inline Insert/Delete/Edit/Search group (CompareShell drives these from a shared bar in synced mode). */
+  showBuilderBar?: boolean;
 }) {
   const { settings } = useSettings();
   const { t, locale } = useLocale();
-  const [level, setLevel] = React.useState<Level>(settings.defaultLevel);
   const [inputOpen, setInputOpen] = React.useState(false);
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
 
-  const searchFieldKey = React.useMemo(
-    () => module.inputFields.find((f) => f.search || SEARCH_FIELD_KEYS.includes(f.key))?.key,
-    [module],
-  );
-  const listFieldKey = React.useMemo(
-    () => module.inputFields.find((f) => f.list || f.key === "values")?.key,
-    [module],
-  );
-
-  // ---- input history (undo/redo over dataset edits) ----
-  const initialInput = React.useMemo(() => {
-    if (initialFields) {
-      try {
-        return module.parseInput(initialFields);
-      } catch {
-        // fall through to a random dataset on malformed deep links
-      }
-    }
-    return module.defaultInput(settings.defaultLevel, createRNG(randomSeed()));
-    // module identity is stable per page; defaultLevel only seeds the first input
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [module, initialFields]);
-  const [history, setHistory] = React.useState<unknown[]>([initialInput]);
-  const [hIndex, setHIndex] = React.useState(0);
-  const input = history[hIndex];
-
-  const pushInput = React.useCallback(
-    (next: unknown) => {
-      setHistory((h) => [...h.slice(0, hIndex + 1), next].slice(-50));
-      setHIndex((i) => Math.min(i + 1, 49));
+  // Live-input state (level, undo/redo history, insert/delete/edit/search).
+  // Standalone pages own a private instance; CompareShell passes a shared one.
+  const ownLiveInput = useLiveInput(module, initialFields, settings.defaultLevel, {
+    onClearNeedsManualInput: (fields) => {
+      setDialogPreset(fields);
+      setInputOpen(true);
     },
-    [hIndex],
-  );
+  });
+  const live = externalLiveInput ?? ownLiveInput;
+  const { level, listFieldKey, searchFieldKey } = live;
+  const input = live.input;
 
   // ---- steps ----
   const { steps, error } = React.useMemo((): { steps: Step[]; error: string | null } => {
@@ -154,15 +134,13 @@ export function VisualizerShell({
   // Must be declared AFTER useVisualizerPlayer so this effect runs after its
   // internal reset-on-stepCount-change effect — otherwise that effect's
   // setPlaying(false) wins and playback never starts.
-  const liveActionRef = React.useRef(false);
   React.useEffect(() => {
-    if (liveActionRef.current) {
-      liveActionRef.current = false;
+    if (live.consumeLiveActionFlag()) {
       player.goto(0);
       player.play();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hIndex]);
+  }, [input]);
 
   // ---- refs ----
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -177,136 +155,7 @@ export function VisualizerShell({
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [step?.codeLine]);
 
-  // ---- actions ----
-  const randomize = React.useCallback(
-    (lvl: Level = level) => {
-      pushInput(module.defaultInput(lvl, createRNG(randomSeed())));
-    },
-    [module, level, pushInput],
-  );
-
-  const applyFields = (fields: Record<string, string>) => {
-    const parsed = module.parseInput(fields); // throws friendly errors
-    pushInput(parsed);
-  };
-
-  const shuffleInput = () => {
-    const fields = module.serializeInput(input);
-    const next = { ...fields };
-    let touched = false;
-    for (const k of Object.keys(next)) {
-      if (!isListValue(next[k])) continue;
-      const tokens = next[k].split(",").map((t) => t.trim()).filter(Boolean);
-      for (let i = tokens.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [tokens[i], tokens[j]] = [tokens[j], tokens[i]];
-      }
-      next[k] = tokens.join(", ");
-      touched = true;
-    }
-    if (!touched) {
-      toast.info(t("shell.nothingToShuffle"));
-      return;
-    }
-    try {
-      pushInput(module.parseInput(next));
-      toast.success(t("shell.shuffled"));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("shell.couldNotShuffle"));
-    }
-  };
-
-  const clearInput = () => {
-    const fields = module.serializeInput(input);
-    const next = { ...fields };
-    let touched = false;
-    for (const k of Object.keys(next)) {
-      if (isListValue(next[k])) {
-        next[k] = "";
-        touched = true;
-      }
-    }
-    if (!touched) {
-      toast.info(t("shell.nothingToClear"));
-      return;
-    }
-    try {
-      pushInput(module.parseInput(next));
-      toast.success(t("shell.cleared"));
-    } catch {
-      setDialogPreset(next);
-      setInputOpen(true);
-      toast.info(t("shell.enterNewValues"));
-    }
-  };
-
-  const insertValue = (raw: string) => {
-    if (!listFieldKey) return;
-    const fields = module.serializeInput(input);
-    const current = fields[listFieldKey] ?? "";
-    const next = { ...fields, [listFieldKey]: current ? `${current}, ${raw}` : raw };
-    try {
-      pushInput(module.parseInput(next));
-      liveActionRef.current = true;
-      toast.success(t("shell.toastInserted", { value: raw }));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
-    }
-  };
-
-  const removeValue = (raw: string) => {
-    if (!listFieldKey) return;
-    const fields = module.serializeInput(input);
-    const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
-    const idx = tokens.findIndex((t) => t === raw.trim());
-    if (idx === -1) {
-      toast.info(t("shell.toastNotInValues", { value: raw }));
-      return;
-    }
-    tokens.splice(idx, 1);
-    const next = { ...fields, [listFieldKey]: tokens.join(", ") };
-    try {
-      pushInput(module.parseInput(next));
-      liveActionRef.current = true;
-      toast.success(t("shell.toastRemoved", { value: raw }));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("shell.couldNotRemove"));
-    }
-  };
-
-  const editValue = (oldRaw: string, newRaw: string) => {
-    if (!listFieldKey) return;
-    const fields = module.serializeInput(input);
-    const tokens = (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
-    const idx = tokens.findIndex((t) => t === oldRaw.trim());
-    if (idx === -1) {
-      toast.info(t("shell.toastNotInValues", { value: oldRaw }));
-      return;
-    }
-    tokens[idx] = newRaw.trim();
-    const next = { ...fields, [listFieldKey]: tokens.join(", ") };
-    try {
-      pushInput(module.parseInput(next));
-      liveActionRef.current = true;
-      toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("shell.couldNotEdit"));
-    }
-  };
-
-  const searchValue = (raw: string) => {
-    if (!searchFieldKey) return;
-    const fields = module.serializeInput(input);
-    const next = { ...fields, [searchFieldKey]: raw };
-    try {
-      pushInput(module.parseInput(next));
-      liveActionRef.current = true;
-      toast.success(t("shell.toastSearching", { value: raw }));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("shell.couldNotSearch"));
-    }
-  };
-
+  // ---- grid-cell editing (backtracking / grid renderers) ----
   const gridFieldKey = React.useMemo(
     () => module.inputFields.find((f) => f.key === "grid")?.key,
     [module],
@@ -322,8 +171,7 @@ export function VisualizerShell({
     rows[row] = chars.join("");
     const next = { ...fields, [gridFieldKey]: rows.join(" / ") };
     try {
-      pushInput(module.parseInput(next));
-      liveActionRef.current = true;
+      live.commitLiveFields(next);
       toast.success(t("shell.toastCellSet", { row, col, char }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotEditCell"));
@@ -354,8 +202,7 @@ export function VisualizerShell({
         if (data.slug !== module.slug) {
           throw new Error(`This file belongs to "${data.slug}", not "${module.slug}".`);
         }
-        const parsed = module.parseInput(data.fields);
-        pushInput(parsed);
+        live.applyFields(data.fields);
         toast.success(t("shell.stateImported"));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : t("shell.couldNotImport"));
@@ -382,7 +229,7 @@ export function VisualizerShell({
     }
     try {
       const data = JSON.parse(raw) as SavedState;
-      pushInput(module.parseInput(data.fields));
+      live.applyFields(data.fields);
       toast.success(t("shell.savedStateLoaded"));
     } catch {
       toast.error(t("shell.savedStateCorrupted"));
@@ -474,8 +321,8 @@ export function VisualizerShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.toggle, player.next, player.prev, player.reset, player.setSpeed, player.speed]);
 
-  const canUndo = hIndex > 0;
-  const canRedo = hIndex < history.length - 1;
+  const canUndo = live.canUndo;
+  const canRedo = live.canRedo;
 
   return (
     <div
@@ -661,8 +508,8 @@ export function VisualizerShell({
             value={String(level)}
             onValueChange={(v) => {
               const lvl = Number(v) as Level;
-              setLevel(lvl);
-              randomize(lvl);
+              live.setLevel(lvl);
+              live.randomize(lvl);
             }}
           >
             <SelectTrigger className="h-8 w-32 text-xs">
@@ -677,7 +524,7 @@ export function VisualizerShell({
             </SelectContent>
           </Select>
 
-          <Button variant="secondary" size="sm" onClick={() => randomize()}>
+          <Button variant="secondary" size="sm" onClick={() => live.randomize()}>
             <Dices /> {t("shell.random")}
           </Button>
           <Button
@@ -690,13 +537,13 @@ export function VisualizerShell({
           >
             <SlidersHorizontal /> {t("shell.customInput")}
           </Button>
-          <IconBtn label={t("shell.shuffleValues")} onClick={shuffleInput}>
+          <IconBtn label={t("shell.shuffleValues")} onClick={live.shuffleInput}>
             <Shuffle />
           </IconBtn>
-          <IconBtn label={t("shell.clearValues")} onClick={clearInput}>
+          <IconBtn label={t("shell.clearValues")} onClick={live.clearInput}>
             <Eraser />
           </IconBtn>
-          {(listFieldKey || searchFieldKey) && (
+          {showBuilderBar && (listFieldKey || searchFieldKey) && (
             <div className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 p-1">
               {listFieldKey && (
                 <ValuePromptButton
@@ -704,7 +551,7 @@ export function VisualizerShell({
                   label={t("shell.insertValue")}
                   placeholder={t("shell.placeholderExample")}
                   confirmLabel={t("shell.confirmInsert")}
-                  onSubmit={insertValue}
+                  onSubmit={live.insertValue}
                   emphasized
                 />
               )}
@@ -714,7 +561,7 @@ export function VisualizerShell({
                   label={t("shell.deleteValue")}
                   placeholder={t("shell.placeholderExample")}
                   confirmLabel={t("shell.confirmDelete")}
-                  onSubmit={removeValue}
+                  onSubmit={live.removeValue}
                   emphasized
                 />
               )}
@@ -725,7 +572,7 @@ export function VisualizerShell({
                   oldPlaceholder={t("shell.placeholderCurrentValue")}
                   newPlaceholder={t("shell.placeholderNewValue")}
                   confirmLabel={t("shell.confirmEdit")}
-                  onSubmit={editValue}
+                  onSubmit={live.editValue}
                 />
               )}
               {searchFieldKey && (
@@ -734,7 +581,7 @@ export function VisualizerShell({
                   label={t("shell.searchValue")}
                   placeholder={t("shell.placeholderExample")}
                   confirmLabel={t("shell.confirmSearch")}
-                  onSubmit={searchValue}
+                  onSubmit={live.searchValue}
                   emphasized
                 />
               )}
@@ -743,10 +590,10 @@ export function VisualizerShell({
 
           <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
 
-          <IconBtn label={t("shell.undo")} onClick={() => setHIndex((i) => i - 1)} disabled={!canUndo}>
+          <IconBtn label={t("shell.undo")} onClick={live.undo} disabled={!canUndo}>
             <Undo2 />
           </IconBtn>
-          <IconBtn label={t("shell.redo")} onClick={() => setHIndex((i) => i + 1)} disabled={!canRedo}>
+          <IconBtn label={t("shell.redo")} onClick={live.redo} disabled={!canRedo}>
             <Redo2 />
           </IconBtn>
 
@@ -803,7 +650,7 @@ export function VisualizerShell({
         }}
         fields={module.inputFields}
         initial={dialogPreset ?? module.serializeInput(input)}
-        onSubmit={applyFields}
+        onSubmit={live.applyFields}
         parseInput={module.parseInput}
       />
     </div>
