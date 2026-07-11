@@ -19,7 +19,10 @@ Every algorithm in this app is ONE self-contained TypeScript file:
   modules — `parseEdgeList` re-exported from `@/lib/algorithms/graphs/bfs`.
 - **Frames are immutable snapshots.** Never push a reference you later mutate.
   Spread/copy arrays and records on every step (see exemplars).
-- **Counters are CUMULATIVE** per step (`{ comparisons: 5, swaps: 2 }`), not deltas.
+- **Counters are usually CUMULATIVE** per step (`{ comparisons: 5, swaps: 2 }`),
+  not deltas. A counter may instead be a live gauge (recursion depth, queue size)
+  — if so, add it to `GAUGE_COUNTERS` in `tests/algorithms/invariants.test.ts`
+  with a one-line justification, or the invariant suite will fail.
   Use 2–3 counters that make sense for your algorithm (comparisons, swaps,
   visits, probes, recursiveCalls, cellsFilled, shifts…).
 - **`description`** is one clear narration sentence per step, mentioning concrete
