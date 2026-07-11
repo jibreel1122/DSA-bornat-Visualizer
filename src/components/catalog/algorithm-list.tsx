@@ -8,17 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { AlgorithmMeta, AlgoDifficulty, CategoryId } from "@/lib/engine/types";
 import { CATEGORIES, CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites } from "@/lib/hooks";
-import { useLocale, type DictKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
+import { DIFFICULTY_KEY } from "@/lib/i18n/difficulty";
 import { cn } from "@/lib/utils";
 import { AlgorithmCard } from "./algorithm-card";
 
 const DIFFICULTIES: AlgoDifficulty[] = ["Beginner", "Intermediate", "Advanced"];
-
-const DIFFICULTY_KEY: Record<AlgoDifficulty, DictKey> = {
-  Beginner: "catalog.difficultyBeginner",
-  Intermediate: "catalog.difficultyIntermediate",
-  Advanced: "catalog.difficultyAdvanced",
-};
 
 /** Shared filterable, groupable algorithm browser used by /algorithms and /data-structures. */
 export function AlgorithmList({

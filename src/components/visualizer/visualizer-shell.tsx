@@ -702,8 +702,8 @@ export function VisualizerShell({
                 <ValuePromptButton
                   icon={<ListPlus />}
                   label={t("shell.insertValue")}
-                  placeholder="e.g. 42"
-                  confirmLabel="Insert"
+                  placeholder={t("shell.placeholderExample")}
+                  confirmLabel={t("shell.confirmInsert")}
                   onSubmit={insertValue}
                   emphasized
                 />
@@ -712,8 +712,8 @@ export function VisualizerShell({
                 <ValuePromptButton
                   icon={<ListMinus />}
                   label={t("shell.deleteValue")}
-                  placeholder="e.g. 42"
-                  confirmLabel="Delete"
+                  placeholder={t("shell.placeholderExample")}
+                  confirmLabel={t("shell.confirmDelete")}
                   onSubmit={removeValue}
                   emphasized
                 />
@@ -722,9 +722,9 @@ export function VisualizerShell({
                 <EditPromptButton
                   icon={<Pencil />}
                   label={t("shell.editValue")}
-                  oldPlaceholder="current value"
-                  newPlaceholder="new value"
-                  confirmLabel="Edit"
+                  oldPlaceholder={t("shell.placeholderCurrentValue")}
+                  newPlaceholder={t("shell.placeholderNewValue")}
+                  confirmLabel={t("shell.confirmEdit")}
                   onSubmit={editValue}
                 />
               )}
@@ -732,8 +732,8 @@ export function VisualizerShell({
                 <ValuePromptButton
                   icon={<Search />}
                   label={t("shell.searchValue")}
-                  placeholder="e.g. 42"
-                  confirmLabel="Search"
+                  placeholder={t("shell.placeholderExample")}
+                  confirmLabel={t("shell.confirmSearch")}
                   onSubmit={searchValue}
                   emphasized
                 />

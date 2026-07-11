@@ -27,6 +27,7 @@ import { loadAlgorithm } from "@/lib/algorithms";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites, useHistory, useNotes } from "@/lib/hooks";
 import { useLocale } from "@/lib/i18n";
+import { DIFFICULTY_KEY } from "@/lib/i18n/difficulty";
 import { cn } from "@/lib/utils";
 import { VisualizerShell } from "./visualizer-shell";
 import { CodeViewer } from "./code-viewer";
@@ -80,7 +81,7 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
             <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
             <p className="mt-1.5 max-w-2xl text-muted-foreground">{meta.summary}</p>
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <Badge>{meta.difficulty}</Badge>
+              <Badge>{t(DIFFICULTY_KEY[meta.difficulty])}</Badge>
               {meta.tags.map((t) => (
                 <Badge key={t} variant="secondary">
                   {t}

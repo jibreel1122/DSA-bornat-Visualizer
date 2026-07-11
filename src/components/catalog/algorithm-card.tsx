@@ -5,10 +5,11 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import type { AlgorithmMeta, AlgoDifficulty } from "@/lib/engine/types";
+import type { AlgorithmMeta } from "@/lib/engine/types";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { useFavorites } from "@/lib/hooks";
-import { useLocale, type DictKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
+import { DIFFICULTY_KEY } from "@/lib/i18n/difficulty";
 import { cn } from "@/lib/utils";
 
 const DIFFICULTY_VARIANT = {
@@ -16,12 +17,6 @@ const DIFFICULTY_VARIANT = {
   Intermediate: "warning",
   Advanced: "destructive",
 } as const;
-
-const DIFFICULTY_KEY: Record<AlgoDifficulty, DictKey> = {
-  Beginner: "catalog.difficultyBeginner",
-  Intermediate: "catalog.difficultyIntermediate",
-  Advanced: "catalog.difficultyAdvanced",
-};
 
 export function AlgorithmCard({ meta, index = 0 }: { meta: AlgorithmMeta; index?: number }) {
   const { isFavorite, toggle } = useFavorites();
