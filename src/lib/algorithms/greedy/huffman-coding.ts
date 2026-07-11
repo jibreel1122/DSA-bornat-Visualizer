@@ -69,7 +69,14 @@ function generate(input: Input): Step<TreeFrame>[] {
     return out;
   };
 
-  const frame = (states: Record<string, CellState>, description: string, codeLine: number, aux?: AuxRow[], finalRoot?: string): void => {
+  const frame = (
+    states: Record<string, CellState>,
+    description: string,
+    codeLine: number,
+    aux?: AuxRow[],
+    finalRoot?: string,
+    descriptionAr?: string,
+  ): void => {
     const virtual = finalRoot === undefined;
     const treeNodes = buildTreeNodes(finalRoot ?? "", virtual);
     steps.push({
@@ -81,6 +88,7 @@ function generate(input: Input): Step<TreeFrame>[] {
         note: virtual ? `PQ = current forest of trees (children of the "PQ" node), sorted by frequency` : `final Huffman tree — left edge = 0, right edge = 1`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { merges },
     });
@@ -90,6 +98,9 @@ function generate(input: Input): Step<TreeFrame>[] {
     Object.fromEntries(forest.map((id) => [id, "active" as CellState])),
     `Huffman coding of "${text}". Start with one leaf per character, holding its frequency, in a priority queue.`,
     1,
+    undefined,
+    undefined,
+    `ترميز هوفمان للنص "${text}". ابدأ بورقة واحدة لكل حرف، تحمل تكراره، داخل طابور أولوية.`,
   );
 
   while (forest.length > 1) {
@@ -98,14 +109,28 @@ function generate(input: Input): Step<TreeFrame>[] {
     const bId = forest[1];
     const a = nodes.get(aId)!;
     const b = nodes.get(bId)!;
-    frame({ [aId]: "swap", [bId]: "swap" }, `Take the two smallest frequencies: ${label(a)}=${a.freq} and ${label(b)}=${b.freq}.`, 3);
+    frame(
+      { [aId]: "swap", [bId]: "swap" },
+      `Take the two smallest frequencies: ${label(a)}=${a.freq} and ${label(b)}=${b.freq}.`,
+      3,
+      undefined,
+      undefined,
+      `خذ أصغر تكرارين: ${label(a)}=${a.freq} و${label(b)}=${b.freq}.`,
+    );
 
     const id = `n${idc++}`;
     nodes.set(id, { id, freq: a.freq + b.freq, left: aId, right: bId, order: order++ });
     forest = forest.slice(2);
     forest.push(id);
     merges++;
-    frame({ [id]: "found", [aId]: "visited", [bId]: "visited" }, `Merge them into a new node with frequency ${a.freq + b.freq}. Push it back into the queue.`, 4);
+    frame(
+      { [id]: "found", [aId]: "visited", [bId]: "visited" },
+      `Merge them into a new node with frequency ${a.freq + b.freq}. Push it back into the queue.`,
+      4,
+      undefined,
+      undefined,
+      `ادمجهما في عقدة جديدة بتكرار ${a.freq + b.freq}. أعِدها إلى الطابور.`,
+    );
   }
 
   const rootId = forest[0];
@@ -116,7 +141,14 @@ function generate(input: Input): Step<TreeFrame>[] {
   ];
   const leafStates: Record<string, CellState> = {};
   for (const [id, n] of nodes) if (n.ch !== undefined) leafStates[id] = "found";
-  frame(leafStates, `Done. Read left=0 / right=1 from the root to each leaf for its prefix-free code.`, 6, codeAux, rootId);
+  frame(
+    leafStates,
+    `Done. Read left=0 / right=1 from the root to each leaf for its prefix-free code.`,
+    6,
+    codeAux,
+    rootId,
+    `انتهى. اقرأ يسار=0 / يمين=1 من الجذر إلى كل ورقة للحصول على شفرتها الخالية من التطابق البادئ.`,
+  );
   return steps;
 }
 
@@ -133,10 +165,13 @@ function sampleInput(level: number): Input {
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "huffman-coding",
   title: "Huffman Coding",
+  titleAr: "ترميز هوفمان (Huffman)",
   category: "greedy",
   difficulty: "Advanced",
   tags: ["greedy", "compression", "prefix code", "binary tree"],
+  tagsAr: ["جشِع", "ضغط", "شفرة بادئة", "شجرة ثنائية"],
   summary: "Builds an optimal prefix-free binary code by repeatedly merging the two lowest-frequency nodes into a tree.",
+  summaryAr: "يبني شفرة ثنائية مثلى خالية من التطابق البادئ بدمج العقدتين الأقل تكرارًا معًا في شجرة بشكل متكرر.",
   renderer: "tree",
   pseudocode: [
     "procedure huffman(freqs)",
@@ -327,6 +362,63 @@ The algorithm builds a binary tree from the bottom up. Each character starts as 
       { question: "Each step merges…", options: ["The two highest-frequency nodes", "The two lowest-frequency nodes", "Random nodes", "All nodes at once"], answer: 1, explanation: "The two rarest are combined under a new parent." },
       { question: "With a binary heap, construction takes…", options: ["O(n)", "O(n log n)", "O(n²)", "O(2^n)"], answer: 1, explanation: "n−1 merges each cost O(log n) heap operations." },
       { question: "Huffman codes are read from the tree by…", options: ["Level order", "Left=0, right=1 from root to leaf", "Random assignment", "Alphabetical order"], answer: 1, explanation: "The root-to-leaf path bits form each symbol's code." },
+    ],
+  },
+  contentAr: {
+    overview: `ترميز هوفمان خوارزمية جشعة تُنتج شفرة ثنائية مثلى خالية من التطابق البادئ لضغط البيانات. فبدلًا من إعطاء كل حرف عددًا ثابتًا من البتات (كما تفعل شفرة ASCII)، يُخصّص شفرات قصيرة للحروف المتكررة وشفرات أطول للحروف النادرة، مما يقلّل العدد الإجمالي للبتات. تعني عبارة "خالية من التطابق البادئ" أن لا شفرة تكون بادئة لشفرة أخرى، لذا يُفكّ ترميز الدفق المضغوط دون لبس وبلا فواصل.
+
+تبني الخوارزمية شجرة ثنائية من الأسفل إلى الأعلى. يبدأ كل حرف كورقة موزونة بتكراره، وتوضع جميع الأوراق في طابور أولوية أدنى. بشكل متكرر، تُزال العقدتان الأقل تكرارًا وتُدمَجان تحت أب جديد تكراره مجموع تكراريهما؛ ثم يُعاد الأب إلى الطابور. بعد n−1 عملية دمج، تبقى شجرة واحدة. قراءة المسار من الجذر إلى كل ورقة — يسار = 0، يمين = 1 — تُعطي شفرة ذلك الحرف. تُثبت قاعدة "دمج الأندر تكرارًا" الجشعة أنها تُقلّل الطول المتوقع للشفرة، وهذا ما يجعل شفرات هوفمان مثلى بين الشفرات ذات البادئة.`,
+    howItWorks: [
+      "احسب تكرار كل رمز وأنشئ عقدة ورقة لكل واحد منها.",
+      "أدرج جميع الأوراق في كومة دنيا مرتّبة حسب التكرار.",
+      "أزل العقدتين الأقل تكرارًا وادمجهما تحت عقدة داخلية جديدة (التكرار = المجموع).",
+      "أدرج العقدة المدموجة مجددًا في الكومة؛ كرّر حتى تبقى عقدة واحدة (الجذر).",
+      "خصّص الشفرات باجتياز الشجرة: أضِف 0 عند الاتجاه يسارًا، و1 عند الاتجاه يمينًا، وصولًا إلى كل ورقة.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(n)",
+      notes: "باستخدام كومة ثنائية، تستغرق كل عملية من عمليات الدمج الـ n−1 عملَ كومة بتكلفة O(log n) ← O(n log n) إجمالًا. إذا كانت التكرارات مرتّبة مسبقًا، يمكن لطابورين تحقيق O(n). المساحة O(n) للشجرة والكومة.",
+    },
+    applications: [
+      "ضغط الملفات (تستخدم DEFLATE/ZIP وgzip وPNG ترميز هوفمان)",
+      "مراحل الترميز الإنتروبي في JPEG وMP3",
+      "ترميز بيانات الفاكس والمودم",
+      "أي مخطط شفرة بادئة متغيرة الطول",
+    ],
+    advantages: [
+      "يُنتج شفرات بادئة مثبتة المثالية عند معرفة التكرارات",
+      "شفرات خالية من التطابق البادئ تُفكّ ترميزها دون لبس وفوريًا",
+      "بناء جشع بسيط وسريع بتعقيد O(n log n)",
+      "أساسي في العديد من صيغ الضغط الفعلية",
+    ],
+    disadvantages: [
+      "يحتاج إلى جدول التكرارات (مرورين أو نقل الشجرة)",
+      "أمثل لكل رمز فقط؛ يمكن للترميز الحسابي أن يتفوق عليه",
+      "ضعيف الأداء مع الأبجديات الصغيرة جدًا أو التوزيعات شبه المنتظمة",
+      "لا يتكيّف هوفمان الساكن مع البيانات المتغيرة (توجد نسخ تكيّفية)",
+    ],
+    commonMistakes: [
+      "إنتاج شفرات ليست خالية من التطابق البادئ (كارثة عند فك الترميز).",
+      "كسر التعادل بشكل غير متسق، مما يُنتج شجرة مختلفة (لكن صحيحة).",
+      "نسيان نقل جدول الشفرات أو إعادة بنائه من أجل فك الترميز.",
+      "تخصيص شفرات أقصر للرموز النادرة عن طريق الخطأ.",
+    ],
+    interviewQuestions: [
+      "لماذا يُعطي دمج العقدتين الأقل تكرارًا شفرة مثلى؟",
+      "ماذا تعني «خالية من التطابق البادئ» ولماذا هي ضرورية لفك الترميز؟",
+      "كيف يمكن لبناء شجرة هوفمان أن يعمل بتعقيد O(n) مع تكرارات مرتّبة؟",
+      "كيف يتفوق الترميز الحسابي على هوفمان؟",
+      "كيف تبني شفرة هوفمان تكيّفية تتحدّث مع تدفق البيانات؟",
+    ],
+    summary:
+      "يدمج ترميز هوفمان بأسلوب جشع العقدتين الأقل تكرارًا في شجرة ثنائية، مُنتجًا شفرة مثلى خالية من التطابق البادئ تُعطي الرموز المتكررة سلاسل بتات أقصر. يعمل بتعقيد O(n log n) باستخدام كومة، ويقوم عليه ضغط ZIP وJPEG وMP3.",
+    quiz: [
+      { question: "يُخصّص ترميز هوفمان شفرات أقصر لـ…", options: ["الرموز النادرة", "الرموز المتكررة", "جميع الرموز بالتساوي", "الرمز الأول"], answer: 1, explanation: "تحصل الرموز المتكررة على شفرات أقصر لتقليل إجمالي البتات." },
+      { question: "«خالية من التطابق البادئ» تعني…", options: ["الشفرات ليس لها بادئات", "لا شفرة تكون بادئة لشفرة أخرى", "كل الشفرات تبدأ بـ 0", "الشفرات مرتّبة"], answer: 1, explanation: "هذه الخاصية تجعل الدفق المُرمّز قابلًا لفك الترميز بشكل فريد." },
+      { question: "تدمج كل خطوة…", options: ["العقدتين الأعلى تكرارًا", "العقدتين الأقل تكرارًا", "عقدتين عشوائيتين", "جميع العقد دفعة واحدة"], answer: 1, explanation: "تُدمج العقدتان الأندر تحت أب جديد." },
+      { question: "باستخدام كومة ثنائية، يستغرق البناء…", options: ["O(n)", "O(n log n)", "O(n²)", "O(2^n)"], answer: 1, explanation: "كل عملية من عمليات الدمج الـ n−1 تكلّف O(log n) من عمليات الكومة." },
+      { question: "تُقرأ شفرات هوفمان من الشجرة عن طريق…", options: ["الترتيب حسب المستوى", "يسار=0، يمين=1 من الجذر إلى الورقة", "تخصيص عشوائي", "الترتيب الأبجدي"], answer: 1, explanation: "تشكّل بتات المسار من الجذر إلى الورقة شفرة كل رمز." },
     ],
   },
   inputFields: [

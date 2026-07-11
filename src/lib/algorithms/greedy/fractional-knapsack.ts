@@ -17,7 +17,7 @@ function generate(input: Input): Step<TableFrame>[] {
   const taken: (number | null)[] = new Array(order.length).fill(null);
   const gained: (number | null)[] = new Array(order.length).fill(null);
 
-  const frame = (activeRow: number | null, description: string, codeLine: number, remaining: number, total: number): void => {
+  const frame = (activeRow: number | null, description: string, codeLine: number, remaining: number, total: number, descriptionAr?: string): void => {
     const cells = order.map((it, i) => {
       const rowState: CellState | undefined =
         activeRow === i ? "active" : taken[i] !== null ? (taken[i]! >= it.w ? "sorted" : "found") : undefined;
@@ -42,12 +42,20 @@ function generate(input: Input): Step<TableFrame>[] {
         note: `greedy: take items in decreasing value/weight ratio; split the last if it doesn't fully fit`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { picks, total: Number(total.toFixed(2)) },
     });
   };
 
-  frame(null, `Fractional knapsack, capacity ${W}. Sort items by value/weight ratio (highest first), then greedily fill.`, 1, W, 0);
+  frame(
+    null,
+    `Fractional knapsack, capacity ${W}. Sort items by value/weight ratio (highest first), then greedily fill.`,
+    1,
+    W,
+    0,
+    `حقيبة ظهر كسرية بسعة ${W}. رتّب العناصر حسب نسبة القيمة إلى الوزن (الأعلى أولًا)، ثم املأها بأسلوب جشع.`,
+  );
 
   let remaining = W;
   let total = 0;
@@ -56,7 +64,14 @@ function generate(input: Input): Step<TableFrame>[] {
     if (remaining <= 0) {
       taken[i] = 0;
       gained[i] = 0;
-      frame(i, `Knapsack is full — skip item (ratio ${it.ratio.toFixed(2)}).`, 5, remaining, total);
+      frame(
+        i,
+        `Knapsack is full — skip item (ratio ${it.ratio.toFixed(2)}).`,
+        5,
+        remaining,
+        total,
+        `الحقيبة ممتلئة — تخطَّ العنصر (نسبة ${it.ratio.toFixed(2)}).`,
+      );
       continue;
     }
     if (it.w <= remaining) {
@@ -65,7 +80,14 @@ function generate(input: Input): Step<TableFrame>[] {
       remaining -= it.w;
       total += it.v;
       picks++;
-      frame(i, `Item fits wholly: take all ${it.w} (value ${it.v}). Remaining capacity ${remaining}.`, 3, remaining, total);
+      frame(
+        i,
+        `Item fits wholly: take all ${it.w} (value ${it.v}). Remaining capacity ${remaining}.`,
+        3,
+        remaining,
+        total,
+        `العنصر يسع بالكامل: خذ كل ${it.w} (بقيمة ${it.v}). السعة المتبقية ${remaining}.`,
+      );
     } else {
       const frac = remaining;
       const value = it.ratio * frac;
@@ -73,12 +95,26 @@ function generate(input: Input): Step<TableFrame>[] {
       gained[i] = value;
       total += value;
       picks++;
-      frame(i, `Only ${remaining} capacity left: take fraction ${frac}/${it.w}, adding ${value.toFixed(2)} value.`, 4, 0, total);
+      frame(
+        i,
+        `Only ${remaining} capacity left: take fraction ${frac}/${it.w}, adding ${value.toFixed(2)} value.`,
+        4,
+        0,
+        total,
+        `تبقّت سعة ${remaining} فقط: خذ الكسر ${frac}/${it.w}، مضيفًا قيمة ${value.toFixed(2)}.`,
+      );
       remaining = 0;
     }
   }
 
-  frame(null, `Done. Maximum value = ${total.toFixed(2)} within capacity ${W}.`, 6, remaining, total);
+  frame(
+    null,
+    `Done. Maximum value = ${total.toFixed(2)} within capacity ${W}.`,
+    6,
+    remaining,
+    total,
+    `انتهى. القيمة القصوى = ${total.toFixed(2)} ضمن السعة ${W}.`,
+  );
   return steps;
 }
 
@@ -92,10 +128,13 @@ function randomItems(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "fractional-knapsack",
   title: "Fractional Knapsack",
+  titleAr: "حقيبة الظهر الكسرية",
   category: "greedy",
   difficulty: "Intermediate",
   tags: ["greedy", "optimization", "ratio", "knapsack"],
+  tagsAr: ["جشِع", "تحسين", "نسبة", "حقيبة الظهر"],
   summary: "Maximizes value under a weight limit when items can be split, by greedily taking the highest value/weight ratio first.",
+  summaryAr: "يعظّم القيمة ضمن حدّ وزن معيّن عندما يمكن تقسيم العناصر، بأخذ أعلى نسبة قيمة إلى وزن أولًا بأسلوب جشع.",
   renderer: "table",
   pseudocode: [
     "procedure fractionalKnapsack(items, W)",
@@ -281,6 +320,63 @@ Unlike 0/1 knapsack (which needs dynamic programming), fractional knapsack is so
       { question: "The time complexity is dominated by…", options: ["The greedy fill", "Sorting: O(n log n)", "O(n·W)", "O(2^n)"], answer: 1, explanation: "Sorting by ratio is the costly step." },
       { question: "The greedy strategy fails for…", options: ["Fractional knapsack", "0/1 (indivisible) knapsack", "Sorted input", "Small inputs"], answer: 1, explanation: "Without fractions, the highest-ratio item can crowd out a better combination." },
       { question: "When the next item doesn't fully fit, you…", options: ["Skip it entirely", "Take the fraction that fills remaining capacity", "Remove a previous item", "Double the capacity"], answer: 1, explanation: "Partial capacity is filled with a fraction of that item." },
+    ],
+  },
+  contentAr: {
+    overview: `مسألة حقيبة الظهر الكسرية هي "الشقيقة القابلة للتجزئة" لمسألة حقيبة الظهر 0/1: لديك حقيبة بحدّ وزن أقصى، وعناصر لكل منها وزن وقيمة، لكن هنا يمكنك أخذ أي جزء كسري من العنصر — تخيّل لصًا يملأ كيسًا بغبار الذهب أو الحبوب أو سائل بدلًا من أجسام غير قابلة للتجزئة. الهدف نفسه: تعظيم القيمة الإجمالية المحمولة.
+
+على عكس حقيبة الظهر 0/1 (التي تحتاج إلى البرمجة الديناميكية)، تُحل حقيبة الظهر الكسرية بشكل أمثل باستراتيجية جشعة بسيطة: فضّل دائمًا العنصر ذا أعلى قيمة لكل وحدة وزن (نسبة القيمة إلى الوزن). رتّب العناصر حسب هذه النسبة، خذ العناصر الكاملة بأسلوب جشع طالما أنها تسع، وعندما لا يسع العنصر التالي بالكامل، خذ فقط الجزء الذي يملأ السعة المتبقية. ولأن القيمة قابلة للتجزئة تمامًا، فإن هذا الاختيار المحلي "الأفضل نسبةً أولًا" يُثبت أنه أمثل على المستوى الكلي — تُظهر حجة التبادل أن أي حل آخر يمكن تحسينه ليصبح هذا الحل.`,
+    howItWorks: [
+      "احسب نسبة القيمة إلى الوزن لكل عنصر.",
+      "رتّب العناصر حسب النسبة تنازليًا.",
+      "اجتز القائمة المرتّبة، وخذ كل عنصر كامل طالما يسع ضمن السعة المتبقية.",
+      "عندما لا يسع عنصر بالكامل، خذ الجزء الذي يملأ السعة المتبقية تمامًا.",
+      "توقف عند امتلاء الحقيبة؛ القيمة المتراكمة تكون مثلى.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(1)",
+      notes: "يهيمن الترتيب حسب النسبة بتكلفة O(n log n)؛ أما الملء الجشع فتكلفته O(n). يمكن لنسخة قائمة على الاختيار (median-of-medians) أن تصل إلى O(n). المساحة O(1) بخلاف قائمة العناصر.",
+    },
+    applications: [
+      "توزيع الموارد القابلة للتجزئة (النطاق الترددي، الميزانية، المواد الخام)",
+      "مسائل قطع المخزون والمزج بكميات متصلة",
+      "توزيع المحفظة الاستثمارية بما يتناسب مع العائد/المخاطرة",
+      "خوارزميات فرعية تقريبية لمتغيرات أصعب من حقيبة الظهر",
+    ],
+    advantages: [
+      "خوارزمية جشعة بسيطة مع إثبات واضح للمثالية",
+      "سريعة: O(n log n)، محكومة بالترتيب",
+      "مساحة إضافية ثابتة",
+      "تتعامل بشكل طبيعي مع الكميات المتصلة/القابلة للتجزئة",
+    ],
+    disadvantages: [
+      "أمثل فقط عندما تكون العناصر قابلة للتجزئة (تفشل في حالة 0/1)",
+      "تتطلب ترتيبًا كاملًا مسبقًا (أو اختيارًا ذكيًا)",
+      "التعادل في النسب قد يتطلب ترتيبًا دقيقًا",
+      "لا تنطبق على القيود غير القابلة للتجزئة أو من نوع الكل أو لا شيء",
+    ],
+    commonMistakes: [
+      "تطبيق استراتيجية النسبة الجشعة على حقيبة الظهر 0/1، حيث لا تكون مثلى.",
+      "الترتيب حسب القيمة أو الوزن فقط بدلًا من نسبة القيمة إلى الوزن.",
+      "نسيان أخذ جزء كسري من العنصر الأخير الذي يسع جزئيًا.",
+      "استخدام القسمة الصحيحة للجزء الكسري وفقدان الدقة.",
+    ],
+    interviewQuestions: [
+      "لماذا تنجح استراتيجية النسبة الجشعة في الحقيبة الكسرية ولا تنجح في حقيبة 0/1؟",
+      "أثبت أن الاختيار الجشع أمثل باستخدام حجة التبادل.",
+      "كيف يمكن حل حقيبة الظهر الكسرية بتعقيد O(n) بدلًا من O(n log n)؟",
+      "كيف يؤثر التعادل في نسبة القيمة إلى الوزن على الحل؟",
+      "كيف تكيّف الخوارزمية عندما يكون للعناصر حد أدنى لكمية الأخذ؟",
+    ],
+    summary:
+      "تعظّم حقيبة الظهر الكسرية القيمة ضمن حدّ وزن معيّن بأخذ العناصر بأسلوب جشع حسب نسبة القيمة إلى الوزن تنازليًا وتقسيم العنصر الجزئي الأخير. وهي مثلى بتعقيد O(n log n) تحديدًا لأن العناصر قابلة للتجزئة، على عكس نسخة 0/1 التي تحتاج إلى البرمجة الديناميكية.",
+    quiz: [
+      { question: "تُحل حقيبة الظهر الكسرية بشكل أمثل باستخدام…", options: ["البرمجة الديناميكية", "استراتيجية جشعة قائمة على نسبة القيمة إلى الوزن", "التراجع", "القوة الغاشمة فقط"], answer: 1, explanation: "قابلية التجزئة تجعل اختيار النسبة الجشع أمثل على المستوى الكلي." },
+      { question: "تُرتَّب العناصر حسب…", options: ["الوزن تصاعديًا", "القيمة تنازليًا", "نسبة القيمة إلى الوزن تنازليًا", "ترتيب عشوائي"], answer: 2, explanation: "تُؤخذ أعلى قيمة لكل وحدة وزن أولًا." },
+      { question: "يهيمن على التعقيد الزمني…", options: ["الملء الجشع", "الترتيب: O(n log n)", "O(n·W)", "O(2^n)"], answer: 1, explanation: "الترتيب حسب النسبة هو الخطوة الأعلى تكلفة." },
+      { question: "تفشل الاستراتيجية الجشعة في حالة…", options: ["حقيبة الظهر الكسرية", "حقيبة الظهر 0/1 (غير القابلة للتجزئة)", "الإدخال المرتّب", "المدخلات الصغيرة"], answer: 1, explanation: "بدون التجزئة، قد يزاحم العنصر ذو أعلى نسبة تركيبةً أفضل." },
+      { question: "عندما لا يسع العنصر التالي بالكامل، فإنك…", options: ["تتخطاه كليًا", "تأخذ الجزء الذي يملأ السعة المتبقية", "تزيل عنصرًا سابقًا", "تضاعف السعة"], answer: 1, explanation: "تُملأ السعة المتبقية بجزء كسري من ذلك العنصر." },
     ],
   },
   inputFields: [

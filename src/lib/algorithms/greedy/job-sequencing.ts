@@ -26,7 +26,7 @@ function generate(input: Input): Step<TableFrame>[] {
     };
   };
 
-  const frame = (activeRow: number | null, probing: number | null, description: string, codeLine: number): void => {
+  const frame = (activeRow: number | null, probing: number | null, description: string, codeLine: number, descriptionAr?: string): void => {
     const cells = order.map((j, i) => {
       const rs: CellState | undefined = activeRow === i ? "active" : assignedSlot[i] === "—" ? "discarded" : assignedSlot[i] !== null ? "sorted" : undefined;
       return [
@@ -44,37 +44,74 @@ function generate(input: Input): Step<TableFrame>[] {
         note: `greedy: highest-profit jobs first; place each in the latest free slot ≤ its deadline`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { scheduled, profit: totalProfit },
     });
   };
 
-  frame(null, null, `Job sequencing with deadlines. Sort jobs by profit (highest first); each job takes one time unit.`, 1);
+  frame(
+    null,
+    null,
+    `Job sequencing with deadlines. Sort jobs by profit (highest first); each job takes one time unit.`,
+    1,
+    `جدولة المهام بمواعيد نهائية. رتّب المهام حسب الربح (الأعلى أولًا)؛ كل مهمة تستغرق وحدة زمنية واحدة.`,
+  );
 
   for (let i = 0; i < order.length; i++) {
     const j = order[i];
-    frame(i, null, `Consider job ${j.id}: profit ${j.profit}, deadline ${j.deadline}. Look for a free slot at or before t${j.deadline}.`, 3);
+    frame(
+      i,
+      null,
+      `Consider job ${j.id}: profit ${j.profit}, deadline ${j.deadline}. Look for a free slot at or before t${j.deadline}.`,
+      3,
+      `تأمّل المهمة ${j.id}: الربح ${j.profit}، الموعد النهائي ${j.deadline}. ابحث عن فتحة شاغرة عند t${j.deadline} أو قبلها.`,
+    );
     let placed = false;
     for (let t = Math.min(maxD, j.deadline) - 1; t >= 0; t--) {
-      frame(i, t, `Probe slot t${t + 1}: ${slots[t] ? `taken by ${slots[t]}` : "free"}.`, 4);
+      frame(
+        i,
+        t,
+        `Probe slot t${t + 1}: ${slots[t] ? `taken by ${slots[t]}` : "free"}.`,
+        4,
+        `افحص الفتحة t${t + 1}: ${slots[t] ? `مشغولة بواسطة ${slots[t]}` : "شاغرة"}.`,
+      );
       if (slots[t] === null) {
         slots[t] = j.id;
         assignedSlot[i] = t;
         totalProfit += j.profit;
         scheduled++;
         placed = true;
-        frame(i, t, `Place job ${j.id} in slot t${t + 1}. Profit +${j.profit} → ${totalProfit}.`, 5);
+        frame(
+          i,
+          t,
+          `Place job ${j.id} in slot t${t + 1}. Profit +${j.profit} → ${totalProfit}.`,
+          5,
+          `ضع المهمة ${j.id} في الفتحة t${t + 1}. الربح +${j.profit} → ${totalProfit}.`,
+        );
         break;
       }
     }
     if (!placed) {
       assignedSlot[i] = "—";
-      frame(i, null, `No free slot ≤ deadline ${j.deadline} for job ${j.id} — it is rejected.`, 6);
+      frame(
+        i,
+        null,
+        `No free slot ≤ deadline ${j.deadline} for job ${j.id} — it is rejected.`,
+        6,
+        `لا توجد فتحة شاغرة ≤ الموعد النهائي ${j.deadline} للمهمة ${j.id} — تُستبعد.`,
+      );
     }
   }
 
   const seq = slots.map((s, i) => (s ? `t${i + 1}:${s}` : `t${i + 1}:—`)).join(", ");
-  frame(null, null, `Done. Schedule: ${seq}. Maximum profit = ${totalProfit} from ${scheduled} job(s).`, 6);
+  frame(
+    null,
+    null,
+    `Done. Schedule: ${seq}. Maximum profit = ${totalProfit} from ${scheduled} job(s).`,
+    6,
+    `انتهى. الجدول: ${seq}. أقصى ربح = ${totalProfit} من ${scheduled} مهمة/مهام.`,
+  );
   return steps;
 }
 
@@ -91,10 +128,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "job-sequencing",
   title: "Job Sequencing with Deadlines",
+  titleAr: "جدولة المهام بمواعيد نهائية",
   category: "greedy",
   difficulty: "Intermediate",
   tags: ["greedy", "scheduling", "deadlines", "profit"],
+  tagsAr: ["جشِع", "جدولة", "مواعيد نهائية", "ربح"],
   summary: "Schedules unit-time jobs to maximize profit by taking the most profitable jobs first and placing them in the latest free slot before their deadline.",
+  summaryAr: "يجدول مهامًا أحادية الوحدة الزمنية لتعظيم الربح بأخذ المهام الأعلى ربحًا أولًا ووضعها في آخر فتحة زمنية شاغرة قبل موعدها النهائي.",
   renderer: "table",
   pseudocode: [
     "procedure jobSequencing(jobs)",
@@ -278,6 +318,63 @@ The greedy insight is to prioritize money: consider jobs from most to least prof
       { question: "Each job occupies…", options: ["Variable time", "Exactly one time unit", "Its deadline in units", "Zero time"], answer: 1, explanation: "The classic version assumes unit-time jobs." },
       { question: "The naive time complexity is about…", options: ["O(n)", "O(n log n) sort + O(n²) placement", "O(2^n)", "O(n³)"], answer: 1, explanation: "Sorting plus scanning slots per job gives O(n²) overall." },
       { question: "Union-Find is used to…", options: ["Sort jobs", "Quickly find the next free slot", "Compute profit", "Detect cycles"], answer: 1, explanation: "DSU points each slot to the next available earlier slot, speeding placement." },
+    ],
+  },
+  contentAr: {
+    overview: `في مسألة جدولة المهام بمواعيد نهائية، تستغرق كل مهمة وحدة زمنية واحدة بالضبط، وتجني ربحًا، ويجب أن تنتهي في موعد نهائي معيّن. يمكن تشغيل مهمة واحدة فقط في كل مرة، ولا تجني المهمة ربحها إلا إذا جُدولت في فتحة زمنية عند موعدها النهائي أو قبله. الهدف هو اختيار المهام التي ستُشغَّل ومتى، لتعظيم الربح الإجمالي.
+
+الفكرة الجشعة هي إعطاء الأولوية للمال: تأمّل المهام من الأعلى ربحًا إلى الأدنى، وضع كل واحدة منها في آخر فتحة زمنية لا تزال شاغرة وتكون عند موعدها النهائي أو قبله. جدولة المهمة في أقصى وقت ممكن (بدلًا من أقرب وقت ممكن) تُبقي الفتحات المبكرة متاحة لمهام أخرى ذات مواعيد نهائية أضيق — وهذا ما يجعل الاختيار الجشع أمثل. إذا لم توجد فتحة شاغرة حتى موعد المهمة النهائي، تُستبعد المهمة. والنتيجة جدول يعظّم الربح ضمن قيود المواعيد النهائية.`,
+    howItWorks: [
+      "رتّب جميع المهام حسب الربح تنازليًا.",
+      "أنشئ فتحات زمنية فارغة من 1 حتى أقصى موعد نهائي.",
+      "لكل مهمة (الأعلى ربحًا أولًا)، امسح من فتحة موعدها النهائي إلى الوراء نحو الفتحة 1.",
+      "ضع المهمة في أول فتحة شاغرة تجدها (وهي آخر فتحة تفي بموعدها النهائي).",
+      "إذا كانت جميع الفتحات حتى الموعد النهائي ممتلئة، استبعد المهمة؛ اجمع أرباح المهام المجدولة.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n²)", worst: "O(n²)" },
+      space: "O(maxDeadline)",
+      notes: "الترتيب تكلفته O(n log n)؛ أما البحث الساذج عن فتحة فتكلفته O(n·maxDeadline) ≈ O(n²). استخدام مجموعة منفصلة (اتحاد-بحث) لإيجاد الفتحة الشاغرة التالية يقلّص التوضيع إلى ما يقارب O(n·α(n)).",
+    },
+    applications: [
+      "الجدولة على آلة واحدة لتعظيم الربح",
+      "جدولة المعالج/المهام بمواعيد نهائية صارمة",
+      "تخصيص فتحات الإعلانات ومواعيد الحجز",
+      "بحوث العمليات وورش التصنيع",
+    ],
+    advantages: [
+      "قاعدة جشعة بسيطة مع إثبات للمثالية",
+      "يعظّم الربح، وليس عدد المهام فقط",
+      "التوضيع في آخر فتحة يترك مجالًا للمهام ذات المواعيد الضيقة",
+      "قابل للتسريع إلى شبه خطي باستخدام اتحاد-بحث",
+    ],
+    disadvantages: [
+      "يفترض أن المهام أحادية الوحدة الزمنية (مدد متساوية)",
+      "البحث الساذج عن الفتحة تكلفته O(n²)",
+      "آلة واحدة فقط / مهمة واحدة في كل مرة",
+      "لا يتعامل مع مدد المهام المتفاوتة دون تعديل",
+    ],
+    commonMistakes: [
+      "وضع المهام في أقرب فتحة شاغرة بدلًا من الأبعد، مما يعيق المهام ذات المواعيد الضيقة.",
+      "الترتيب حسب الموعد النهائي بدلًا من الربح.",
+      "تجاهل الحدّ عند min(maxDeadline, job.deadline).",
+      "افتراض أن جميع المهام يمكن جدولتها بغضّ النظر عن تعارض المواعيد النهائية.",
+    ],
+    interviewQuestions: [
+      "لماذا تُجدول كل مهمة في آخر فتحة ممكنة بدلًا من أقربها؟",
+      "كيف يسرّع اتحاد-بحث عملية إيجاد الفتحة الشاغرة التالية؟",
+      "كيف تكيّف الخوارزمية للمهام ذات المدد المختلفة؟",
+      "أثبت أن الاختيار الجشع (الأعلى ربحًا أولًا) أمثل.",
+      "كيف تُبلغ أيضًا عن المهام التي استُبعدت؟",
+    ],
+    summary:
+      "تجدول جدولة المهام بمواعيد نهائية أعلى المهام ربحًا أولًا (أحادية الوحدة الزمنية)، كلًا منها في آخر فتحة شاغرة عند موعدها النهائي أو قبله، لتعظيم الربح الإجمالي. تعمل بتعقيد O(n²) بالأسلوب الساذج (ترتيب O(n log n) + بحث عن فتحة) وشبه خطي باستخدام اتحاد-بحث.",
+    quiz: [
+      { question: "يُنظر إلى المهام بترتيب…", options: ["أقرب موعد نهائي", "أعلى ربح", "أقصر مدة", "وقت الوصول"], answer: 1, explanation: "تعالج القاعدة الجشعة المهام الأعلى ربحًا أولًا." },
+      { question: "توضع كل مهمة مُختارة في…", options: ["أقرب فتحة شاغرة", "آخر فتحة شاغرة ≤ موعدها النهائي", "الفتحة 1 دائمًا", "فتحة عشوائية"], answer: 1, explanation: "التوضيع في آخر فتحة يُبقي الفتحات المبكرة متاحة للمواعيد الأضيق." },
+      { question: "تشغل كل مهمة…", options: ["وقتًا متغيرًا", "وحدة زمنية واحدة بالضبط", "موعدها النهائي بالوحدات", "زمنًا صفريًا"], answer: 1, explanation: "تفترض النسخة الكلاسيكية أن المهام أحادية الوحدة الزمنية." },
+      { question: "التعقيد الزمني الساذج يبلغ تقريبًا…", options: ["O(n)", "ترتيب O(n log n) + توضيع O(n²)", "O(2^n)", "O(n³)"], answer: 1, explanation: "الترتيب مع مسح الفتحات لكل مهمة يعطي O(n²) إجمالًا." },
+      { question: "يُستخدم اتحاد-بحث من أجل…", options: ["ترتيب المهام", "إيجاد الفتحة الشاغرة التالية بسرعة", "حساب الربح", "اكتشاف الدورات"], answer: 1, explanation: "يشير كل فتحة إلى أقرب فتحة سابقة متاحة، مما يسرّع التوضيع." },
     ],
   },
   inputFields: [

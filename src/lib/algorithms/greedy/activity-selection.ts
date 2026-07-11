@@ -18,7 +18,7 @@ function generate(input: Input): Step<TableFrame>[] {
   const rowLabels = acts.map((a) => `A${a.id}`);
   const colLabels = ["start", "finish", "status"];
 
-  const frame = (activeRow: number | null, compareVal: number | null, description: string, codeLine: number): void => {
+  const frame = (activeRow: number | null, compareVal: number | null, description: string, codeLine: number, descriptionAr?: string): void => {
     const cells = acts.map((a, i) => {
       const rowState: CellState | undefined =
         activeRow === i ? "active" : status[i] === "selected" ? "sorted" : status[i] === "rejected" ? "discarded" : undefined;
@@ -41,29 +41,54 @@ function generate(input: Input): Step<TableFrame>[] {
         note: compareVal !== null ? `need start ≥ ${compareVal}` : undefined,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, selected: selected.length },
     });
   };
 
-  frame(null, null, `Greedy activity selection: sort by finish time, then always take the next compatible activity.`, 0);
+  frame(
+    null,
+    null,
+    `Greedy activity selection: sort by finish time, then always take the next compatible activity.`,
+    0,
+    `اختيار الأنشطة الجشع: رتّب حسب وقت الانتهاء، ثم خذ دائمًا النشاط التالي المتوافق.`,
+  );
 
   for (let i = 0; i < acts.length; i++) {
     const a = acts[i];
     comparisons++;
-    frame(i, lastFinish === -Infinity ? null : lastFinish, `Consider A${a.id} [${a.start}, ${a.finish}].`, 2);
+    frame(i, lastFinish === -Infinity ? null : lastFinish, `Consider A${a.id} [${a.start}, ${a.finish}].`, 2, `تأمّل A${a.id} [${a.start}, ${a.finish}].`);
     if (a.start >= lastFinish) {
       status[i] = "selected";
       selected.push(a.id);
       lastFinish = a.finish;
-      frame(i, null, `A${a.id} starts at ${a.start} ≥ last finish — select it. Update last finish to ${a.finish}.`, 3);
+      frame(
+        i,
+        null,
+        `A${a.id} starts at ${a.start} ≥ last finish — select it. Update last finish to ${a.finish}.`,
+        3,
+        `A${a.id} يبدأ عند ${a.start} ≥ وقت الانتهاء الأخير — اخترْه. حدّث وقت الانتهاء الأخير إلى ${a.finish}.`,
+      );
     } else {
       status[i] = "rejected";
-      frame(i, lastFinish, `A${a.id} starts at ${a.start} < last finish ${lastFinish} — conflict, skip it.`, 4);
+      frame(
+        i,
+        lastFinish,
+        `A${a.id} starts at ${a.start} < last finish ${lastFinish} — conflict, skip it.`,
+        4,
+        `A${a.id} يبدأ عند ${a.start} < وقت الانتهاء الأخير ${lastFinish} — يوجد تعارض، تخطَّه.`,
+      );
     }
   }
 
-  frame(null, null, `Done. Maximum ${selected.length} non-overlapping activities: ${selected.map((id) => `A${id}`).join(", ")}.`, 5);
+  frame(
+    null,
+    null,
+    `Done. Maximum ${selected.length} non-overlapping activities: ${selected.map((id) => `A${id}`).join(", ")}.`,
+    5,
+    `انتهى. أقصى عدد من الأنشطة غير المتداخلة هو ${selected.length}: ${selected.map((id) => `A${id}`).join(", ")}.`,
+  );
   return steps;
 }
 
@@ -81,10 +106,13 @@ function randomActivities(level: number, rng: { int: (a: number, b: number) => n
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "activity-selection",
   title: "Activity Selection",
+  titleAr: "اختيار الأنشطة",
   category: "greedy",
   difficulty: "Beginner",
   tags: ["greedy", "interval scheduling", "sorting"],
+  tagsAr: ["جشِع", "جدولة الفترات", "ترتيب"],
   summary: "Selects the maximum number of non-overlapping activities by always taking the one that finishes earliest.",
+  summaryAr: "يختار أكبر عدد من الأنشطة غير المتداخلة بأخذ النشاط الذي ينتهي أولًا في كل مرة.",
   renderer: "table",
   pseudocode: [
     "procedure activitySelection(activities)",
@@ -249,6 +277,62 @@ The intuition: finishing early frees up the most remaining time for future activ
       { question: "The overall time complexity is dominated by…", options: ["The greedy sweep", "The sort, O(n log n)", "O(n²) comparisons", "O(2ⁿ) search"], answer: 1, explanation: "Sorting is O(n log n); the linear sweep is cheaper." },
       { question: "Greedy activity selection maximizes…", options: ["Total value", "The number of activities", "Total duration", "Idle time"], answer: 1, explanation: "It finds the largest count of mutually compatible activities." },
       { question: "For the weighted version (maximize total value), greedy…", options: ["Still works", "Is not optimal; use dynamic programming", "Is faster", "Needs no sorting"], answer: 1, explanation: "Weighted interval scheduling requires DP because greedy can pick low-value early-finishers." },
+    ],
+  },
+  contentAr: {
+    overview: `تطرح مسألة اختيار الأنشطة السؤال التالي: بالنظر إلى أنشطة لكل منها وقت بداية ووقت انتهاء، ما أكبر مجموعة يمكنك حضورها إذا كان بإمكانك القيام بنشاط واحد فقط في كل مرة (بلا تداخل)؟ الإجابة الجشعة بسيطة وأنيقة — اختر دائمًا النشاط الذي ينتهي أولًا من بين الأنشطة المتوافقة مع ما اخترته حتى الآن.
+
+الفكرة الحدسية: الانتهاء المبكر يترك أكبر قدر من الوقت المتبقي للأنشطة القادمة. إن الترتيب حسب وقت الانتهاء ثم المسح عبر القائمة، مع أخذ أي نشاط يبدأ عند وقت انتهاء آخر نشاط مُختار أو بعده، يُثبت أنه يُنتج اختيارًا أمثل (بأقصى حجم). وهذا مثال كلاسيكي على أن قاعدة جشعة مُختارة بعناية يمكن أن تكون مثلى على المستوى الكلي.`,
+    howItWorks: [
+      "رتّب جميع الأنشطة حسب وقت انتهائها (تصاعديًا).",
+      "تتبّع وقت انتهاء آخر نشاط تم اختياره (يبدأ بـ −∞).",
+      "امسح الأنشطة المرتّبة بالترتيب.",
+      "اختر النشاط إذا كان وقت بدايته ≥ وقت انتهاء آخر نشاط مُختار؛ ثم حدّث وقت الانتهاء الأخير.",
+      "ارفض أي نشاط يبدأ قبل وقت الانتهاء الأخير (لأنه يتداخل).",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(1)",
+      notes: "يهيمن على التعقيد الترتيبُ بتكلفة O(n log n)؛ أما المسح الجشع نفسه فتكلفته O(n). إذا كانت الأنشطة مُرتّبة مسبقًا حسب وقت الانتهاء، يصبح الاختيار بتكلفة O(n). المساحة O(1) بخلاف بيانات الإدخال.",
+    },
+    applications: [
+      "جدولة اجتماعات أو مهام أو حجوزات غير متعارضة على مورد واحد",
+      "تعظيم جدولة الفترات في بحوث العمليات",
+      "اختيار أكبر عدد من المهام التي يمكن لمعالج واحد أو قاعة واحدة خدمتها",
+      "جدولة البث/المحاضرات وأنظمة الحجز",
+    ],
+    advantages: [
+      "أمثل رغم كونه جشعًا — يُثبت أنه يُعطي أقصى اختيار ممكن",
+      "بسيط وسريع بعد الترتيب",
+      "مساحة إضافية O(1)",
+      "مثال ممتاز على خاصية الاختيار الجشع",
+    ],
+    disadvantages: [
+      "يعظّم العدد فقط — وليس القيمة المرجّحة (التي تحتاج إلى البرمجة الديناميكية)",
+      "يتطلب الترتيب أولًا",
+      "يتعامل مع مورد واحد فقط؛ الجدولة متعددة الموارد أصعب",
+    ],
+    commonMistakes: [
+      "الترتيب حسب وقت البداية أو المدة بدلًا من وقت الانتهاء (يُفقد الحل مثاليته).",
+      "استخدام > بدلًا من ≥ عند مقارنة وقت البداية بوقت الانتهاء الأخير (الأنشطة التي تتلامس أطرافها متوافقة).",
+      "محاولة استخدام حل جشع للنسخة المرجّحة من المسألة، حيث لا يكون أمثل.",
+      "نسيان تحديث مؤشر وقت الانتهاء الأخير بعد الاختيار.",
+    ],
+    interviewQuestions: [
+      "لماذا يُنتج الترتيب حسب وقت الانتهاء (وليس وقت البداية) الاختيار الأمثل؟",
+      "أثبت خاصية الاختيار الجشع لمسألة اختيار الأنشطة.",
+      "كيف تختلف النسخة المرجّحة، ولماذا يفشل الأسلوب الجشع فيها؟",
+      "كيف يمكنك أيضًا إرجاع الأنشطة المُختارة فعليًا؟",
+      "ماذا لو تلامست نهايتا نشاطين — هل يُعدّان متوافقين؟",
+    ],
+    summary:
+      "يعظّم اختيار الأنشطة عدد الأنشطة غير المتداخلة عبر الترتيب حسب وقت الانتهاء والأخذ الجشع لكل نشاط متوافق مع آخر نشاط مُختار. تعقيده O(n log n)، ويُثبت أنه أمثل، وهو مثال كلاسيكي على خوارزمية جشعة صحيحة.",
+    quiz: [
+      { question: "يجب ترتيب الأنشطة حسب…", options: ["وقت البداية", "وقت الانتهاء", "المدة", "القيمة"], answer: 1, explanation: "اختيار أقرب وقت انتهاء يترك أكبر مساحة زمنية للأنشطة اللاحقة." },
+      { question: "يكون النشاط متوافقًا مع الاختيار الحالي إذا كان وقت بدايته…", options: ["> وقت الانتهاء الأخير", "≥ وقت الانتهاء الأخير", "< وقت الانتهاء الأخير", "= 0"], answer: 1, explanation: "البداية عند وقت الانتهاء الأخير أو بعده تعني عدم وجود تداخل." },
+      { question: "يهيمن على التعقيد الزمني الإجمالي…", options: ["المسح الجشع", "الترتيب، O(n log n)", "مقارنات O(n²)", "بحث O(2ⁿ)"], answer: 1, explanation: "الترتيب تكلفته O(n log n)؛ أما المسح الخطي فأرخص." },
+      { question: "اختيار الأنشطة الجشع يعظّم…", options: ["القيمة الإجمالية", "عدد الأنشطة", "المدة الإجمالية", "وقت الفراغ"], answer: 1, explanation: "يجد أكبر عدد من الأنشطة المتوافقة فيما بينها." },
+      { question: "بالنسبة إلى النسخة المرجّحة (تعظيم القيمة الإجمالية)، الأسلوب الجشع…", options: ["لا يزال يعمل", "غير أمثل؛ استخدم البرمجة الديناميكية", "أسرع", "لا يحتاج إلى ترتيب"], answer: 1, explanation: "تتطلب جدولة الفترات المرجّحة البرمجة الديناميكية لأن الأسلوب الجشع قد يختار أنشطة منخفضة القيمة تنتهي مبكرًا." },
     ],
   },
   inputFields: [
