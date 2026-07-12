@@ -10,8 +10,8 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let flips = 0;
   let comparisons = 0;
 
-  const snap = (states: Record<number, CellState>, description: string, codeLine: number, range?: { from: number; to: number }) => {
-    steps.push({ frame: { values: [...a], states, range: range ?? null }, description, codeLine, counters: { flips, comparisons } });
+  const snap = (states: Record<number, CellState>, description: string, codeLine: number, range?: { from: number; to: number }, descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states, range: range ?? null }, description, descriptionAr, codeLine, counters: { flips, comparisons } });
   };
 
   const flip = (k: number) => {
@@ -26,7 +26,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     flips++;
   };
 
-  snap({}, `Pancake sort: repeatedly find the largest unsorted element and "flip" it to the front, then flip it into its final position — like flipping a stack of pancakes with a spatula.`, 0);
+  snap({}, `Pancake sort: repeatedly find the largest unsorted element and "flip" it to the front, then flip it into its final position — like flipping a stack of pancakes with a spatula.`, 0, undefined, `ترتيب الفطائر: أوجد مرارًا أكبر عنصر غير مرتب و"اقلبه" إلى المقدمة، ثم اقلبه إلى موضعه النهائي — كقلب كومة فطائر بملعقة.`);
 
   for (let size = n; size > 1; size--) {
     let maxIdx = 0;
@@ -39,10 +39,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
       `Among a[0..${size - 1}], the largest is a[${maxIdx}] = ${a[maxIdx]}.`,
       1,
       { from: 0, to: size - 1 },
+      `من بين a[0..${size - 1}]، الأكبر هو a[${maxIdx}] = ${a[maxIdx]}.`,
     );
 
     if (maxIdx === size - 1) {
-      snap({ [maxIdx]: "sorted" }, `a[${maxIdx}] = ${a[maxIdx]} is already at the end of this range — no flip needed.`, 2, { from: 0, to: size - 1 });
+      snap({ [maxIdx]: "sorted" }, `a[${maxIdx}] = ${a[maxIdx]} is already at the end of this range — no flip needed.`, 2, { from: 0, to: size - 1 }, `a[${maxIdx}] = ${a[maxIdx]} في نهاية هذا المجال بالفعل — لا حاجة للقلب.`);
       continue;
     }
 
@@ -54,6 +55,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
         `Flip 1: reverse a[0..${maxIdx}] so the max (${before[maxIdx]}) moves to the front: [${a.slice(0, size).join(", ")}].`,
         3,
         { from: 0, to: size - 1 },
+        `القلب 1: اعكس a[0..${maxIdx}] كي ينتقل الأكبر (${before[maxIdx]}) إلى المقدمة: [${a.slice(0, size).join(", ")}].`,
       );
     }
 
@@ -63,22 +65,26 @@ function generate(input: Input): Step<ArrayFrame>[] {
       `Flip 2: reverse a[0..${size - 1}] to send the max to its final position, index ${size - 1}.`,
       4,
       { from: 0, to: size - 1 },
+      `القلب 2: اعكس a[0..${size - 1}] لإرسال الأكبر إلى موضعه النهائي، الفهرس ${size - 1}.`,
     );
   }
 
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, `Sorted using ${flips} flips and ${comparisons} comparisons (at most 2(n−1) flips are ever needed).`, 5);
+  snap(sorted, `Sorted using ${flips} flips and ${comparisons} comparisons (at most 2(n−1) flips are ever needed).`, 5, undefined, `اكتمل الترتيب باستخدام ${flips} عملية قلب و${comparisons} مقارنة (على الأكثر 2(n−1) عملية قلب مطلوبة دومًا).`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "pancake-sort",
   title: "Pancake Sort",
+  titleAr: "ترتيب الفطائر",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["comparison sort", "flip-based", "O(n²)", "prefix reversal"],
+  tagsAr: ["ترتيب بالمقارنة", "قائم على القلب", "O(n²)", "عكس البادئة"],
   summary: "Sorts using only 'flip the first k elements' operations — find the max, flip it to the front, then flip it to its final position.",
+  summaryAr: "يرتب باستخدام عمليات 'اقلب أول k عنصر' فقط — أوجد الأكبر، اقلبه إلى المقدمة، ثم اقلبه إلى موضعه النهائي.",
   renderer: "array",
   pseudocode: [
     "procedure pancakeSort(a)",
@@ -312,6 +318,61 @@ The algorithm itself is a straightforward O(n²) comparison sort — its real in
       { question: "Pancake sort's overall time complexity is…", options: ["O(n log n)", "O(n²)", "O(n)", "O(2ⁿ)"], answer: 1, explanation: "Finding the max each pass and flipping are both O(n), repeated over n−1 passes." },
       { question: "The greedy strategy shown uses at most how many flips?", options: ["n", "2(n − 1)", "n²", "log n"], answer: 1, explanation: "Two flips per pass, over n−1 passes, gives the 2(n−1) bound — not necessarily the true minimum." },
       { question: "The 'pancake number' problem asks…", options: ["How to bake pancakes fastest", "The minimum number of flips needed to sort any arrangement of n pancakes in the worst case", "How many pancakes fit on a plate", "The average case flip count"], answer: 1, explanation: "It's an open combinatorial question for general n, famously worked on by Bill Gates and Christos Papadimitriou." },
+    ],
+  },
+  contentAr: {
+    overview: `ترتيب الفطائر نموذج ترتيب مقيّد بشكل ممتع: العملية الوحيدة المسموحة هي "القلب" — عكس أول k عنصر من المصفوفة، كملعقة تقلب أعلى k فطيرة من كومة. رغم هذا القيد، من السهل ترتيب أي شيء باستراتيجية بسيطة من قلبتين لكل مرور: أوجد أكبر فطيرة غير مرتبة، اقلبها إلى أعلى الكومة، ثم اقلب الجزء غير المرتب بأكمله كي تستقر تلك الفطيرة في أسفل المنطقة غير المرتبة (موضعها النهائي).
+
+الخوارزمية نفسها ترتيب بسيط بالمقارنة بزمن O(n²) — الاهتمام الحقيقي بها هو نموذج عملية "القلب"، وهي لغز كلاسيكي في التوافقيات/الخوارزميات (مسألة "ترتيب الفطائر" أو مسألة "عدد الفطائر") يسأل عن أقل عدد من القلبات المطلوبة في أسوأ حالة. تستخدم هذه الاستراتيجية الجشعة البسيطة على الأكثر 2(n−1) قلبة؛ والحد الأدنى الحقيقي لأسوأ حالة مسألة مفتوحة عمومًا، معروف بدقة فقط لقيم n الصغيرة.`,
+    howItWorks: [
+      "اعتبر البادئة غير المرتبة a[0..size-1]، بدءًا بـ size = n.",
+      "أوجد فهرس القيمة القصوى داخل تلك البادئة.",
+      "إذا كانت في نهاية البادئة بالفعل (الفهرس size−1)، فهي في موضعها النهائي — انتقل إلى الحجم الأصغر التالي.",
+      "وإلا، اقلب البادئة حتى فهرس الأكبر (لجلب الأكبر إلى المقدمة)، ثم اقلب البادئة كاملة a[0..size-1] (لإرسال الأكبر إلى نهاية ذلك المجال).",
+      "قلّص size بواحد وكرر؛ بعد معالجة size من n نزولًا إلى 2، تصبح المصفوفة مرتبة.",
+    ],
+    complexity: {
+      time: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" },
+      space: "O(1)",
+      notes: "كل مرور من مرورات n−1 يُجري عمل O(n) لإيجاد الأكبر وعمل O(n) للقلب، معطيًا إجمالي O(n²). على الأكثر 2(n−1) عملية قلب تُنفَّذ بغض النظر عن المدخلات.",
+    },
+    applications: [
+      "لغز خوارزميات كلاسيكي: تقليل القلبات للترتيب (مسألة 'عدد الفطائر'، التي درسها بيل غيتس كطالب جامعي)",
+      "نمذجة الأنظمة التي لا تتوفر فيها إلا عمليات 'اعكس بادئة' فعليًا (مثل آليات ترتيب روبوتية معينة)",
+      "مثال تدريسي لتصميم خوارزميات بعمليات مقيّدة",
+      "أبحاث إعادة ترتيب الجينوم تستخدم قريبًا لها (الترتيب بالعكس)",
+    ],
+    advantages: [
+      "نموذج عملية بسيط للغاية — يحتاج فقط عكس البادئة",
+      "في المكان، مساحة إضافية O(1)",
+      "يضمن على الأكثر 2(n−1) قلبة، حد نظيف وسهل الإثبات",
+    ],
+    disadvantages: [
+      "O(n²) مقارنة — لا أفضل من ترتيب الاختيار البسيط في نموذج المقارنة القياسي",
+      "ليس أقل عدد ممكن من القلبات (إيجاد ذلك الحد الأدنى مسألة توافقية صعبة/مفتوحة)",
+      "نادرًا ما يكون مفيدًا خارج مجاله الخاص القائم على القلب — ليس ترتيبًا عمليًا عام الغرض",
+    ],
+    commonMistakes: [
+      "نسيان تخطي القلبة الأولى عندما يكون الأكبر عند الفهرس 0 بالفعل (قلب عنصر واحد لا يفعل شيئًا لكنه يهدر خطوة).",
+      "خطأ انزياح بمقدار واحد في حدود القلب — flip(k) يجب أن يعكس الفهارس 0..k شاملة.",
+      "الخلط بينه وبين الترتيب الفقاعي — الحركة الوحيدة المسموحة في ترتيب الفطائر هي عكس البادئة، وليست تبديل المتجاورات.",
+      "افتراض أن 2(n-1) هو الحد الأدنى الحقيقي لعدد القلبات — إنه فقط حد هذه الاستراتيجية الجشعة، وليس الأمثل المثبت.",
+    ],
+    interviewQuestions: [
+      "لماذا تستخدم هذه الاستراتيجية الجشعة على الأكثر 2(n−1) قلبة؟",
+      "ما مسألة 'عدد الفطائر'، ولماذا يصعب إيجاد الحد الأدنى الحقيقي؟",
+      "لماذا ترتيب الفطائر O(n²) رغم عملية القلب البسيطة؟",
+      "كيف تكيّف ترتيب الفطائر لصيغة 'الفطيرة المحروقة' حيث تعكس كل قلبة الاتجاه أيضًا؟",
+      "اربط عملية القلب في ترتيب الفطائر بإعادة ترتيب الجينوم بالعكس.",
+    ],
+    summary:
+      "يقلب ترتيب الفطائر مرارًا أكبر عنصر غير مرتب إلى المقدمة، ثم يقلبه إلى موضعه النهائي — مستخدمًا فقط عمليات عكس البادئة، بزمن O(n²) وبأقصى 2(n−1) قلبة. هو أقل من كونه خوارزمية ترتيب عملية وأكثر كونه عرضًا للغز 'عدد الفطائر' الكلاسيكي لتقليل القلبات في نموذج عملية مقيّد.",
+    quiz: [
+      { question: "العملية الوحيدة المسموحة في ترتيب الفطائر هي…", options: ["تبديل أي عنصرين", "عكس أول k عنصر ('قلبة')", "إدراج عنصر في أي مكان", "تدوير المصفوفة كاملة"], answer: 1, explanation: "كل خطوة هي حرفيًا 'اقلب أعلى k فطيرة' — عكس بادئة، لا شيء آخر." },
+      { question: "كم قلبة يُجري كل مرور (عند الحاجة)؟", options: ["واحدة بالضبط", "حتى 2 — واحدة لجلب الأكبر للمقدمة، وأخرى لإرساله لموضعه النهائي", "n قلبة", "0"], answer: 1, explanation: "القلبة الأولى تُظهر الأكبر عند الفهرس 0؛ والثانية تدفعه إلى نهاية المجال غير المرتب الحالي." },
+      { question: "التعقيد الزمني الإجمالي لترتيب الفطائر هو…", options: ["O(n log n)", "O(n²)", "O(n)", "O(2ⁿ)"], answer: 1, explanation: "إيجاد الأكبر في كل مرور والقلب كلاهما O(n)، مكررًا عبر n−1 مرورًا." },
+      { question: "الاستراتيجية الجشعة المعروضة تستخدم على الأكثر كم قلبة؟", options: ["n", "2(n − 1)", "n²", "log n"], answer: 1, explanation: "قلبتان لكل مرور، عبر n−1 مرورًا، يعطي حد 2(n−1) — ليس بالضرورة الحد الأدنى الحقيقي." },
+      { question: "مسألة 'عدد الفطائر' تسأل…", options: ["كيف تخبز الفطائر بأسرع طريقة", "أقل عدد من القلبات اللازمة لترتيب أي ترتيب من n فطيرة في أسوأ حالة", "كم فطيرة تسع في طبق", "متوسط عدد القلبات"], answer: 1, explanation: "إنها سؤال توافقي مفتوح لقيم n العامة، اشتهر العمل عليه من قبل بيل غيتس وكريستوس باباديميتريو." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 3, 6, 1, 10, 2, 5", help: "2–35 numbers." }],

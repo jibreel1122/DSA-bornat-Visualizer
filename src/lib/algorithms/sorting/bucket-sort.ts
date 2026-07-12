@@ -20,8 +20,8 @@ function generate(input: Input): Step<ArrayFrame>[] {
       return { label: `bucket ${i}`, values: b.length ? [...b] : ["—"], states };
     });
 
-  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number) => {
-    steps.push({ frame: { values: [...a], states, aux }, description, codeLine, counters: { comparisons, writes } });
+  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number, descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states, aux }, description, descriptionAr, codeLine, counters: { comparisons, writes } });
   };
 
   snap(
@@ -29,6 +29,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     [],
     `Bucket sort: scatter n=${n} values into ${bucketCount} buckets by value range, sort each bucket, then concatenate.`,
     0,
+    `ترتيب الدلاء: وزّع n=${n} قيمة إلى ${bucketCount} دلو حسب مدى القيمة، رتّب كل دلو، ثم اسلسلها.`,
   );
 
   const buckets: number[][] = Array.from({ length: bucketCount }, () => []);
@@ -38,13 +39,13 @@ function generate(input: Input): Step<ArrayFrame>[] {
     const b = bucketOf(a[i]);
     buckets[b].push(a[i]);
     writes++;
-    snap({ [i]: "active" }, bucketRows(buckets, b), `a[${i}] = ${a[i]} → scaled into bucket ${b} of ${bucketCount}.`, 1);
+    snap({ [i]: "active" }, bucketRows(buckets, b), `a[${i}] = ${a[i]} → scaled into bucket ${b} of ${bucketCount}.`, 1, `a[${i}] = ${a[i]} ← تحجيمه إلى الدلو ${b} من ${bucketCount}.`);
   }
 
   // insertion-sort each bucket (visualized as a whole per bucket, since buckets are small)
   for (let b = 0; b < bucketCount; b++) {
     if (buckets[b].length <= 1) continue;
-    snap({}, bucketRows(buckets, b), `Sort bucket ${b} = [${buckets[b].join(", ")}] internally (insertion sort — buckets are small).`, 2);
+    snap({}, bucketRows(buckets, b), `Sort bucket ${b} = [${buckets[b].join(", ")}] internally (insertion sort — buckets are small).`, 2, `رتّب الدلو ${b} = [${buckets[b].join(", ")}] داخليًا (ترتيب إدراج — الدلاء صغيرة).`);
     for (let i = 1; i < buckets[b].length; i++) {
       const key = buckets[b][i];
       let j = i - 1;
@@ -55,28 +56,31 @@ function generate(input: Input): Step<ArrayFrame>[] {
       }
       buckets[b][j + 1] = key;
     }
-    snap({}, bucketRows(buckets, b), `Bucket ${b} sorted: [${buckets[b].join(", ")}].`, 2);
+    snap({}, bucketRows(buckets, b), `Bucket ${b} sorted: [${buckets[b].join(", ")}].`, 2, `اكتمل ترتيب الدلو ${b}: [${buckets[b].join(", ")}].`);
   }
 
   // gather
   const gathered: number[] = [];
   for (const b of buckets) for (const v of b) gathered.push(v);
   a = gathered;
-  snap({}, bucketRows(buckets), `Concatenate buckets 0…${bucketCount - 1} in order — the array is now fully sorted.`, 3);
+  snap({}, bucketRows(buckets), `Concatenate buckets 0…${bucketCount - 1} in order — the array is now fully sorted.`, 3, `اسلسل الدلاء من 0…${bucketCount - 1} بالترتيب — المصفوفة الآن مرتبة بالكامل.`);
 
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, [], `Sorted in average O(n + k) with ${bucketCount} buckets, ${comparisons} internal comparisons.`, 4);
+  snap(sorted, [], `Sorted in average O(n + k) with ${bucketCount} buckets, ${comparisons} internal comparisons.`, 4, `اكتمل الترتيب بمتوسط زمن O(n + k) بـ ${bucketCount} دلو، و${comparisons} مقارنة داخلية.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "bucket-sort",
   title: "Bucket Sort",
+  titleAr: "ترتيب الدلاء",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["non-comparison", "distribution sort", "stable", "average O(n+k)"],
+  tagsAr: ["ليس بالمقارنة", "ترتيب توزيعي", "مستقر", "متوسط O(n+k)"],
   summary: "Scatters values into range-based buckets, sorts each bucket internally, then concatenates — fast when input is uniformly distributed.",
+  summaryAr: "يوزّع القيم إلى دلاء حسب المدى، يرتب كل دلو داخليًا، ثم يسلسلها — سريع عندما تكون المدخلات موزعة بانتظام.",
   renderer: "array",
   pseudocode: [
     "procedure bucketSort(a)",
@@ -309,6 +313,61 @@ Its average-case O(n + k) speed depends critically on the uniform-distribution a
       { question: "Bucket sort degrades to O(n²) when…", options: ["k = n exactly", "Values are uniformly distributed", "Most values fall into the same bucket (skewed distribution)", "The array is already sorted"], answer: 2, explanation: "One overloaded bucket's internal sort then dominates, same as sorting the whole array with that method." },
       { question: "Inside each bucket, which sort is typically used?", options: ["Merge sort", "Insertion sort (buckets are expected to be small)", "Quicksort", "Radix sort"], answer: 1, explanation: "Small buckets favor insertion sort's low constant factor over the overhead of a recursive O(n log n) sort." },
       { question: "Which property of the input does bucket sort rely on for its speed?", options: ["It must be already partially sorted", "Values roughly uniformly distributed across a known range", "All values are integers", "The array must be large"], answer: 1, explanation: "Uniform distribution ensures the buckets stay balanced, which is exactly what gives the O(n + k) average case." },
+    ],
+  },
+  contentAr: {
+    overview: `يستغل ترتيب الدلاء معرفة توزيع المدخلات: إذا كانت القيم موزعة بانتظام تقريبًا على مدى معروف، فإن توزيعها إلى k مدى فرعي متساوي الحجم ("دلاء") يضع عددًا قليلًا فقط من العناصر في كل دلو. ترتيب كل دلو صغير (بترتيب الإدراج، لأنها صغيرة) وسلسلة الدلاء بالترتيب يعطي مصفوفة مرتبة بالكامل.
+
+سرعته في المتوسط O(n + k) تعتمد بشكل حاسم على افتراض التوزيع المنتظم: مع n قيمة موزعة بانتظام على n دلو، يحصل كل دلو على O(1) عنصر في المتوسط، فيكون إجمالي عمل الترتيب عبر كل الدلاء O(n). إذا كان التوزيع منحرفًا — تتجمع قيم كثيرة في دلو واحد — يهيمن الترتيب الداخلي لذلك الدلو ويتدهور الأداء نحو O(n²)، تمامًا كما لو رتّبت المصفوفة كاملة بترتيب الإدراج في دلو واحد.`,
+    howItWorks: [
+      "حدد مدى القيم [الأدنى، الأقصى] واختر k دلوًا (غالبًا k ≈ n).",
+      "وزّع كل قيمة إلى الدلو ⌊(v − الأدنى) / المدى × k⌋، مع تقييده بآخر دلو.",
+      "رتّب محتويات كل دلو بشكل مستقل (ترتيب الإدراج نمطي لأن الدلاء متوقعة أن تكون صغيرة).",
+      "سلسل الدلاء بترتيب الفهرس 0، 1، …، k−1 — النتيجة مرتبة لأن الدلو i يحتوي فقط قيمًا أصغر من كل ما في الدلو i+1.",
+      "لا حاجة أبدًا لمقارنات بين الدلاء، وهذا مصدر السرعة عندما تكون الدلاء متوازنة.",
+    ],
+    complexity: {
+      time: { best: "O(n + k)", average: "O(n + k)", worst: "O(n²)" },
+      space: "O(n + k)",
+      notes: "الحالة المتوسطة تفترض مدخلات موزعة بانتظام عبر k ≈ n دلو. أسوأ حالة: كل القيم تقع في دلو واحد، فيتدهور الأداء إلى أسوأ حالة الترتيب الداخلي (O(n²) لترتيب الإدراج).",
+    },
+    applications: [
+      "ترتيب قيم ذات فاصلة عائمة موزعة بانتظام في [0, 1) (الإعداد الكلاسيكي لترتيب الدلاء)",
+      "الترتيب/التصنيف القائم على الرسم البياني التكراري في خطوط معالجة البيانات",
+      "لبنة بناء إلى جانب ترتيب الأساس للترتيب حسب المديات الرقمية",
+      "الترتيب الخارجي: تقسيم البيانات إلى دلاء مديات يناسب كل منها الذاكرة",
+    ],
+    advantages: [
+      "متوسط O(n + k) — يتفوق على الحد الأدنى Ω(n log n) لأي ترتيب بالمقارنة عندما تكون البيانات موزعة جيدًا",
+      "قابل للموازاة بطبيعته: يمكن ترتيب كل دلو بشكل مستقل ومتزامن",
+      "بسيط الفهم والتنفيذ",
+    ],
+    disadvantages: [
+      "يتطلب معرفة (أو افتراضًا عن) توزيع المدخلات لضبط أحجام الدلاء جيدًا",
+      "يتدهور إلى O(n²) على بيانات منحرفة/متجمعة — دلو واحد مثقل يهيمن",
+      "ذاكرة إضافية O(n + k) للدلاء نفسها",
+    ],
+    commonMistakes: [
+      "اختيار حدود الدلاء دون مراعاة الأدنى/الأقصى الفعليين للبيانات (افتراض ثابت [0,1) على مدخلات عشوائية).",
+      "نسيان تقييد فهرس دلو القيمة القصوى (v = الأقصى يُطابق تمامًا الفهرس k، خارج الحدود).",
+      "استخدام ترتيب O(n log n) داخل كل دلو بينما يُفترض أن تكون الدلاء صغيرة — ترتيب الإدراج عادة أسرع هناك.",
+      "افتراض انطباق المتوسط O(n + k) على أي مدخلات، بما فيها التوزيعات شديدة الانحراف.",
+    ],
+    interviewQuestions: [
+      "لماذا تتفوق حالة ترتيب الدلاء المتوسطة على الحد الأدنى Ω(n log n) لترتيبات المقارنة؟",
+      "أي توزيع مدخلات يجعل ترتيب الدلاء يتدهور إلى O(n²)، ولماذا؟",
+      "كيف تختار عدد الدلاء k، وكيف يؤثر ذلك الاختيار على الأداء؟",
+      "قارن ترتيب الدلاء بترتيب الأساس — متى تفضّل أحدهما على الآخر؟",
+      "كيف تُوازي ترتيب الدلاء عبر عدة خيوط/أجهزة؟",
+    ],
+    summary:
+      "يوزّع ترتيب الدلاء القيم إلى k دلو حسب المدى، يرتب كل دلو صغير داخليًا، ويسلسلها بالترتيب — متوسط O(n + k) عندما يكون توزيع المدخلات منتظمًا تقريبًا، لأن كل دلو ينتهي بعدد قليل من العناصر فقط. المدخلات المنحرفة تركّز العناصر في دلاء أقل وتُدهور الأداء نحو أسوأ حالة الترتيب الداخلي.",
+    quiz: [
+      { question: "التعقيد الزمني المتوسط لترتيب الدلاء هو…", options: ["O(n log n)", "O(n + k)", "O(n²)", "O(log n)"], answer: 1, explanation: "مع قيم موزعة بانتظام عبر k ≈ n دلو، يحمل كل دلو O(1) عنصر في المتوسط، فيكون العمل الإجمالي خطيًا." },
+      { question: "لماذا يمكن لترتيب الدلاء التفوق على الحد الأدنى لترتيبات المقارنة Ω(n log n)؟", options: ["لا يتفوق — هو دائمًا أبطأ", "يستخدم معلومات التوزيع (فهرس الدلو) بدلًا من المقارنات الثنائية", "إنها حيلة دون أساس حقيقي", "يعمل فقط على بيانات مرتبة بالفعل"], answer: 1, explanation: "مثل ترتيب الأساس/العد، يتجاوز نموذج المقارنة تمامًا باستخدام معلومات القيمة مباشرة." },
+      { question: "يتدهور ترتيب الدلاء إلى O(n²) عندما…", options: ["k = n بالضبط", "القيم موزعة بانتظام", "تقع معظم القيم في نفس الدلو (توزيع منحرف)", "المصفوفة مرتبة بالفعل"], answer: 2, explanation: "الترتيب الداخلي لدلو واحد مثقل يهيمن حينها، تمامًا كترتيب المصفوفة كاملة بتلك الطريقة." },
+      { question: "داخل كل دلو، أي ترتيب يُستخدم عادة؟", options: ["الترتيب بالدمج", "ترتيب الإدراج (الدلاء متوقعة أن تكون صغيرة)", "الترتيب السريع", "ترتيب الأساس"], answer: 1, explanation: "الدلاء الصغيرة تفضّل عامل ترتيب الإدراج الثابت المنخفض على عبء ترتيب عودي O(n log n)." },
+      { question: "أي خاصية للمدخلات يعتمد عليها ترتيب الدلاء لسرعته؟", options: ["يجب أن تكون مرتبة جزئيًا بالفعل", "قيم موزعة بانتظام تقريبًا عبر مدى معروف", "كل القيم أعداد صحيحة", "يجب أن تكون المصفوفة كبيرة"], answer: 1, explanation: "التوزيع المنتظم يضمن بقاء الدلاء متوازنة، وهذا بالضبط ما يعطي المتوسط O(n + k)." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 29, 25, 3, 49, 9, 37, 21, 43", help: "2–60 numbers." }],

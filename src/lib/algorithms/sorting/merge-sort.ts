@@ -18,16 +18,17 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     aux?: AuxRow[],
+    descriptionAr?: string,
   ) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, aux }, description, codeLine, counters: counters() });
+    steps.push({ frame: { values: [...a], states: { ...states }, range, aux }, description, descriptionAr, codeLine, counters: counters() });
   };
 
-  snap({}, null, `Merge sort recursively splits the array, then merges sorted halves.`, 0);
+  snap({}, null, `Merge sort recursively splits the array, then merges sorted halves.`, 0, undefined, `الترتيب بالدمج يُقسّم المصفوفة عوديًا، ثم يدمج الأنصاف المرتبة.`);
 
   const sort = (lo: number, hi: number, depth: number) => {
     if (lo >= hi) return;
     const mid = (lo + hi) >> 1;
-    snap({}, { from: lo, to: hi }, `Split [${lo}..${hi}] at ${mid} (depth ${depth}).`, 1);
+    snap({}, { from: lo, to: hi }, `Split [${lo}..${hi}] at ${mid} (depth ${depth}).`, 1, undefined, `قسّم [${lo}..${hi}] عند ${mid} (العمق ${depth}).`);
     sort(lo, mid, depth + 1);
     sort(mid + 1, hi, depth + 1);
 
@@ -41,51 +42,54 @@ function generate(input: Input): Step<ArrayFrame>[] {
       { label: "left", values: left.slice(i) },
       { label: "right", values: right.slice(j) },
     ];
-    snap({}, { from: lo, to: hi }, `Merge sorted halves [${lo}..${mid}] and [${mid + 1}..${hi}].`, 3, bufRow());
+    snap({}, { from: lo, to: hi }, `Merge sorted halves [${lo}..${mid}] and [${mid + 1}..${hi}].`, 3, bufRow(), `ادمج النصفين المرتبين [${lo}..${mid}] و[${mid + 1}..${hi}].`);
     while (i < left.length && j < right.length) {
       comparisons++;
       const states: Record<number, CellState> = { [k]: "active" };
-      snap(states, { from: lo, to: hi }, `Compare ${left[i]} and ${right[j]}.`, 4, bufRow());
+      snap(states, { from: lo, to: hi }, `Compare ${left[i]} and ${right[j]}.`, 4, bufRow(), `قارن ${left[i]} و${right[j]}.`);
       if (left[i] <= right[j]) {
         a[k] = left[i++];
       } else {
         a[k] = right[j++];
       }
       writes++;
-      snap({ [k]: "swap" }, { from: lo, to: hi }, `Place ${a[k]} at index ${k}.`, 5, bufRow());
+      snap({ [k]: "swap" }, { from: lo, to: hi }, `Place ${a[k]} at index ${k}.`, 5, bufRow(), `ضع ${a[k]} عند الفهرس ${k}.`);
       k++;
     }
     while (i < left.length) {
       a[k] = left[i++];
       writes++;
-      snap({ [k]: "swap" }, { from: lo, to: hi }, `Copy remaining ${a[k]} from left.`, 6, bufRow());
+      snap({ [k]: "swap" }, { from: lo, to: hi }, `Copy remaining ${a[k]} from left.`, 6, bufRow(), `انسخ المتبقي ${a[k]} من اليسار.`);
       k++;
     }
     while (j < right.length) {
       a[k] = right[j++];
       writes++;
-      snap({ [k]: "swap" }, { from: lo, to: hi }, `Copy remaining ${a[k]} from right.`, 6, bufRow());
+      snap({ [k]: "swap" }, { from: lo, to: hi }, `Copy remaining ${a[k]} from right.`, 6, bufRow(), `انسخ المتبقي ${a[k]} من اليمين.`);
       k++;
     }
     const done: Record<number, CellState> = {};
     for (let x = lo; x <= hi; x++) done[x] = "sorted";
-    snap(done, { from: lo, to: hi }, `Subarray [${lo}..${hi}] is now sorted.`, 7);
+    snap(done, { from: lo, to: hi }, `Subarray [${lo}..${hi}] is now sorted.`, 7, undefined, `المصفوفة الفرعية [${lo}..${hi}] أصبحت مرتبة الآن.`);
   };
 
   sort(0, n - 1, 0);
   const allSorted: Record<number, CellState> = {};
   for (let x = 0; x < n; x++) allSorted[x] = "sorted";
-  snap(allSorted, null, `Fully sorted in O(n log n) with ${comparisons} comparisons.`, 8);
+  snap(allSorted, null, `Fully sorted in O(n log n) with ${comparisons} comparisons.`, 8, undefined, `اكتمل الترتيب بزمن O(n log n) وبـ ${comparisons} مقارنة.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "merge-sort",
   title: "Merge Sort",
+  titleAr: "الترتيب بالدمج",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["divide & conquer", "stable", "O(n log n)", "not in-place"],
+  tagsAr: ["فرّق تسد", "مستقر", "O(n log n)", "ليس في المكان"],
   summary: "Recursively splits the array in half, sorts each half, then merges them — guaranteed O(n log n).",
+  summaryAr: "يُقسّم المصفوفة إلى نصفين عوديًا، يرتب كل نصف، ثم يدمجهما — بضمان O(n log n).",
   renderer: "array",
   pseudocode: [
     "procedure mergeSort(a, lo, hi)",
@@ -315,6 +319,63 @@ Its running time is O(n log n) in the best, average, and worst case — no input
       { question: "Which comparison keeps the merge stable?", options: ["left[i] < right[j] takes left", "left[i] <= right[j] takes left", "right[j] < left[i] takes left", "stability is impossible"], answer: 1, explanation: "Taking from the left on ties preserves the original order of equal keys." },
       { question: "Why is merge sort well suited to linked lists?", options: ["It needs random access", "It needs no random access and splits/merges via pointers", "It is in-place", "It uses O(1) memory"], answer: 1, explanation: "Merging only walks nodes sequentially, so no indexing is required." },
       { question: "Merge sort is a classic example of which paradigm?", options: ["Greedy", "Dynamic programming", "Divide and conquer", "Backtracking"], answer: 2, explanation: "It divides the problem, solves subproblems, and combines their results." },
+    ],
+  },
+  contentAr: {
+    overview: `الترتيب بالدمج هو النموذج الأصيل لخوارزميات فرّق تسد. يُقسّم المصفوفة إلى نصفين، يرتب كل نصف عوديًا، ثم يدمج النصفين المرتبين في نصف واحد. خطوة الدمج هي جوهر الخوارزمية: لأن كلا المدخلين مرتب بالفعل، يمكنها إنتاج الخرج المدموج المرتب بمرور خطي واحد.
+
+زمن تشغيله O(n log n) في أفضل حالة ومتوسطها وأسوأها — لا يمكن لأي مدخل أن يبطئه. وهو أيضًا مستقر، ما يجعله خيار الترتيب حين يهم الضمان القابل للتنبؤ والاستقرار أكثر من ذاكرته المساعدة O(n) المطلوبة.`,
+    howItWorks: [
+      "إذا كان المجال يحوي 0 أو 1 عنصر، فهو مرتب بالفعل — عُد.",
+      "قسّم المجال عند نقطة منتصفه إلى نصفين أيسر وأيمن.",
+      "رتّب النصف الأيسر عوديًا، ثم النصف الأيمن.",
+      "الدمج: خذ مرارًا الأصغر من العنصرين الأماميين للنصفين.",
+      "انسخ أي عناصر متبقية؛ المجال المدموج أصبح مرتبًا بالكامل الآن.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(n)",
+      notes: "log n مستوى من العودية، كل مستوى يُجري عمل دمج O(n). يحتاج مساحة مساعدة O(n) للدمج (إضافة إلى مكدس O(log n)).",
+    },
+    applications: [
+      "الترتيب الخارجي للبيانات الكبيرة جدًا على أن تسع الذاكرة (دمج بـ k مسارات)",
+      "الترتيب المستقر حيث يجب أن تحافظ المفاتيح المتساوية على ترتيبها",
+      "ترتيب القوائم المترابطة (الترتيب بالدمج لا يحتاج وصولًا عشوائيًا)",
+      "عدّ الانقلابات ومسائل فرّق تسد الأخرى",
+      "خطوة الدمج تقوم عليها خوارزمية Timsort، الترتيب الافتراضي في بايثون وجافا",
+    ],
+    advantages: [
+      "زمن O(n log n) مضمون — لا مدخلات سيئة",
+      "مستقر",
+      "ممتاز للقوائم المترابطة والبيانات الخارجية/المتدفقة",
+      "قابل للموازاة بدرجة عالية (الأنصاف مستقلة)",
+    ],
+    disadvantages: [
+      "يتطلب ذاكرة إضافية O(n) للنسخة القياسية على المصفوفات",
+      "ليس في المكان (الدمج في المكان معقد وبطيء)",
+      "عوامل ثابتة أعلى من الترتيب السريع على المصفوفات النمطية داخل الذاكرة",
+    ],
+    commonMistakes: [
+      "استخدام a[i] < a[j] بدلًا من a[i] <= a[j] في الدمج، مما يكسر الاستقرار.",
+      "تخصيص مخزن مؤقت جديد في كل عملية دمج بدلًا من إعادة استخدام واحد، مما يضر بالأداء.",
+      "حساب mid كـ (lo+hi) في لغات قد يفيض فيها ذلك — استخدم lo + (hi-lo)/2.",
+      "نسيان نسخ الذيل المتبقي من أي النصفين تبقى.",
+    ],
+    interviewQuestions: [
+      "لماذا أسوأ حالة للترتيب بالدمج هي O(n log n) بينما أسوأ حالة للترتيب السريع O(n²)؟",
+      "كيف تجعل الترتيب بالدمج مستقرًا، ومن أين يأتي الاستقرار بالضبط؟",
+      "اشرح كيف يتكيف الترتيب بالدمج لترتيب قائمة مترابطة أحادية.",
+      "كيف تستخدم خطوة الدمج لعدّ الانقلابات في مصفوفة؟",
+      "صف الترتيب بالدمج الخارجي لبيانات أكبر من الذاكرة العشوائية.",
+    ],
+    summary:
+      "يُقسّم الترتيب بالدمج المصفوفة، يرتب كل نصف، ويدمجهما بزمن خطي، معطيًا ترتيبًا مستقرًا مضمون O(n log n) بتكلفة مساحة إضافية O(n). وهو العمود الفقري للترتيب الخارجي، وترتيب القوائم المترابطة، والترتيبات الهجينة مثل Timsort.",
+    quiz: [
+      { question: "ما التعقيد الزمني لأسوأ حالة في الترتيب بالدمج؟", options: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], answer: 1, explanation: "log n مستوى، كل منها عمل دمج O(n) — بغض النظر عن المدخلات." },
+      { question: "كم مساحة مساعدة يستخدم الترتيب بالدمج القياسي على المصفوفات؟", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 2, explanation: "خطوة الدمج تحتاج مخزنًا مؤقتًا يتناسب مع حجم المجال." },
+      { question: "أي مقارنة تحافظ على استقرار الدمج؟", options: ["left[i] < right[j] يأخذ اليسار", "left[i] <= right[j] يأخذ اليسار", "right[j] < left[i] يأخذ اليسار", "الاستقرار مستحيل"], answer: 1, explanation: "أخذ العنصر من اليسار عند التعادل يحافظ على الترتيب الأصلي للمفاتيح المتساوية." },
+      { question: "لماذا يناسب الترتيب بالدمج القوائم المترابطة؟", options: ["يحتاج وصولًا عشوائيًا", "لا يحتاج وصولًا عشوائيًا ويُقسّم/يدمج عبر المؤشرات", "هو في المكان", "يستخدم ذاكرة O(1)"], answer: 1, explanation: "الدمج يمشي عبر العقد تسلسليًا فقط، فلا حاجة للفهرسة." },
+      { question: "الترتيب بالدمج مثال كلاسيكي لأي نمط؟", options: ["جشِع", "البرمجة الديناميكية", "فرّق تسد", "التراجع"], answer: 2, explanation: "يُقسّم المسألة، يحل المسائل الفرعية، ويجمع نتائجها." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 38, 27, 43, 3, 9, 82, 10", help: "2–40 numbers, comma or space separated." }],

@@ -27,23 +27,23 @@ function generate(input: Input): Step<ArrayFrame>[] {
     states: active !== undefined ? { [active]: "swap" } : {},
   });
 
-  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number) => {
-    steps.push({ frame: { values: [...a], states, aux }, description, codeLine, counters: counters() });
+  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number, descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states, aux }, description, descriptionAr, codeLine, counters: counters() });
   };
 
-  snap({}, [countRow()], `Counting sort tallies how many of each value, then places them in order — no comparisons.`, 0);
+  snap({}, [countRow()], `Counting sort tallies how many of each value, then places them in order — no comparisons.`, 0, `ترتيب العد يحصي عدد كل قيمة، ثم يضعها بترتيبها — دون أي مقارنات.`);
 
   // count occurrences
   for (let i = 0; i < n; i++) {
     reads++;
     count[a[i] - min]++;
-    snap({ [i]: "compare" }, [countRow(a[i] - min)], `Tally a[${i}] = ${a[i]}: increment count[${a[i]}].`, 1);
+    snap({ [i]: "compare" }, [countRow(a[i] - min)], `Tally a[${i}] = ${a[i]}: increment count[${a[i]}].`, 1, `أحصِ a[${i}] = ${a[i]}: زِد count[${a[i]}].`);
   }
 
   // prefix sums
   for (let i = 1; i < range; i++) {
     count[i] += count[i - 1];
-    snap({}, [countRow(i)], `Prefix sum: count[${min + i}] += count[${min + i - 1}] → ${count[i]}.`, 2);
+    snap({}, [countRow(i)], `Prefix sum: count[${min + i}] += count[${min + i - 1}] → ${count[i]}.`, 2, `مجموع بادئة: count[${min + i}] += count[${min + i - 1}] ← ${count[i]}.`);
   }
 
   // place from the back (stable)
@@ -53,23 +53,26 @@ function generate(input: Input): Step<ArrayFrame>[] {
     count[a[i] - min]--;
     output[pos] = a[i];
     writes++;
-    snap({ [i]: "active" }, [countRow(a[i] - min), outRow(pos)], `Place a[${i}] = ${a[i]} at output[${pos}] (stable, back to front).`, 3);
+    snap({ [i]: "active" }, [countRow(a[i] - min), outRow(pos)], `Place a[${i}] = ${a[i]} at output[${pos}] (stable, back to front).`, 3, `ضع a[${i}] = ${a[i]} عند output[${pos}] (بشكل مستقر، من الخلف إلى الأمام).`);
   }
 
   for (let i = 0; i < n; i++) a[i] = output[i]!;
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, [outRow()], `Copy output back. Sorted in O(n + k) with k = ${range} distinct-value range.`, 4);
+  snap(sorted, [outRow()], `Copy output back. Sorted in O(n + k) with k = ${range} distinct-value range.`, 4, `انسخ المخرجات إلى المصفوفة. اكتمل الترتيب بزمن O(n + k) حيث k = ${range} مدى القيم المتمايزة.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "counting-sort",
   title: "Counting Sort",
+  titleAr: "ترتيب العد",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["non-comparison", "stable", "linear", "integer keys"],
+  tagsAr: ["ليس بالمقارنة", "مستقر", "خطي", "مفاتيح صحيحة"],
   summary: "Counts occurrences of each key and uses prefix sums to place elements directly — O(n + k), no comparisons.",
+  summaryAr: "يحصي تكرار كل مفتاح ويستخدم مجاميع البادئة لوضع العناصر مباشرة — O(n + k)، دون مقارنات.",
   renderer: "array",
   pseudocode: [
     "procedure countingSort(a, k)",
@@ -246,6 +249,62 @@ Because it never compares two elements, it sidesteps the O(n log n) lower bound 
       { question: "To keep counting sort stable, elements are placed…", options: ["Front to back", "Back to front", "In random order", "By value"], answer: 1, explanation: "Iterating the input in reverse preserves the original order of equal keys." },
       { question: "Counting sort is impractical when…", options: ["n is small", "The key range k is much larger than n", "Keys are integers", "The array is sorted"], answer: 1, explanation: "A huge value range makes the O(k) count array dominate memory and time." },
       { question: "The prefix-sum step converts counts into…", options: ["Random positions", "Output positions for each key", "Comparisons", "Bucket sizes only"], answer: 1, explanation: "Cumulative counts give each value its final index range in the output." },
+    ],
+  },
+  contentAr: {
+    overview: `ترتيب العد خوارزمية ترتيب دون مقارنة لمفاتيح صحيحة مأخوذة من مدى صغير. بدلًا من مقارنة العناصر، يحصي عدد مرات ظهور كل قيمة، يحوّل تلك الأعداد إلى مواضع بداية باستخدام مجموع بادئة، ثم يضع كل عنصر مباشرة في خانته الصحيحة في المخرجات.
+
+لأنه لا يقارن أبدًا بين عنصرين، يتفادى الحد الأدنى O(n log n) الذي ينطبق على الترتيبات القائمة على المقارنة، فيعمل بزمن O(n + k) حيث k حجم مدى المفاتيح. وهو مستقر (تحافظ المفاتيح المتساوية على ترتيبها) عندما توضع العناصر من الخلف إلى الأمام، ويُستخدم كإجراء فرعي مستقر داخل ترتيب الأساس.`,
+    howItWorks: [
+      "امسح المصفوفة واحصِ تكرار كل مفتاح في مصفوفة عد.",
+      "حوّل الأعداد إلى مجاميع بادئة، بحيث يصبح count[v] آخر فهرس مخرجات للقيمة v.",
+      "اجتز المدخلات من العنصر الأخير إلى الأول (للحفاظ على الاستقرار).",
+      "لكل عنصر، ضعه عند output[count[القيمة] − 1] وأنقص ذلك العد.",
+      "انسخ مصفوفة المخرجات إلى الأصل؛ كل مفتاح الآن في موضعه المرتب.",
+    ],
+    complexity: {
+      time: { best: "O(n + k)", average: "O(n + k)", worst: "O(n + k)" },
+      space: "O(n + k)",
+      notes: "k هو حجم مدى المفاتيح (الأقصى − الأدنى + 1). فعّال فقط عندما لا يكون k أكبر بكثير من n؛ وإلا فإن مصفوفة العد تهيمن.",
+    },
+    applications: [
+      "ترتيب الأعداد الصحيحة أو المفاتيح من مدى صغير معروف",
+      "ترتيب الأرقام المستقر داخل ترتيب الأساس",
+      "ترتيب الأحرف أو الدرجات أو الأعمار أو البيانات المُصنَّفة في دلاء",
+      "بناء الرسوم البيانية التكرارية وجداول التردد",
+    ],
+    advantages: [
+      "زمن خطي O(n + k) — يتفوق على ترتيبات المقارنة عندما يكون k صغيرًا",
+      "مستقر عند الوضع من الخلف إلى الأمام",
+      "بسيط وحتمي",
+      "لا يتطلب مقارنات",
+    ],
+    disadvantages: [
+      "يعمل فقط للمفاتيح الصحيحة (أو القابلة للتقطيع)",
+      "ذاكرة O(k) تتضخم عندما يكون مدى القيم كبيرًا",
+      "ليس في المكان",
+      "غير عملي للمفاتيح ذات الفاصلة العائمة أو المدى الكبير",
+    ],
+    commonMistakes: [
+      "الاجتياز من الأمام إلى الخلف في حلقة الوضع، مما يكسر الاستقرار.",
+      "نسيان خطوة مجموع البادئة ووضع العناصر خطأً.",
+      "استخدامه عندما يكون k أكبر بكثير من n، مما يهدر كمية هائلة من الذاكرة.",
+      "عدم الإزاحة بالقيمة الدنيا عندما لا تبدأ المفاتيح من 0.",
+    ],
+    interviewQuestions: [
+      "لماذا يمكن لترتيب العد أن يتفوق على الحد الأدنى O(n log n) للمقارنة؟",
+      "لماذا يجب أن يجتاز الوضع من العنصر الأخير من أجل الاستقرار؟",
+      "متى يصبح ترتيب العد غير عملي؟",
+      "كيف يُستخدم ترتيب العد كلبنة بناء في ترتيب الأساس؟",
+    ],
+    summary:
+      "يحصي ترتيب العد كل مفتاح، يحوّل الأعداد بمجموع بادئة إلى مواضع، ويضع العناصر مباشرة — ترتيب مستقر دون مقارنة بزمن O(n + k). مثالي لمديات الأعداد الصحيحة الصغيرة وهو المحرك خلف ترتيب الأساس.",
+    quiz: [
+      { question: "التعقيد الزمني لترتيب العد هو…", options: ["O(n log n)", "O(n + k)", "O(n²)", "O(k log n)"], answer: 1, explanation: "خطي في عدد العناصر زائد حجم مدى المفاتيح k." },
+      { question: "يتجنب ترتيب العد الحد الأدنى O(n log n) لأنه…", options: ["يستخدم العودية", "لا يُجري أي مقارنات", "في المكان", "يستخدم كومة"], answer: 1, explanation: "الحد الأدنى للمقارنة ينطبق فقط على الترتيبات القائمة على المقارنة." },
+      { question: "للحفاظ على استقرار ترتيب العد، توضع العناصر…", options: ["من الأمام إلى الخلف", "من الخلف إلى الأمام", "بترتيب عشوائي", "حسب القيمة"], answer: 1, explanation: "اجتياز المدخلات بالعكس يحافظ على الترتيب الأصلي للمفاتيح المتساوية." },
+      { question: "يصبح ترتيب العد غير عملي عندما…", options: ["n صغير", "مدى المفاتيح k أكبر بكثير من n", "المفاتيح أعداد صحيحة", "المصفوفة مرتبة"], answer: 1, explanation: "مدى قيم ضخم يجعل مصفوفة العد O(k) تهيمن على الذاكرة والزمن." },
+      { question: "خطوة مجموع البادئة تحوّل الأعداد إلى…", options: ["مواضع عشوائية", "مواضع مخرجات لكل مفتاح", "مقارنات", "أحجام دلاء فقط"], answer: 1, explanation: "الأعداد التراكمية تعطي كل قيمة مدى فهرسها النهائي في المخرجات." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values (0–30)", placeholder: "e.g. 4, 2, 2, 8, 3, 3, 1", help: "2–40 non-negative integers, values 0–30 keep the count array small." }],

@@ -16,41 +16,44 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let shifts = 0;
   const counters = () => ({ comparisons, shifts });
 
-  steps.push({ frame: frame(a, {}, "gap sequence: n/2, n/4, … 1"), description: `Shell sort runs insertion sort on elements spaced by a shrinking gap.`, codeLine: 0, counters: counters() });
+  steps.push({ frame: frame(a, {}, "gap sequence: n/2, n/4, … 1"), description: `Shell sort runs insertion sort on elements spaced by a shrinking gap.`, descriptionAr: `ترتيب شل يُشغّل ترتيب الإدراج على عناصر متباعدة بفجوة متقلصة.`, codeLine: 0, counters: counters() });
 
   for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {
-    steps.push({ frame: frame(a, {}, `gap = ${gap}`), description: `Start a pass with gap ${gap}.`, codeLine: 1, counters: counters() });
+    steps.push({ frame: frame(a, {}, `gap = ${gap}`), description: `Start a pass with gap ${gap}.`, descriptionAr: `ابدأ مرورًا بفجوة ${gap}.`, codeLine: 1, counters: counters() });
     for (let i = gap; i < n; i++) {
       const key = a[i];
       let j = i;
-      steps.push({ frame: frame(a, { [i]: "active" }, `gap = ${gap}`, [{ index: i, label: "i" }]), description: `Take key a[${i}] = ${key}; compare backwards in steps of ${gap}.`, codeLine: 2, counters: counters() });
+      steps.push({ frame: frame(a, { [i]: "active" }, `gap = ${gap}`, [{ index: i, label: "i" }]), description: `Take key a[${i}] = ${key}; compare backwards in steps of ${gap}.`, descriptionAr: `خذ المفتاح a[${i}] = ${key}؛ قارن للخلف بخطوات مقدارها ${gap}.`, codeLine: 2, counters: counters() });
       while (j >= gap) {
         comparisons++;
-        steps.push({ frame: frame(a, { [j - gap]: "compare", [j]: "active" }, `gap = ${gap}`), description: `Compare a[${j - gap}] = ${a[j - gap]} with key ${key}.`, codeLine: 3, counters: counters() });
+        steps.push({ frame: frame(a, { [j - gap]: "compare", [j]: "active" }, `gap = ${gap}`), description: `Compare a[${j - gap}] = ${a[j - gap]} with key ${key}.`, descriptionAr: `قارن a[${j - gap}] = ${a[j - gap]} مع المفتاح ${key}.`, codeLine: 3, counters: counters() });
         if (a[j - gap] > key) {
           a[j] = a[j - gap];
           shifts++;
-          steps.push({ frame: frame(a, { [j]: "swap", [j - gap]: "swap" }, `gap = ${gap}`), description: `${a[j]} > ${key}, shift it forward by ${gap}.`, codeLine: 4, counters: counters() });
+          steps.push({ frame: frame(a, { [j]: "swap", [j - gap]: "swap" }, `gap = ${gap}`), description: `${a[j]} > ${key}, shift it forward by ${gap}.`, descriptionAr: `${a[j]} > ${key}، أزحه للأمام بمقدار ${gap}.`, codeLine: 4, counters: counters() });
           j -= gap;
         } else break;
       }
       a[j] = key;
-      steps.push({ frame: frame(a, { [j]: "found" }, `gap = ${gap}`), description: `Place key ${key} at index ${j}.`, codeLine: 5, counters: counters() });
+      steps.push({ frame: frame(a, { [j]: "found" }, `gap = ${gap}`), description: `Place key ${key} at index ${j}.`, descriptionAr: `ضع المفتاح ${key} عند الفهرس ${j}.`, codeLine: 5, counters: counters() });
     }
   }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  steps.push({ frame: frame(a, sorted), description: `Sorted! Gaps let elements move long distances early, beating plain insertion sort.`, codeLine: 6, counters: counters() });
+  steps.push({ frame: frame(a, sorted), description: `Sorted! Gaps let elements move long distances early, beating plain insertion sort.`, descriptionAr: `اكتمل الترتيب! الفجوات تتيح للعناصر التحرك مسافات طويلة مبكرًا، متفوقة على ترتيب الإدراج البسيط.`, codeLine: 6, counters: counters() });
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "shell-sort",
   title: "Shell Sort",
+  titleAr: "ترتيب شل",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["gap sequence", "in-place", "adaptive", "insertion-based"],
+  tagsAr: ["متتالية فجوات", "في المكان", "متكيّف", "قائم على الإدراج"],
   summary: "Generalizes insertion sort by comparing elements a shrinking gap apart, moving them long distances early.",
+  summaryAr: "يُعمّم ترتيب الإدراج بمقارنة عناصر متباعدة بفجوة متقلصة، فتتحرك مسافات طويلة مبكرًا.",
   renderer: "array",
   pseudocode: [
     "procedure shellSort(a[0..n-1])",
@@ -242,6 +245,62 @@ Its performance depends heavily on the gap sequence. The simple halving sequence
       { question: "Why is the gap = 1 pass fast?", options: ["It is skipped", "The array is already nearly sorted by then", "It uses binary search", "It sorts in place"], answer: 1, explanation: "Earlier gapped passes leave few remaining inversions for the final insertion pass." },
       { question: "Shell sort's extra space usage is…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 0, explanation: "It sorts in place with only a few index variables." },
       { question: "Shell sort is…", options: ["stable", "unstable", "always O(n log n)", "recursive"], answer: 1, explanation: "Long-distance moves can reorder equal keys, so it is not stable." },
+    ],
+  },
+  contentAr: {
+    overview: `ترتيب شل تعميم لترتيب الإدراج يسمح للعناصر بالتحرك مسافات بعيدة عبر المصفوفة بخطوة واحدة. ترتيب الإدراج البسيط يبدّل فقط العناصر المتجاورة، فقيمة صغيرة عالقة في النهاية تحتاج حركات كثيرة للوصول إلى المقدمة. يعالج ترتيب شل هذا بترتيب العناصر المتباعدة بـ"فجوة" كبيرة أولًا، ثم تقليص الفجوة مرارًا حتى تصل إلى 1 — عندها تكون المصفوفة شبه مرتبة ويصبح مرور الإدراج الأخير رخيصًا.
+
+يعتمد أداؤه بشدة على متتالية الفجوات. متتالية التنصيف البسيطة (n/2، n/4، …، 1) الموضحة هنا سهلة الفهم لكنها ليست مثلى؛ متتاليات مثل متتالية Ciura أو Sedgewick تدفعه إلى ما دون O(n²) بكثير. ترتيب شل في المكان، سريع بشكل معقول على المصفوفات المتوسطة، وكان مهمًا تاريخيًا كترتيب بسيط دون التربيعي.`,
+    howItWorks: [
+      "اختر فجوة بداية (هنا، n/2).",
+      "شغّل ترتيب إدراج حيث تكون العناصر المقارَنة متباعدة بمقدار 'الفجوة' بدلًا من التجاور.",
+      "الإزاحات بعيدة المدى تنقل العناصر غير الموضوعة معظم الطريق إلى موضعها مبكرًا.",
+      "قلّص الفجوة إلى النصف وكرر، كل مرور يترك المصفوفة 'أكثر ترتيبًا'.",
+      "المرور الأخير بفجوة 1 هو ترتيب إدراج عادي على بيانات شبه مرتبة — سريع.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "≈O(n^1.25)", worst: "O(n²)" },
+      space: "O(1)",
+      notes: "التعقيد يعتمد على متتالية الفجوات. التنصيف يعطي أسوأ حالة O(n²)؛ المتتاليات الأفضل (Ciura، Sedgewick) تحقق نحو O(n^1.3) أو أفضل. في المكان، ذاكرة إضافية O(1).",
+    },
+    applications: [
+      "المصفوفات المتوسطة الحجم حيث يُرغب بترتيب بسيط في المكان دون التربيعي",
+      "الأنظمة المدمجة (كود صغير، دون عودية، دون ذاكرة إضافية)",
+      "المواقف التي تتجنب استخدام العودية/المكدس في الترتيب السريع/الترتيب بالدمج",
+      "كجسر تدريسي بين ترتيب الإدراج والترتيبات المتقدمة",
+    ],
+    advantages: [
+      "في المكان بذاكرة إضافية O(1)",
+      "أسرع بكثير من ترتيب الإدراج البسيط على المدخلات الأكبر",
+      "بسيط، تكراري، دون عودية",
+      "متكيّف — يستفيد من الترتيب الجزئي",
+    ],
+    disadvantages: [
+      "غير مستقر",
+      "الأداء حساس جدًا لمتتالية الفجوات",
+      "أسوأ حالة O(n²) مع فجوات سيئة",
+      "أصعب في التحليل من معظم الترتيبات",
+    ],
+    commonMistakes: [
+      "استخدام متتالية فجوات سيئة وتوقّع O(n log n).",
+      "أخطاء انزياح بمقدار واحد في الحلقة الداخلية ذات الفجوة (j >= gap).",
+      "افتراض أن ترتيب شل مستقر — القفزات الطويلة تعيد ترتيب المفاتيح المتساوية.",
+      "نسيان أن الفجوة الأخيرة يجب أن تصل إلى 1.",
+    ],
+    interviewQuestions: [
+      "لماذا يتفوق ترتيب شل على ترتيب الإدراج البسيط؟",
+      "كيف يؤثر اختيار متتالية الفجوات على التعقيد؟",
+      "هل ترتيب شل مستقر؟ لماذا أو لماذا لا؟",
+      "لماذا المرور الأخير (فجوة = 1) رخيص دائمًا؟",
+    ],
+    summary:
+      "ترتيب شل هو ترتيب إدراج بفجوات: يرتب العناصر المتباعدة بفجوة كبيرة، ثم يقلّص الفجوة إلى 1، مما يتيح للقيم قطع مسافات طويلة مبكرًا. في المكان ومساحة O(1)، بتعقيد بين O(n log n) وO(n²) حسب متتالية الفجوات.",
+    quiz: [
+      { question: "ترتيب شل هو تعميم لأي خوارزمية؟", options: ["الترتيب بالدمج", "ترتيب الإدراج", "الترتيب السريع", "ترتيب الكومة"], answer: 1, explanation: "يُجري ترتيب إدراج على عناصر متباعدة بفجوة، مقلّصًا الفجوة إلى 1." },
+      { question: "ما الذي يحدد بشكل رئيسي زمن تشغيل ترتيب شل؟", options: ["المحور", "متتالية الفجوات", "عمق العودية", "حجم الأبجدية"], answer: 1, explanation: "متتاليات الفجوات المختلفة تعطي حدودًا تقاربية مختلفة جدًا." },
+      { question: "لماذا يكون مرور الفجوة = 1 سريعًا؟", options: ["يُتخطى", "المصفوفة تكون شبه مرتبة بحلول ذلك الوقت", "يستخدم البحث الثنائي", "يرتب في المكان"], answer: 1, explanation: "المرورات ذات الفجوات السابقة تترك انقلابات قليلة متبقية للمرور الأخير بالإدراج." },
+      { question: "استخدام ترتيب شل للذاكرة الإضافية هو…", options: ["O(1)", "O(log n)", "O(n)", "O(n²)"], answer: 0, explanation: "يرتب في المكان بمتغيرات فهرسة قليلة فقط." },
+      { question: "ترتيب شل…", options: ["مستقر", "غير مستقر", "دائمًا O(n log n)", "عودي"], answer: 1, explanation: "الحركات بعيدة المدى قد تعيد ترتيب المفاتيح المتساوية، فهو غير مستقر." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 23, 12, 1, 8, 34, 54, 2, 3", help: "2–40 numbers." }],

@@ -13,7 +13,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let swaps = 0;
   const c = () => ({ comparisons, swaps });
 
-  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0, sortedFrom: n, note: `active range [0..${n - 1}]` }), description: `Cocktail sort bubbles in both directions each pass, sorting from both ends inward.`, codeLine: 0, counters: c() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0, sortedFrom: n, note: `active range [0..${n - 1}]` }), description: `Cocktail sort bubbles in both directions each pass, sorting from both ends inward.`, descriptionAr: `ترتيب الكوكتيل يُصعّد في كلا الاتجاهين كل مرور، مرتّبًا من الطرفين نحو الداخل.`, codeLine: 0, counters: c() });
 
   let lo = 0;
   let hi = n - 1;
@@ -22,44 +22,47 @@ function generate(input: Input): Step<ArrayFrame>[] {
     swapped = false;
     for (let i = lo; i < hi; i++) {
       comparisons++;
-      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + 1]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, codeLine: 3, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i]: "compare", [i + 1]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `→ Compare a[${i}] = ${a[i]} and a[${i + 1}] = ${a[i + 1]}.`, descriptionAr: `← قارن a[${i}] = ${a[i]} وa[${i + 1}] = ${a[i + 1]}.`, codeLine: 3, counters: c() });
       if (a[i] > a[i + 1]) {
         [a[i], a[i + 1]] = [a[i + 1], a[i]];
         swaps++;
         swapped = true;
-        steps.push({ frame: arrayFrame(a, { [i]: "swap", [i + 1]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — larger bubbles right.`, codeLine: 3, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i]: "swap", [i + 1]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — larger bubbles right.`, descriptionAr: `بدّل — الأكبر يصعد يمينًا.`, codeLine: 3, counters: c() });
       }
     }
     hi--;
-    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Largest is parked at the right end; shrink upper bound.`, codeLine: 3, counters: c() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Largest is parked at the right end; shrink upper bound.`, descriptionAr: `استقر الأكبر عند الطرف الأيمن؛ قلّص الحد الأعلى.`, codeLine: 3, counters: c() });
     if (!swapped) break;
     swapped = false;
     for (let i = hi; i > lo; i--) {
       comparisons++;
-      steps.push({ frame: arrayFrame(a, { [i - 1]: "compare", [i]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, codeLine: 4, counters: c() });
+      steps.push({ frame: arrayFrame(a, { [i - 1]: "compare", [i]: "compare" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `← Compare a[${i - 1}] = ${a[i - 1]} and a[${i}] = ${a[i]}.`, descriptionAr: `→ قارن a[${i - 1}] = ${a[i - 1]} وa[${i}] = ${a[i]}.`, codeLine: 4, counters: c() });
       if (a[i - 1] > a[i]) {
         [a[i - 1], a[i]] = [a[i], a[i - 1]];
         swaps++;
         swapped = true;
-        steps.push({ frame: arrayFrame(a, { [i - 1]: "swap", [i]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — smaller bubbles left.`, codeLine: 4, counters: c() });
+        steps.push({ frame: arrayFrame(a, { [i - 1]: "swap", [i]: "swap" }, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Swap — smaller bubbles left.`, descriptionAr: `بدّل — الأصغر يصعد يسارًا.`, codeLine: 4, counters: c() });
       }
     }
     lo++;
-    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Smallest is parked at the left end; raise lower bound.`, codeLine: 4, counters: c() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: lo, sortedFrom: hi + 1, note: `active range [${lo}..${hi}]` }), description: `Smallest is parked at the left end; raise lower bound.`, descriptionAr: `استقر الأصغر عند الطرف الأيسر؛ ارفع الحد الأدنى.`, codeLine: 4, counters: c() });
   }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  steps.push({ frame: { values: [...a], states: sorted }, description: `Sorted from both ends inward.`, codeLine: 6, counters: c() });
+  steps.push({ frame: { values: [...a], states: sorted }, description: `Sorted from both ends inward.`, descriptionAr: `اكتمل الترتيب من الطرفين نحو الداخل.`, codeLine: 6, counters: c() });
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "cocktail-shaker-sort",
   title: "Cocktail Shaker Sort",
+  titleAr: "ترتيب الكوكتيل",
   category: "sorting",
   difficulty: "Beginner",
   tags: ["bidirectional", "stable", "in-place", "bubble variant"],
+  tagsAr: ["ثنائي الاتجاه", "مستقر", "في المكان", "مشتق من الفقاعي"],
   summary: "A bidirectional bubble sort that alternates forward and backward passes, sorting from both ends inward.",
+  summaryAr: "ترتيب فقاعي ثنائي الاتجاه يتناوب بين مرورات أمامية وخلفية، مرتّبًا من الطرفين نحو الداخل.",
   renderer: "array",
   pseudocode: [
     "procedure cocktailSort(a)",
@@ -253,6 +256,61 @@ Its main advantage over plain bubble sort is that it handles "turtles" — small
       { question: "Its average-case time complexity is…", options: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], answer: 2, explanation: "Like bubble sort, it does quadratic work on average." },
       { question: "Cocktail sort is…", options: ["unstable", "stable and in-place", "out-of-place", "non-adaptive"], answer: 1, explanation: "It only swaps adjacent out-of-order pairs and uses O(1) memory." },
       { question: "Its best case O(n) occurs when the input is…", options: ["Reverse sorted", "Already sorted", "All equal to zero", "Random"], answer: 1, explanation: "One forward pass with no swaps triggers the early exit." },
+    ],
+  },
+  contentAr: {
+    overview: `ترتيب الكوكتيل (يُسمى أيضًا الترتيب الفقاعي ثنائي الاتجاه أو ترتيب الهزّاز) نسخة من الترتيب الفقاعي تجتاز المصفوفة في كلا الاتجاهين بالتناوب على المرورات. المرور الأمامي يُصعّد أكبر عنصر متبقٍ إلى الطرف الأيمن؛ ثم يُصعّد المرور الخلفي أصغر عنصر متبقٍ إلى الطرف الأيسر. تنمو المنطقة المرتبة بذلك من الطرفين نحو الوسط.
+
+ميزته الرئيسية على الترتيب الفقاعي البسيط أنه يعالج "السلاحف" — القيم الصغيرة قرب نهاية المصفوفة — أسرع بكثير. في الترتيب الفقاعي تتحرك السلحفاة يسارًا موضعًا واحدًا فقط في كل مرور كامل؛ بينما يحرّكها المرور الخلفي لترتيب الكوكتيل مواضع عديدة دفعة واحدة. يظل ترتيبًا بسيطًا مستقرًا بزمن O(n²)، مفيدًا أساسًا للتدريس.`,
+    howItWorks: [
+      "احتفظ بنافذة نشطة متقلصة [lo, hi].",
+      "المرور الأمامي: قارن الأزواج المتجاورة من lo إلى hi، وبدّل غير المرتبة منها؛ يستقر الأكبر عند hi.",
+      "قلّص hi بواحد — الطرف الأيمن أصبح مرتبًا الآن.",
+      "المرور الخلفي: قارن الأزواج المتجاورة من hi نزولًا إلى lo؛ يستقر الأصغر عند lo.",
+      "ارفع lo بواحد وكرر حتى تكتمل جولة كاملة دون أي تبديل.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n²)", worst: "O(n²)" },
+      space: "O(1)",
+      notes: "أفضل حالة O(n) على مدخلات مرتبة مسبقًا (مرور واحد، دون تبديل). المتوسط والأسوأ O(n²). يعالج 'السلاحف' الصغيرة القيمة أفضل من الترتيب الفقاعي لكنه مماثل له تقاربيًا.",
+    },
+    applications: [
+      "تدريس مشتقات الترتيب الفقاعي ومسألة 'السلحفاة'",
+      "المصفوفات الصغيرة شبه المرتبة حيث تهم البساطة",
+      "المواقف التي تحتاج ترتيبًا مستقرًا وفي المكان بكود ضئيل",
+      "توضيح المرورات ثنائية الاتجاه",
+    ],
+    advantages: [
+      "يعالج القيم الصغيرة المتأخرة أسرع من الترتيب الفقاعي",
+      "مستقر وفي المكان",
+      "متكيّف: O(n) على مدخلات مرتبة",
+      "بسيط التنفيذ",
+    ],
+    disadvantages: [
+      "لا يزال O(n²) في المتوسط",
+      "أكثر تعقيدًا من الترتيب الفقاعي البسيط مقابل مكسب ضئيل",
+      "يتفوق عليه ترتيب الإدراج عمليًا",
+    ],
+    commonMistakes: [
+      "عدم تقليص كلا الحدين (lo وhi)، مما يعيد العمل على أجزاء مرتبة بالفعل.",
+      "نسيان الخروج المبكر عندما لا يُجري مرور أي تبديل.",
+      "أخطاء انزياح بمقدار واحد في حدود الحلقة الخلفية.",
+      "الاعتقاد بأنه أفضل تقاربيًا من الترتيب الفقاعي — وهو ليس كذلك.",
+    ],
+    interviewQuestions: [
+      "ما المشكلة في الترتيب الفقاعي التي يعالجها ترتيب الكوكتيل؟",
+      "لماذا يمكن وسم طرفي المصفوفة كمرتبين أثناء التشغيل؟",
+      "هل ترتيب الكوكتيل مستقر؟ ولماذا؟",
+      "ما تعقيده في أفضل حالة ومتى يحدث؟",
+    ],
+    summary:
+      "ترتيب الكوكتيل هو ترتيب فقاعي يتناوب بين مرورات أمامية وخلفية، منمّيًا منطقة مرتبة من الطرفين. مستقر، في المكان، بمتوسط O(n²)، لكنه أسرع من الترتيب الفقاعي في تحريك القيم الصغيرة القريبة من النهاية.",
+    quiz: [
+      { question: "يتحسّن ترتيب الكوكتيل على الترتيب الفقاعي أساسًا عبر…", options: ["استخدام العودية", "المرور في كلا الاتجاهين لتحريك القيم الصغيرة المتأخرة أسرع", "كونه O(n log n)", "تجنب التبديل"], answer: 1, explanation: "المرور الخلفي يحرّك 'السلاحف' (القيم الصغيرة قرب النهاية) يسارًا بسرعة." },
+      { question: "أثناء تشغيل ترتيب الكوكتيل، تنمو المنطقة المرتبة…", options: ["من اليسار فقط", "من الطرفين نحو الداخل", "من الوسط للخارج", "عشوائيًا"], answer: 1, explanation: "المرورات الأمامية تثبّت الطرف الأيمن؛ والمرورات الخلفية تثبّت الطرف الأيسر." },
+      { question: "تعقيده الزمني في المتوسط هو…", options: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], answer: 2, explanation: "مثل الترتيب الفقاعي، يُجري عملًا تربيعيًا في المتوسط." },
+      { question: "ترتيب الكوكتيل…", options: ["غير مستقر", "مستقر وفي المكان", "خارج المكان", "غير متكيّف"], answer: 1, explanation: "يبدّل فقط الأزواج المتجاورة غير المرتبة ويستخدم ذاكرة O(1)." },
+      { question: "أفضل حالة له O(n) تحدث عندما تكون المدخلات…", options: ["معكوسة الترتيب", "مرتبة بالفعل", "كلها تساوي صفرًا", "عشوائية"], answer: 1, explanation: "مرور أمامي واحد دون تبديل يُطلق الخروج المبكر." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 5, 1, 4, 2, 8, 0, 2", help: "2–40 numbers." }],

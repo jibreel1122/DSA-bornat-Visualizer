@@ -4,6 +4,7 @@ import { parseNumberList } from "@/lib/utils";
 type Input = { values: number[] };
 
 const PLACE_NAME = ["ones", "tens", "hundreds", "thousands"];
+const PLACE_NAME_AR = ["الآحاد", "العشرات", "المئات", "الآلاف"];
 
 function generate(input: Input): Step<ArrayFrame>[] {
   let a = [...input.values];
@@ -20,42 +21,46 @@ function generate(input: Input): Step<ArrayFrame>[] {
       return { label: `bucket ${d}`, values: b.length ? [...b] : ["—"], states };
     });
 
-  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number) => {
-    steps.push({ frame: { values: [...a], states, aux }, description, codeLine, counters: counters() });
+  const snap = (states: Record<number, CellState>, aux: AuxRow[], description: string, codeLine: number, descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states, aux }, description, descriptionAr, codeLine, counters: counters() });
   };
 
-  snap({}, [], `Radix sort (LSD): stably sort by each digit from least to most significant.`, 0);
+  snap({}, [], `Radix sort (LSD): stably sort by each digit from least to most significant.`, 0, `ترتيب الأساس (LSD): رتّب بثبات حسب كل رقم من الأقل أهمية إلى الأكثر أهمية.`);
 
   for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
     passNo++;
     const place = PLACE_NAME[Math.log10(exp)] ?? `10^${Math.log10(exp)}`;
+    const placeAr = PLACE_NAME_AR[Math.log10(exp)] ?? `10^${Math.log10(exp)}`;
     const buckets: number[][] = Array.from({ length: 10 }, () => []);
-    snap({}, bucketRows(buckets), `Pass ${passNo}: distribute by the ${place} digit.`, 1);
+    snap({}, bucketRows(buckets), `Pass ${passNo}: distribute by the ${place} digit.`, 1, `المرور ${passNo}: وزّع حسب رقم خانة ${placeAr}.`);
     for (let i = 0; i < n; i++) {
       const digit = Math.floor(a[i] / exp) % 10;
       buckets[digit].push(a[i]);
-      snap({ [i]: "compare" }, bucketRows(buckets, digit), `a[${i}] = ${a[i]} → ${place} digit ${digit}, drop into bucket ${digit}.`, 2);
+      snap({ [i]: "compare" }, bucketRows(buckets, digit), `a[${i}] = ${a[i]} → ${place} digit ${digit}, drop into bucket ${digit}.`, 2, `a[${i}] = ${a[i]} ← رقم خانة ${placeAr} هو ${digit}، ضعه في الدلو ${digit}.`);
     }
     // gather
     const gathered: number[] = [];
     for (let d = 0; d < 10; d++) for (const v of buckets[d]) gathered.push(v);
     a = gathered;
     writes += n;
-    snap({}, bucketRows(buckets), `Gather buckets 0→9 in order — array is now sorted by digits up to the ${place} place.`, 3);
+    snap({}, bucketRows(buckets), `Gather buckets 0→9 in order — array is now sorted by digits up to the ${place} place.`, 3, `اجمع الدلاء من 0←9 بالترتيب — المصفوفة الآن مرتبة حسب الأرقام حتى خانة ${placeAr}.`);
   }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, [], `Sorted in O(d·(n + 10)) with d = ${passNo} digit passes — no comparisons.`, 4);
+  snap(sorted, [], `Sorted in O(d·(n + 10)) with d = ${passNo} digit passes — no comparisons.`, 4, `اكتمل الترتيب بزمن O(d·(n + 10)) حيث d = ${passNo} مرورًا رقميًا — دون مقارنات.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "radix-sort",
   title: "Radix Sort (LSD)",
+  titleAr: "ترتيب الأساس (LSD)",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["non-comparison", "stable", "digit-by-digit", "linear-ish"],
+  tagsAr: ["ليس بالمقارنة", "مستقر", "رقمًا برقم", "شبه خطي"],
   summary: "Sorts integers digit by digit from least to most significant, using a stable bucket pass for each digit.",
+  summaryAr: "يرتب الأعداد الصحيحة رقمًا برقم من الأقل إلى الأكثر أهمية، مستخدمًا مرور دلاء مستقرًا لكل رقم.",
   renderer: "array",
   pseudocode: [
     "procedure radixSort(a)",
@@ -251,6 +256,62 @@ Because it uses bucketing rather than comparisons, radix sort runs in O(d·(n + 
       { question: "Radix sort's time complexity is…", options: ["O(n log n)", "O(d·(n + b))", "O(n²)", "O(2ⁿ)"], answer: 1, explanation: "d digit passes each doing O(n + b) bucket work." },
       { question: "Radix sort works directly on…", options: ["Any comparable objects", "Integers/strings with a digit representation", "Only floats", "Only sorted data"], answer: 1, explanation: "It relies on extracting digits, so keys must be digit-representable." },
       { question: "The stable per-digit sort commonly used is…", options: ["Quick sort", "Counting sort", "Heap sort", "Merge sort"], answer: 1, explanation: "Counting sort is stable and O(n + b), a perfect fit for each digit pass." },
+    ],
+  },
+  contentAr: {
+    overview: `يرتب ترتيب الأساس الأعداد الصحيحة بمعالجة أرقامها خانة تلو الأخرى. الصيغة LSD (الرقم الأقل أهمية أولًا) تبدأ بخانة الآحاد، ثم العشرات، ثم المئات، وهكذا. في كل مرور، يوزّع الأعداد إلى عشرة دلاء حسب الرقم الحالي ثم يجمع الدلاء مجددًا بالترتيب. والمهم أن كل مرور يجب أن يكون مستقرًا كي يُحافَظ على الترتيب الذي حققته الأرقام الأقل أهمية السابقة.
+
+لأنه يستخدم التوزيع في دلاء بدلًا من المقارنات، يعمل ترتيب الأساس بزمن O(d·(n + b))، حيث d عدد الأرقام وb الأساس (10 هنا). عندما يكون عدد الأرقام صغيرًا وثابتًا، يصبح هذا خطيًا فعليًا — وغالبًا أسرع من أي ترتيب بالمقارنة لمجموعات كبيرة من الأعداد الصحيحة محدودة الحجم.`,
+    howItWorks: [
+      "أوجد القيمة القصوى لمعرفة عدد خانات الأرقام d.",
+      "لكل خانة (آحاد، عشرات، مئات، …)، وزّع الأعداد إلى 10 دلاء حسب ذلك الرقم.",
+      "اجمع الدلاء بالترتيب من 0←9 مجددًا في المصفوفة — هذا المرور يجب أن يكون مستقرًا.",
+      "انتقل إلى الرقم التالي الأكثر أهمية وكرر.",
+      "بعد معالجة الرقم الأكثر أهمية، تكون المصفوفة مرتبة بالكامل.",
+    ],
+    complexity: {
+      time: { best: "O(d·(n + b))", average: "O(d·(n + b))", worst: "O(d·(n + b))" },
+      space: "O(n + b)",
+      notes: "d = عدد الأرقام، b = الأساس (10). خطي فعليًا عندما يكون d ثابتًا صغيرًا. يتطلب ترتيبًا مستقرًا لكل رقم (عادة ترتيب العد).",
+    },
+    applications: [
+      "ترتيب مجموعات كبيرة من الأعداد الصحيحة أو النصوص ثابتة العرض",
+      "ترتيب مفاتيح مثل المعرّفات أو الرموز البريدية أو التواريخ",
+      "بناء مصفوفة اللواحق وخوارزميات نصية أخرى",
+      "أي ترتيب لمفاتيح محدودة حيث يهم التفوق على O(n log n)",
+    ],
+    advantages: [
+      "زمن خطي O(d·n) للمفاتيح محدودة العرض",
+      "مستقر",
+      "دون مقارنات",
+      "أداء قابل للتنبؤ ومستقل عن البيانات",
+    ],
+    disadvantages: [
+      "فقط للأعداد الصحيحة/النصوص ذات تمثيل رقمي",
+      "يحتاج ذاكرة إضافية O(n + b) لكل مرور",
+      "يجب أن يكون مرور كل رقم مستقرًا وإلا انكسر",
+      "قد يتجاوز العبء ترتيبات المقارنة عند n الصغيرة أو المفاتيح الواسعة",
+    ],
+    commonMistakes: [
+      "استخدام ترتيب غير مستقر لكل رقم، مما يفسد الترتيب السابق.",
+      "الترتيب من الرقم الأكثر أهمية دون التوزيع العودي الذي تحتاجه MSD.",
+      "تجاهل أن d (عدد الأرقام) يؤثر كثيرًا على العامل الثابت.",
+      "عدم التعامل مع الأعداد السالبة (يحتاج إزاحة أو معالجة إشارة).",
+    ],
+    interviewQuestions: [
+      "لماذا يجب أن يكون كل مرور رقمي في ترتيب الأساس LSD مستقرًا؟",
+      "كيف يحقق ترتيب الأساس زمنًا خطيًا رغم الحد الأدنى لترتيبات المقارنة؟",
+      "قارن بين ترتيب الأساس LSD وMSD.",
+      "كيف توسّع ترتيب الأساس للتعامل مع الأعداد الصحيحة السالبة؟",
+    ],
+    summary:
+      "يرتب ترتيب الأساس (LSD) الأعداد الصحيحة رقمًا برقم من الأقل إلى الأكثر أهمية، مستخدمًا مرور دلاء مستقرًا في كل جولة. يعمل بزمن O(d·(n + b)) — خطي فعليًا للمفاتيح محدودة العرض — وهو مستقر، لكنه يعمل فقط على مفاتيح قابلة للتمثيل الرقمي.",
+    quiz: [
+      { question: "ترتيب الأساس LSD يعالج الأرقام من…", options: ["الأكثر إلى الأقل أهمية", "الأقل إلى الأكثر أهمية", "ترتيب عشوائي", "من الوسط للخارج"], answer: 1, explanation: "يبدأ بخانة الآحاد ويتجه نحو الرقم الأكثر أهمية." },
+      { question: "يجب أن يكون كل مرور لكل رقم…", options: ["غير مستقر", "مستقرًا", "عوديًا", "قائمًا على المقارنة"], answer: 1, explanation: "الاستقرار يحافظ على الترتيب الذي أنشأته الأرقام الأقل أهمية السابقة." },
+      { question: "التعقيد الزمني لترتيب الأساس هو…", options: ["O(n log n)", "O(d·(n + b))", "O(n²)", "O(2ⁿ)"], answer: 1, explanation: "d مرورًا رقميًا كل منها يُجري عمل دلاء O(n + b)." },
+      { question: "يعمل ترتيب الأساس مباشرة على…", options: ["أي كائنات قابلة للمقارنة", "أعداد صحيحة/نصوص ذات تمثيل رقمي", "الأعداد العشرية فقط", "البيانات المرتبة فقط"], answer: 1, explanation: "يعتمد على استخراج الأرقام، فيجب أن تكون المفاتيح قابلة للتمثيل الرقمي." },
+      { question: "الترتيب المستقر لكل رقم المستخدم عادة هو…", options: ["الترتيب السريع", "ترتيب العد", "ترتيب الكومة", "الترتيب بالدمج"], answer: 1, explanation: "ترتيب العد مستقر وبزمن O(n + b)، ملائم تمامًا لكل مرور رقمي." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values (0–999)", placeholder: "e.g. 170, 45, 75, 90, 802, 24, 2, 66", help: "2–30 non-negative integers up to 999." }],

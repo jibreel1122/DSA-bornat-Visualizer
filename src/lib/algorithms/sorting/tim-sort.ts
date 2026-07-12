@@ -17,29 +17,30 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     range?: { from: number; to: number },
+    descriptionAr?: string,
   ) => {
-    steps.push({ frame: { values: [...a], states, range: range ?? null }, description, codeLine, counters: { comparisons, merges } });
+    steps.push({ frame: { values: [...a], states, range: range ?? null }, description, descriptionAr, codeLine, counters: { comparisons, merges } });
   };
 
-  snap({}, `Tim sort: split the array into runs of size ${MIN_RUN}, sort each with insertion sort, then merge runs in pairs (doubling merge size each pass) — like merge sort, but starting from insertion-sorted runs instead of single elements.`, 0);
+  snap({}, `Tim sort: split the array into runs of size ${MIN_RUN}, sort each with insertion sort, then merge runs in pairs (doubling merge size each pass) — like merge sort, but starting from insertion-sorted runs instead of single elements.`, 0, undefined, `ترتيب تيم: قسّم المصفوفة إلى دفعات (runs) بحجم ${MIN_RUN}، رتّب كل دفعة بترتيب الإدراج، ثم ادمج الدفعات في أزواج (مضاعفًا حجم الدمج كل مرور) — مثل الترتيب بالدمج، لكن بدءًا من دفعات مرتبة بالإدراج بدلًا من عناصر مفردة.`);
 
   // Phase 1: insertion-sort each run of size MIN_RUN
   for (let start = 0; start < n; start += MIN_RUN) {
     const end = Math.min(start + MIN_RUN - 1, n - 1);
-    snap({}, `Run [${start}, ${end}]: sort with insertion sort.`, 1, { from: start, to: end });
+    snap({}, `Run [${start}, ${end}]: sort with insertion sort.`, 1, { from: start, to: end }, `الدفعة [${start}, ${end}]: رتّبها بترتيب الإدراج.`);
     for (let i = start + 1; i <= end; i++) {
       const key = a[i];
       let j = i - 1;
-      snap({ [i]: "active" }, `Insert a[${i}] = ${key} into the sorted part of the run.`, 2, { from: start, to: end });
+      snap({ [i]: "active" }, `Insert a[${i}] = ${key} into the sorted part of the run.`, 2, { from: start, to: end }, `أدرج a[${i}] = ${key} في الجزء المرتب من الدفعة.`);
       while (j >= start && a[j] > key) {
         comparisons++;
         a[j + 1] = a[j];
         j--;
-        snap({ [j + 1]: "swap" }, `Shift ${a[j + 1]} right.`, 3, { from: start, to: end });
+        snap({ [j + 1]: "swap" }, `Shift ${a[j + 1]} right.`, 3, { from: start, to: end }, `أزح ${a[j + 1]} يمينًا.`);
       }
       a[j + 1] = key;
     }
-    snap({}, `Run [${start}, ${end}] sorted: [${a.slice(start, end + 1).join(", ")}].`, 4, { from: start, to: end });
+    snap({}, `Run [${start}, ${end}] sorted: [${a.slice(start, end + 1).join(", ")}].`, 4, { from: start, to: end }, `اكتمل ترتيب الدفعة [${start}, ${end}]: [${a.slice(start, end + 1).join(", ")}].`);
   }
 
   // Phase 2: bottom-up merge, doubling run size
@@ -50,7 +51,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
       const right = Math.min(left + 2 * size - 1, n - 1);
       if (mid >= right) continue;
       merges++;
-      snap({}, `Merge run [${left}, ${mid}] with run [${mid + 1}, ${right}].`, 5, { from: left, to: right });
+      snap({}, `Merge run [${left}, ${mid}] with run [${mid + 1}, ${right}].`, 5, { from: left, to: right }, `ادمج الدفعة [${left}, ${mid}] مع الدفعة [${mid + 1}, ${right}].`);
 
       const leftArr = a.slice(left, mid + 1);
       const rightArr = a.slice(mid + 1, right + 1);
@@ -66,39 +67,42 @@ function generate(input: Input): Step<ArrayFrame>[] {
           a[k] = rightArr[j];
           j++;
         }
-        snap({ [k]: "compare" }, `Place ${a[k]} at index ${k}.`, 6, { from: left, to: right });
+        snap({ [k]: "compare" }, `Place ${a[k]} at index ${k}.`, 6, { from: left, to: right }, `ضع ${a[k]} عند الفهرس ${k}.`);
         k++;
       }
       while (i < leftArr.length) {
         a[k] = leftArr[i];
-        snap({ [k]: "compare" }, `Copy remaining left element ${a[k]} to index ${k}.`, 7, { from: left, to: right });
+        snap({ [k]: "compare" }, `Copy remaining left element ${a[k]} to index ${k}.`, 7, { from: left, to: right }, `انسخ العنصر الأيسر المتبقي ${a[k]} إلى الفهرس ${k}.`);
         i++;
         k++;
       }
       while (j < rightArr.length) {
         a[k] = rightArr[j];
-        snap({ [k]: "compare" }, `Copy remaining right element ${a[k]} to index ${k}.`, 7, { from: left, to: right });
+        snap({ [k]: "compare" }, `Copy remaining right element ${a[k]} to index ${k}.`, 7, { from: left, to: right }, `انسخ العنصر الأيمن المتبقي ${a[k]} إلى الفهرس ${k}.`);
         j++;
         k++;
       }
-      snap({}, `Merged range [${left}, ${right}]: [${a.slice(left, right + 1).join(", ")}].`, 8, { from: left, to: right });
+      snap({}, `Merged range [${left}, ${right}]: [${a.slice(left, right + 1).join(", ")}].`, 8, { from: left, to: right }, `اكتمل دمج المجال [${left}, ${right}]: [${a.slice(left, right + 1).join(", ")}].`);
     }
     size *= 2;
   }
 
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
-  snap(sorted, `Sorted with ${merges} merges and ${comparisons} comparisons. Real-world Timsort (Python, Java) also detects naturally-occurring runs and uses galloping mode — this shows the core fixed-run-size skeleton.`, 8);
+  snap(sorted, `Sorted with ${merges} merges and ${comparisons} comparisons. Real-world Timsort (Python, Java) also detects naturally-occurring runs and uses galloping mode — this shows the core fixed-run-size skeleton.`, 8, undefined, `اكتمل الترتيب بـ ${merges} عملية دمج و${comparisons} مقارنة. ترتيب تيم الحقيقي (بايثون، جافا) يكتشف أيضًا الدفعات الطبيعية ويستخدم وضع 'القفز السريع' — هذا يعرض الهيكل الأساسي بحجم دفعة ثابت.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "tim-sort",
   title: "Tim Sort (Simplified)",
+  titleAr: "ترتيب تيم (مبسّط)",
   category: "sorting",
   difficulty: "Advanced",
   tags: ["hybrid sort", "stable", "insertion + merge", "O(n log n)", "real-world"],
+  tagsAr: ["ترتيب هجين", "مستقر", "إدراج + دمج", "O(n log n)", "واقعي"],
   summary: "The hybrid behind Python's and Java's default sort: insertion-sort small runs, then merge them like merge sort — stable and fast on partially-sorted data.",
+  summaryAr: "الترتيب الهجين خلف الترتيب الافتراضي في بايثون وجافا: يرتب دفعات صغيرة بالإدراج، ثم يدمجها كالترتيب بالدمج — مستقر وسريع على البيانات شبه المرتبة.",
   renderer: "array",
   pseudocode: [
     "procedure timSort(a)  // simplified fixed-run version",
@@ -360,6 +364,61 @@ The full algorithm detects naturally occurring ascending or descending runs in t
       { question: "Timsort's worst-case time complexity is…", options: ["O(n²)", "O(n log n)", "O(n)", "O(2ⁿ)"], answer: 1, explanation: "The merge phase guarantees O(n log n) regardless of input, just like merge sort." },
       { question: "Real-world Timsort's best case is O(n) because…", options: ["It always skips sorting", "It detects the input is already one natural run and performs no merging", "It uses a different comparison operator", "n is always small"], answer: 1, explanation: "Natural run detection recognizes fully sorted (or reverse-sorted) input immediately." },
       { question: "Timsort is used as the default sort in…", options: ["C's qsort only", "Python's sort and Java's Arrays.sort for objects", "Assembly language", "It isn't used in practice"], answer: 1, explanation: "It's the production sort behind Python's list.sort()/sorted() and Java's object array sorting." },
+    ],
+  },
+  contentAr: {
+    overview: `تيم سورت هو خوارزمية الترتيب خلف list.sort()/sorted() في بايثون وArrays.sort() في جافا للكائنات — ترتيب هجين صممه Tim Peters عام 2002 خصيصًا لاستغلال حقيقة أن بيانات العالم الحقيقي غالبًا مرتبة جزئيًا بالفعل. يجمع بين أداء ترتيب الإدراج الممتاز على المدخلات الصغيرة/شبه المرتبة وضمان الترتيب بالدمج O(n log n) في أسوأ حالة واستقراره.
+
+الخوارزمية الكاملة تكتشف الدفعات (runs) التصاعدية أو التنازلية الطبيعية في المدخلات وتُمدّد القصيرة منها بترتيب الإدراج حتى طول دفعة أدنى (~32-64)، ثم تدمج الدفعات باستخدام "وضع القفز السريع" المتكيف الذي يُسرّع الدمج عندما تفوز دفعة واحدة باستمرار. تُصوّر هذه الوحدة الهيكل الأساسي بطول دفعة ثابت مبسّط (بدلًا من اكتشاف الدفعات الطبيعية) لإبقاء الآلية واضحة: رتّب كتلًا ثابتة الحجم بالإدراج، ثم ادمج الدفعات المتجاورة مرارًا، مضاعفًا حجم الدمج كل مرور — تمامًا مثل الترتيب بالدمج، لكن بدءًا من دفعات مرتبة مسبقًا بدلًا من عناصر مفردة.`,
+    howItWorks: [
+      "قسّم المصفوفة إلى دفعات متتالية بحجم أدنى (32-64 في تيم سورت الإنتاجي؛ ثابت صغير هنا للتصور).",
+      "رتّب كل دفعة بترتيب الإدراج — رخيص وسريع لأن الدفعات قصيرة.",
+      "ادمج الدفعات المتجاورة زوجيًا باستخدام دمج الترتيب بالدمج القياسي، تمامًا كما في الترتيب بالدمج من الأسفل إلى الأعلى.",
+      "ضاعف حجم الدمج كل مرور وكرر حتى تصبح المصفوفة كاملة دفعة مرتبة واحدة.",
+      "تيم سورت الحقيقي يكتشف أيضًا الدفعات التصاعدية/التنازلية الموجودة (متخطيًا ترتيب الإدراج كليًا على بيانات مرتبة بالفعل) ويستخدم وضع القفز السريع لتسريع الدمج عندما يهيمن أحد الجانبين.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(n)",
+      notes: "أفضل حالة O(n) تحدث على مدخلات مرتبة بالفعل (أو معكوسة الترتيب بالفعل)، لأن تيم سورت الحقيقي يكتشف الدفعة الطبيعية الواحدة ولا يُجري أي دمج على الإطلاق. هذه النسخة المبسطة ثابتة الدفعة لا تحصل على أفضل حالة O(n) تلك، لكن مرحلة الدمج تبقى O(n log n) في أسوأ حالة.",
+    },
+    applications: [
+      "الترتيب المدمج في بايثون (list.sort، sorted()) منذ بايثون 2.3",
+      "Arrays.sort() وCollections.sort() في جافا لمصفوفات الكائنات (الأنواع الأولية تستخدم الترتيب السريع ثنائي المحور)",
+      "ترتيب منصة أندرويد وعدة بيئات تشغيل لغات أخرى",
+      "أي حمل عمل تكون فيه المدخلات مرتبة جزئيًا مسبقًا غالبًا (السجلات، التحديثات التزايدية)",
+    ],
+    advantages: [
+      "يتكيف مع الترتيب الموجود في البيانات — أسرع بكثير من O(n log n) على مدخلات شبه مرتبة",
+      "مستقر — العناصر المتساوية تحافظ على ترتيبها النسبي، ضروري للترتيب متعدد المفاتيح",
+      "أسوأ حالة مضمونة O(n log n)، بخلاف أسوأ حالة الترتيب السريع O(n²)",
+    ],
+    disadvantages: [
+      "أكثر تعقيدًا بكثير للتنفيذ الصحيح من الترتيب السريع أو الترتيب بالدمج",
+      "يستخدم مساحة إضافية O(n) للدمج، بخلاف الترتيب السريع في المكان",
+      "تحسين وضع القفز السريع الكامل يضيف تعقيدًا كبيرًا في التنفيذ مقابل تسريعه",
+    ],
+    commonMistakes: [
+      "تنفيذ 'تيم سورت' كترتيب بالدمج فقط حرفيًا دون خطوة ترتيب الدفعات الصغيرة بالإدراج، مما يفقد ميزة السرعة الواقعية.",
+      "اختيار MIN_RUN كثابت عشوائي بدلًا من قوة للعدد اثنين قريبة من حد مختار (تيم سورت الإنتاجي يضبط هذا بعناية).",
+      "نسيان أن الدمج يجب أن يكون مستقرًا — استخدام >= بدلًا من > (أو العكس) في مقارنة الدمج يقلب الاستقرار.",
+      "افتراض أن هذه النسخة المبسطة ثابتة الدفعة تحصل على أفضل حالة تيم سورت O(n) — ذلك يتطلب اكتشاف الدفعات الطبيعية، الذي يُغفله هذا التصور من أجل الوضوح.",
+    ],
+    interviewQuestions: [
+      "لماذا يجمع تيم سورت بين ترتيب الإدراج والترتيب بالدمج بدلًا من استخدام أحدهما وحده؟",
+      "ما الذي يجعل تيم سورت متكيفًا، وما أنماط البيانات الواقعية التي يساعد فيها ذلك؟",
+      "اشرح دور الترتيب بالدمج في ضمان أسوأ حالة O(n log n) لتيم سورت.",
+      "ما هو 'وضع القفز السريع' ومتى يُفعّل؟",
+      "لماذا الاستقرار مهم لدالة ترتيب لغة برمجة عامة الغرض؟",
+    ],
+    summary:
+      "يرتب تيم سورت الدفعات القصيرة بالإدراج (سريع على البيانات الصغيرة/شبه المرتبة) ثم يدمجها كالترتيب بالدمج بمرورات مضاعِفة (يضمن أسوأ حالة O(n log n)) — ترتيب هجين مستقر ومتكيف يقوم عليه الترتيب الافتراضي في بايثون وجافا. تيم سورت الإنتاجي يضيف اكتشاف الدفعات الطبيعية ودمج وضع القفز السريع لأداء واقعي أفضل؛ تُصوّر هذه الوحدة الهيكل الأساسي للإدراج+الدمج.",
+    quiz: [
+      { question: "تيم سورت خليط من أي خوارزميتين؟", options: ["الترتيب السريع وترتيب الكومة", "ترتيب الإدراج والترتيب بالدمج", "الترتيب الفقاعي وترتيب الاختيار", "ترتيب الأساس وترتيب الدلاء"], answer: 1, explanation: "الدفعات الصغيرة تُرتّب بالإدراج، ثم تُدمج معًا باستخدام خطوة دمج الترتيب بالدمج." },
+      { question: "لماذا يستخدم تيم سورت ترتيب الإدراج على الدفعات الصغيرة بدلًا من المزيد من العودية؟", options: ["ترتيب الإدراج أسرع تقاربيًا بشكل عام", "ترتيب الإدراج له عامل ثابت منخفض وسريع على المدخلات الصغيرة/شبه المرتبة", "مطلوب للاستقرار", "يستخدم ذاكرة أقل"], answer: 1, explanation: "من أجل n الصغيرة، بساطة ترتيب الإدراج تتفوق على عبء المزيد من التقسيم العودي." },
+      { question: "التعقيد الزمني لأسوأ حالة في تيم سورت هو…", options: ["O(n²)", "O(n log n)", "O(n)", "O(2ⁿ)"], answer: 1, explanation: "مرحلة الدمج تضمن O(n log n) بغض النظر عن المدخلات، تمامًا كالترتيب بالدمج." },
+      { question: "أفضل حالة لتيم سورت الحقيقي هي O(n) لأنه…", options: ["يتخطى الترتيب دائمًا", "يكتشف أن المدخلات دفعة طبيعية واحدة بالفعل ولا يُجري أي دمج", "يستخدم عامل مقارنة مختلف", "n دائمًا صغير"], answer: 1, explanation: "اكتشاف الدفعة الطبيعية يتعرف فورًا على مدخلات مرتبة بالكامل (أو معكوسة الترتيب)." },
+      { question: "يُستخدم تيم سورت كترتيب افتراضي في…", options: ["qsort في سي فقط", "ترتيب بايثون وArrays.sort في جافا للكائنات", "لغة التجميع", "لا يُستخدم عمليًا"], answer: 1, explanation: "هو الترتيب الإنتاجي خلف list.sort()/sorted() في بايثون وترتيب مصفوفات الكائنات في جافا." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 5, 21, 7, 23, 19, 3, 2, 8, 14, 1", help: "4–50 numbers." }],

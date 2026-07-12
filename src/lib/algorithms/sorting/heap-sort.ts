@@ -13,11 +13,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let swaps = 0;
   const counters = () => ({ comparisons, swaps });
 
-  const snap = (states: Record<number, CellState>, description: string, codeLine: number, heapSize?: number) => {
+  const snap = (states: Record<number, CellState>, description: string, codeLine: number, heapSize?: number, descriptionAr?: string) => {
     const merged: Record<number, CellState> = { ...states };
     for (const idx of sorted) merged[idx] ??= "sorted";
     const note = heapSize !== undefined ? `heap size: ${heapSize}` : undefined;
-    steps.push({ frame: { values: [...a], states: merged, note }, description, codeLine, counters: counters() });
+    steps.push({ frame: { values: [...a], states: merged, note }, description, descriptionAr, codeLine, counters: counters() });
   };
 
   const siftDown = (i: number, size: number) => {
@@ -34,43 +34,46 @@ function generate(input: Input): Step<ArrayFrame>[] {
         if (a[r] > a[largest]) largest = r;
       }
       if (largest === i) break;
-      snap({ [i]: "active", [largest]: "compare" }, `a[${i}] = ${a[i]} is smaller than child a[${largest}] = ${a[largest]}; sift down.`, 5, size);
+      snap({ [i]: "active", [largest]: "compare" }, `a[${i}] = ${a[i]} is smaller than child a[${largest}] = ${a[largest]}; sift down.`, 5, size, `a[${i}] = ${a[i]} أصغر من الابن a[${largest}] = ${a[largest]}؛ أزحه للأسفل.`);
       [a[i], a[largest]] = [a[largest], a[i]];
       swaps++;
-      snap({ [i]: "swap", [largest]: "swap" }, `Swap so the larger child rises.`, 6, size);
+      snap({ [i]: "swap", [largest]: "swap" }, `Swap so the larger child rises.`, 6, size, `بدّل ليصعد الابن الأكبر.`);
       i = largest;
     }
   };
 
-  snap({}, `Heap sort builds a max-heap, then repeatedly extracts the maximum to the end.`, 0);
+  snap({}, `Heap sort builds a max-heap, then repeatedly extracts the maximum to the end.`, 0, undefined, `ترتيب الكومة يبني كومة عظمى، ثم يستخرج الأكبر إلى النهاية مرارًا.`);
 
   // build max heap
   for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
-    snap({ [i]: "active" }, `Heapify subtree rooted at index ${i}.`, 2, n);
+    snap({ [i]: "active" }, `Heapify subtree rooted at index ${i}.`, 2, n, `كوّم الشجرة الفرعية الجذرها الفهرس ${i}.`);
     siftDown(i, n);
   }
-  snap({}, `Max-heap built: the largest element is at the root (index 0).`, 3, n);
+  snap({}, `Max-heap built: the largest element is at the root (index 0).`, 3, n, `اكتمل بناء الكومة العظمى: أكبر عنصر عند الجذر (الفهرس 0).`);
 
   // extract
   for (let end = n - 1; end > 0; end--) {
     [a[0], a[end]] = [a[end], a[0]];
     swaps++;
     sorted.add(end);
-    snap({ 0: "swap", [end]: "sorted" }, `Move max ${a[end]} to index ${end}; shrink heap to ${end}.`, 4, end);
+    snap({ 0: "swap", [end]: "sorted" }, `Move max ${a[end]} to index ${end}; shrink heap to ${end}.`, 4, end, `انقل الأكبر ${a[end]} إلى الفهرس ${end}؛ قلّص الكومة إلى ${end}.`);
     siftDown(0, end);
   }
   sorted.add(0);
-  snap({}, `Sorted in O(n log n) with O(1) extra space.`, 7);
+  snap({}, `Sorted in O(n log n) with O(1) extra space.`, 7, undefined, `اكتمل الترتيب بزمن O(n log n) ومساحة إضافية O(1).`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "heap-sort",
   title: "Heap Sort",
+  titleAr: "ترتيب الكومة",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["heap", "in-place", "unstable", "O(n log n)"],
+  tagsAr: ["كومة", "في المكان", "غير مستقر", "O(n log n)"],
   summary: "Builds a max-heap in the array, then repeatedly swaps the root maximum to the end and re-heapifies.",
+  summaryAr: "يبني كومة عظمى داخل المصفوفة، ثم يبدّل جذرها الأكبر إلى النهاية مرارًا ويعيد التكويم.",
   renderer: "array",
   pseudocode: [
     "procedure heapSort(a[0..n-1])",
@@ -331,6 +334,62 @@ Heap sort is the practical realization of selection sort's idea: instead of an O
       { question: "Heap sort's worst-case time is…", options: ["O(n²)", "O(n log n)", "O(n)", "O(log n)"], answer: 1, explanation: "n extractions each costing O(log n) — with no bad-input degradation." },
       { question: "Heap sort is…", options: ["stable and in-place", "unstable and in-place", "stable and out-of-place", "unstable and out-of-place"], answer: 1, explanation: "It sorts within the array (in-place) but sift-down swaps can reorder equal keys (unstable)." },
       { question: "Why is heap sort often slower than quicksort in practice?", options: ["Worse asymptotic bound", "Poor cache locality from scattered accesses", "It uses O(n) memory", "It is recursive"], answer: 1, explanation: "Heap operations jump across the array, causing more cache misses than quicksort's local scans." },
+    ],
+  },
+  contentAr: {
+    overview: `يعامل ترتيب الكومة المصفوفة ككومة ثنائية. يعيد ترتيب العناصر أولًا في كومة عظمى، حيث كل أب أكبر من أو يساوي أبناءه، فيستقر الأكبر عند الجذر (الفهرس 0). ثم يبدّل الجذر مرارًا إلى نهاية المنطقة غير المرتبة ويستعيد خاصية الكومة على العناصر المتبقية — منمّيًا لاحقة مرتبة بعنصر واحد في كل خطوة.
+
+ترتيب الكومة هو التحقيق العملي لفكرة ترتيب الاختيار: بدلًا من مسح خطي O(n) لإيجاد الأكبر في كل جولة، تجده الكومة بزمن O(log n). النتيجة ترتيب مضمون O(n log n)، في المكان، دون عودية — يُقدَّر حين تهم ضمانات أسوأ حالة ومساحة O(1) معًا.`,
+    howItWorks: [
+      "اعتبر المصفوفة شجرة ثنائية كاملة: أبناء i عند 2i+1 و2i+2.",
+      "ابنِ كومة عظمى بإزاحة كل عقدة داخلية للأسفل من الأسفل إلى الأعلى.",
+      "يحمل الجذر الآن الأكبر؛ بدّله مع آخر عنصر في الكومة.",
+      "قلّص الكومة بواحد وأزح الجذر الجديد للأسفل لاستعادة الكومة.",
+      "كرر حتى تفرغ الكومة؛ المصفوفة مرتبة تصاعديًا.",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" },
+      space: "O(1)",
+      notes: "بناء الكومة O(n)؛ وكل استخراج من الاستخراجات الـn يكلّف O(log n). الترتيب يتم في المكان بذاكرة إضافية ثابتة فقط.",
+    },
+    applications: [
+      "الترتيب عندما يلزم O(n log n) مضمون ومساحة O(1) معًا",
+      "مرحلة الاختيار في البديل الاحتياطي لأسوأ حالة في introsort",
+      "الجدولة القائمة على طابور الأولوية ومسائل أعلى-k المتدفقة (الكومة نفسها)",
+      "الأنظمة المدمجة/الآنية التي لا تحتمل مخاطرة أسوأ حالة O(n²) للترتيب السريع",
+    ],
+    advantages: [
+      "O(n log n) مضمون في كل الحالات",
+      "في المكان — ذاكرة مساعدة O(1)",
+      "دون عودية (إزاحة تكرارية للأسفل)",
+      "الكومة الأساسية مفيدة بذاتها كطابور أولوية",
+    ],
+    disadvantages: [
+      "غير مستقر",
+      "موضعية ذاكرة مؤقتة ضعيفة — يقفز عبر المصفوفة (أبطأ من الترتيب السريع عمليًا)",
+      "حركة عناصر أكثر من ترتيب سريع مضبوط جيدًا",
+    ],
+    commonMistakes: [
+      "بدء بناء الكومة من الأعلى بدلًا من آخر عقدة داخلية (n/2−1).",
+      "الإزاحة للأعلى أثناء البناء بدلًا من الإزاحة للأسفل (يعطي بناء O(n log n) بدلًا من O(n)).",
+      "نسيان تقليص حجم الكومة عند الاستخراج، مما يفسد اللاحقة المرتبة.",
+      "أخطاء فهرسة الأبناء: أبناء i هم 2i+1 و2i+2 للمصفوفات المفهرسة من صفر.",
+    ],
+    interviewQuestions: [
+      "لماذا بناء الكومة O(n) رغم أنه يُجري n/2 عملية إزاحة للأسفل؟",
+      "كيف يرتبط ترتيب الكومة بترتيب الاختيار مفاهيميًا؟",
+      "لماذا ترتيب الكومة غير مستقر؟",
+      "لماذا يخسر ترتيب الكومة أمام الترتيب السريع عمليًا رغم تساوي التعقيد التقاربي؟",
+      "كيف ترتب تنازليًا — ما الذي يتغير؟",
+    ],
+    summary:
+      "يبني ترتيب الكومة كومة عظمى في المكان، ثم يستخرج الجذر الأكبر إلى النهاية ويعيد التكويم مرارًا، معطيًا ترتيبًا مضمونًا O(n log n) بمساحة O(1). يضحي بصداقة الترتيب السريع للذاكرة المؤقتة مقابل أسوأ حالة صلبة ودون عودية.",
+    quiz: [
+      { question: "في كومة ثنائية مفهرسة من صفر، أبناء العقدة i عند…", options: ["i-1 وi+1", "2i و2i+1", "2i+1 و2i+2", "i/2 وi/2+1"], answer: 2, explanation: "للمصفوفات المفهرسة من صفر، الابن الأيسر 2i+1 والأيمن 2i+2." },
+      { question: "ما التعقيد الزمني لبناء كومة من مصفوفة غير مرتبة؟", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 2, explanation: "التكويم من الأسفل إلى الأعلى يُجمع إلى O(n) لأن معظم العقد ضحلة." },
+      { question: "زمن أسوأ حالة لترتيب الكومة هو…", options: ["O(n²)", "O(n log n)", "O(n)", "O(log n)"], answer: 1, explanation: "n استخراج، كل منها يكلّف O(log n) — دون تدهور بمدخلات سيئة." },
+      { question: "ترتيب الكومة…", options: ["مستقر وفي المكان", "غير مستقر وفي المكان", "مستقر وخارج المكان", "غير مستقر وخارج المكان"], answer: 1, explanation: "يرتب داخل المصفوفة (في المكان) لكن تبديلات الإزاحة للأسفل قد تعيد ترتيب المفاتيح المتساوية (غير مستقر)." },
+      { question: "لماذا يكون ترتيب الكومة أبطأ من الترتيب السريع عمليًا غالبًا؟", options: ["حد تقاربي أسوأ", "موضعية ذاكرة مؤقتة ضعيفة من الوصولات المبعثرة", "يستخدم ذاكرة O(n)", "هو عودي"], answer: 1, explanation: "عمليات الكومة تقفز عبر المصفوفة، مسببة إخفاقات ذاكرة مؤقتة أكثر من مسوحات الترتيب السريع الموضعية." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 12, 11, 13, 5, 6, 7", help: "2–40 numbers, comma or space separated." }],

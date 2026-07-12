@@ -13,39 +13,42 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let swaps = 0;
   const counters = () => ({ comparisons, swaps });
 
-  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0 }), description: `Select the minimum of the unsorted region each pass and place it at the front.`, codeLine: 0, counters: counters() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: 0 }), description: `Select the minimum of the unsorted region each pass and place it at the front.`, descriptionAr: `اختر أصغر عنصر في المنطقة غير المرتبة في كل مرور وضعه في المقدمة.`, codeLine: 0, counters: counters() });
 
   for (let i = 0; i < n - 1; i++) {
     let min = i;
-    steps.push({ frame: arrayFrame(a, { [i]: "active", [min]: "pivot" }, { sortedTo: i }), description: `Pass ${i + 1}: assume a[${i}] = ${a[i]} is the minimum.`, codeLine: 1, counters: counters() });
+    steps.push({ frame: arrayFrame(a, { [i]: "active", [min]: "pivot" }, { sortedTo: i }), description: `Pass ${i + 1}: assume a[${i}] = ${a[i]} is the minimum.`, descriptionAr: `المرور ${i + 1}: افترض أن a[${i}] = ${a[i]} هو الأصغر.`, codeLine: 1, counters: counters() });
     for (let j = i + 1; j < n; j++) {
       comparisons++;
-      steps.push({ frame: arrayFrame(a, { [min]: "pivot", [j]: "compare" }, { sortedTo: i }), description: `Compare a[${j}] = ${a[j]} against current min a[${min}] = ${a[min]}.`, codeLine: 3, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [min]: "pivot", [j]: "compare" }, { sortedTo: i }), description: `Compare a[${j}] = ${a[j]} against current min a[${min}] = ${a[min]}.`, descriptionAr: `قارن a[${j}] = ${a[j]} بالأصغر الحالي a[${min}] = ${a[min]}.`, codeLine: 3, counters: counters() });
       if (a[j] < a[min]) {
         min = j;
-        steps.push({ frame: arrayFrame(a, { [min]: "pivot" }, { sortedTo: i }), description: `New minimum found: a[${min}] = ${a[min]}.`, codeLine: 4, counters: counters() });
+        steps.push({ frame: arrayFrame(a, { [min]: "pivot" }, { sortedTo: i }), description: `New minimum found: a[${min}] = ${a[min]}.`, descriptionAr: `عُثر على أصغر جديد: a[${min}] = ${a[min]}.`, codeLine: 4, counters: counters() });
       }
     }
     if (min !== i) {
       [a[i], a[min]] = [a[min], a[i]];
       swaps++;
-      steps.push({ frame: arrayFrame(a, { [i]: "swap", [min]: "swap" }, { sortedTo: i }), description: `Swap the minimum into position ${i}.`, codeLine: 5, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [i]: "swap", [min]: "swap" }, { sortedTo: i }), description: `Swap the minimum into position ${i}.`, descriptionAr: `بدّل الأصغر إلى الموضع ${i}.`, codeLine: 5, counters: counters() });
     } else {
-      steps.push({ frame: arrayFrame(a, { [i]: "sorted" }, { sortedTo: i }), description: `a[${i}] is already the minimum — no swap needed.`, codeLine: 5, counters: counters() });
+      steps.push({ frame: arrayFrame(a, { [i]: "sorted" }, { sortedTo: i }), description: `a[${i}] is already the minimum — no swap needed.`, descriptionAr: `a[${i}] هو الأصغر بالفعل — لا حاجة للتبديل.`, codeLine: 5, counters: counters() });
     }
-    steps.push({ frame: arrayFrame(a, {}, { sortedTo: i + 1 }), description: `Position ${i} is finalized.`, codeLine: 6, counters: counters() });
+    steps.push({ frame: arrayFrame(a, {}, { sortedTo: i + 1 }), description: `Position ${i} is finalized.`, descriptionAr: `الموضع ${i} أصبح نهائيًا.`, codeLine: 6, counters: counters() });
   }
-  steps.push({ frame: arrayFrame(a, {}, { sortedTo: n }), description: `Sorted with exactly ${swaps} swaps — selection sort minimizes writes.`, codeLine: 7, counters: counters() });
+  steps.push({ frame: arrayFrame(a, {}, { sortedTo: n }), description: `Sorted with exactly ${swaps} swaps — selection sort minimizes writes.`, descriptionAr: `اكتمل الترتيب بـ ${swaps} عملية تبديل بالضبط — ترتيب الاختيار يقلّل الكتابة.`, codeLine: 7, counters: counters() });
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "selection-sort",
   title: "Selection Sort",
+  titleAr: "ترتيب الاختيار",
   category: "sorting",
   difficulty: "Beginner",
   tags: ["comparison sort", "in-place", "quadratic", "few swaps"],
+  tagsAr: ["ترتيب بالمقارنة", "في المكان", "تربيعي", "تبديلات قليلة"],
   summary: "Repeatedly selects the smallest remaining element and moves it to the front, using at most n−1 swaps.",
+  summaryAr: "يختار أصغر عنصر متبقٍ مرارًا وينقله إلى المقدمة، مستخدمًا على الأكثر n−1 عملية تبديل.",
   renderer: "array",
   pseudocode: [
     "procedure selectionSort(a[0..n-1])",
@@ -222,6 +225,61 @@ Its defining trait is write efficiency: it performs at most n−1 swaps total �
       { question: "Selection sort is best described as…", options: ["stable and adaptive", "unstable and non-adaptive", "stable and non-adaptive", "unstable and adaptive"], answer: 1, explanation: "The long-distance swap can reorder equal keys (unstable) and it never exploits existing order (non-adaptive)." },
       { question: "Which algorithm generalizes selection sort using a heap to find the min/max faster?", options: ["Merge sort", "Heap sort", "Radix sort", "Quick sort"], answer: 1, explanation: "Heap sort selects the extreme element in O(log n) instead of O(n)." },
       { question: "Why might selection sort be preferred despite O(n²) time?", options: ["It is stable", "It minimizes the number of writes", "It is adaptive", "It uses O(log n) memory"], answer: 1, explanation: "With at most n−1 swaps, it is attractive when writing memory is expensive." },
+    ],
+  },
+  contentAr: {
+    overview: `يقسّم ترتيب الاختيار المصفوفة إلى بادئة مرتبة وباقٍ غير مرتب. في كل مرور، يمسح المنطقة غير المرتبة بأكملها ليجد أصغر عنصر، ثم يبدّل ذلك العنصر إلى أول خانة غير مرتبة. تنمو البادئة المرتبة بمقدار واحد في كل مرور حتى تُرتّب المصفوفة بأكملها.
+
+سمته المميزة هي كفاءة الكتابة: يُجري على الأكثر n−1 عملية تبديل إجمالًا — واحدة لكل مرور — بغض النظر عن المدخلات. عندما تكون الكتابة أغلى بكثير من القراءة (مثل ذاكرة الفلاش محدودة البِلى)، تصبح هذه الخاصية مهمة.`,
+    howItWorks: [
+      "اعتبر الموضع i أول خانة في المنطقة غير المرتبة.",
+      "امسح كل عنصر على يمينه لإيجاد فهرس الأصغر.",
+      "بدّل ذلك الأصغر إلى الموضع i، فتتوسع البادئة المرتبة.",
+      "تقدّم بـ i وكرر حتى يتبقى عنصر واحد فقط.",
+    ],
+    complexity: {
+      time: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" },
+      space: "O(1)",
+      notes: "يُجري دائمًا n(n−1)/2 مقارنة — لا يمكنه اكتشاف مصفوفة مرتبة مسبقًا مبكرًا. لكنه يُجري فقط O(n) عملية تبديل.",
+    },
+    applications: [
+      "الأنظمة التي تكون فيها الكتابة/التبديل أغلى بكثير من المقارنة",
+      "تدريس ثابت البادئة المرتبة واستراتيجية الاختيار",
+      "المصفوفات الصغيرة حيث تتفوق البساطة على السرعة",
+      "كخطوة مفاهيمية نحو ترتيب الكومة (اختيار أذكى)",
+    ],
+    advantages: [
+      "على الأكثر n−1 عملية تبديل — حركة بيانات أدنى",
+      "في المكان بذاكرة إضافية O(1)",
+      "بسيط وقابل للتنبؤ — نفس التكلفة على أي مدخلات",
+      "سهل الفهم والتنفيذ الصحيح",
+    ],
+    disadvantages: [
+      "دائمًا O(n²) مقارنة، حتى على مدخلات مرتبة",
+      "غير متكيّف — لا يستغل الترتيب الموجود",
+      "غير مستقر في صيغته الكلاسيكية القائمة على التبديل",
+      "يتفوق عليه ترتيب الإدراج على البيانات شبه المرتبة",
+    ],
+    commonMistakes: [
+      "بدء المسح الداخلي عند i بدلًا من i+1، مما يهدر مقارنة.",
+      "التبديل داخل الحلقة الداخلية بدلًا من مرة واحدة بعد إيجاد الأصغر — هذا يكسر ضمان قلة التبديل.",
+      "افتراض أنه مستقر؛ التبديل بعيد المدى قد يغيّر ترتيب المفاتيح المتساوية.",
+      "توقّع خروج مبكر على مدخلات مرتبة — لا يوجد.",
+    ],
+    interviewQuestions: [
+      "لماذا يُجري ترتيب الاختيار فقط O(n) عملية تبديل بينما قد يُجري الترتيب الفقاعي O(n²)؟",
+      "هل ترتيب الاختيار مستقر؟ أظهر مدخلًا يعيد فيه ترتيب عناصر متساوية.",
+      "كيف يكون ترتيب الكومة تحقيقًا أكفأ لفكرة الاختيار؟",
+      "هل يمكنك جعل ترتيب الاختيار مستقرًا، وبأي ثمن؟",
+    ],
+    summary:
+      "يجد ترتيب الاختيار أصغر عنصر في المنطقة غير المرتبة مرارًا ويبدّله إلى موضعه، مستخدمًا O(n²) مقارنة لكن فقط O(n) تبديل. في المكان، بسيط، غير متكيّف، وغير مستقر — يُختار عندما تكون الكتابة مكلفة.",
+    quiz: [
+      { question: "كم عملية تبديل يُجري ترتيب الاختيار في أسوأ حالة؟", options: ["O(n²)", "O(n log n)", "O(n)", "O(1)"], answer: 2, explanation: "تبديل واحد بالضبط لكل مرور، فأقصى n−1 تبديل إجمالًا." },
+      { question: "على مصفوفة مرتبة بالفعل، كم مقارنة يُجري ترتيب الاختيار؟", options: ["0", "n−1", "n(n−1)/2", "n log n"], answer: 2, explanation: "يمسح دائمًا المنطقة غير المرتبة كاملة — لا خروج مبكر — فيعطي n(n−1)/2 مقارنة." },
+      { question: "أفضل وصف لترتيب الاختيار…", options: ["مستقر ومتكيّف", "غير مستقر وغير متكيّف", "مستقر وغير متكيّف", "غير مستقر ومتكيّف"], answer: 1, explanation: "التبديل بعيد المدى قد يعيد ترتيب المفاتيح المتساوية (غير مستقر) ولا يستغل الترتيب الموجود أبدًا (غير متكيّف)." },
+      { question: "أي خوارزمية تُعمّم فكرة ترتيب الاختيار باستخدام كومة لإيجاد الأصغر/الأكبر أسرع؟", options: ["الترتيب بالدمج", "ترتيب الكومة", "ترتيب الأساس", "الترتيب السريع"], answer: 1, explanation: "ترتيب الكومة يختار العنصر الأقصى بزمن O(log n) بدلًا من O(n)." },
+      { question: "لماذا قد يُفضَّل ترتيب الاختيار رغم زمنه O(n²)؟", options: ["لأنه مستقر", "لأنه يقلّل عدد عمليات الكتابة", "لأنه متكيّف", "لأنه يستخدم ذاكرة O(log n)"], answer: 1, explanation: "بأقصى n−1 عملية تبديل، يصبح جذابًا عندما تكون كتابة الذاكرة مكلفة." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 64, 25, 12, 22, 11", help: "2–40 numbers, comma or space separated." }],

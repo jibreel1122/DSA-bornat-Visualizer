@@ -19,33 +19,34 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     pointers?: { index: number; label: string }[],
+    descriptionAr?: string,
   ) => {
     const merged: Record<number, CellState> = { ...states };
     for (const idx of finalized) merged[idx] ??= "sorted";
-    steps.push({ frame: { values: [...a], states: merged, range, pointers }, description, codeLine, counters: counters() });
+    steps.push({ frame: { values: [...a], states: merged, range, pointers }, description, descriptionAr, codeLine, counters: counters() });
   };
 
-  snap({}, null, `Quick sort partitions around a pivot (last element), then recurses on each side.`, 0);
+  snap({}, null, `Quick sort partitions around a pivot (last element), then recurses on each side.`, 0, undefined, `الترتيب السريع يُقسّم حول محور (العنصر الأخير)، ثم يعاود على كل جانب.`);
 
   const quick = (lo: number, hi: number) => {
     if (lo > hi) return;
     if (lo === hi) {
       finalized.add(lo);
-      snap({}, null, `Single element a[${lo}] is in place.`, 1);
+      snap({}, null, `Single element a[${lo}] is in place.`, 1, undefined, `العنصر المفرد a[${lo}] في موضعه.`);
       return;
     }
     const pivot = a[hi];
-    snap({ [hi]: "pivot" }, { from: lo, to: hi }, `Partition [${lo}..${hi}] around pivot ${pivot}.`, 2, [{ index: hi, label: "pivot" }]);
+    snap({ [hi]: "pivot" }, { from: lo, to: hi }, `Partition [${lo}..${hi}] around pivot ${pivot}.`, 2, [{ index: hi, label: "pivot" }], `قسّم [${lo}..${hi}] حول المحور ${pivot}.`);
     let i = lo - 1;
     for (let j = lo; j < hi; j++) {
       comparisons++;
-      snap({ [hi]: "pivot", [j]: "compare" }, { from: lo, to: hi }, `Is a[${j}] = ${a[j]} ≤ pivot ${pivot}?`, 3, [{ index: i + 1, label: "i+1" }, { index: j, label: "j" }]);
+      snap({ [hi]: "pivot", [j]: "compare" }, { from: lo, to: hi }, `Is a[${j}] = ${a[j]} ≤ pivot ${pivot}?`, 3, [{ index: i + 1, label: "i+1" }, { index: j, label: "j" }], `هل a[${j}] = ${a[j]} ≤ المحور ${pivot}؟`);
       if (a[j] <= pivot) {
         i++;
         if (i !== j) {
           [a[i], a[j]] = [a[j], a[i]];
           swaps++;
-          snap({ [hi]: "pivot", [i]: "swap", [j]: "swap" }, { from: lo, to: hi }, `Yes — swap into the ≤ region at index ${i}.`, 4);
+          snap({ [hi]: "pivot", [i]: "swap", [j]: "swap" }, { from: lo, to: hi }, `Yes — swap into the ≤ region at index ${i}.`, 4, undefined, `نعم — بدّله إلى منطقة ≤ عند الفهرس ${i}.`);
         }
       }
     }
@@ -53,7 +54,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     swaps++;
     const p = i + 1;
     finalized.add(p);
-    snap({ [p]: "sorted" }, { from: lo, to: hi }, `Place pivot at index ${p}; everything left is smaller, right is larger.`, 5);
+    snap({ [p]: "sorted" }, { from: lo, to: hi }, `Place pivot at index ${p}; everything left is smaller, right is larger.`, 5, undefined, `ضع المحور عند الفهرس ${p}؛ كل ما على اليسار أصغر، وما على اليمين أكبر.`);
     quick(lo, p - 1);
     quick(p + 1, hi);
   };
@@ -61,17 +62,20 @@ function generate(input: Input): Step<ArrayFrame>[] {
   quick(0, n - 1);
   const all: Record<number, CellState> = {};
   for (let x = 0; x < n; x++) all[x] = "sorted";
-  snap(all, null, `Sorted! Average O(n log n); worst case O(n²) on poor pivots.`, 6);
+  snap(all, null, `Sorted! Average O(n log n); worst case O(n²) on poor pivots.`, 6, undefined, `اكتمل الترتيب! في المتوسط O(n log n)؛ أسوأ حالة O(n²) مع محاور سيئة.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "quick-sort",
   title: "Quick Sort",
+  titleAr: "الترتيب السريع",
   category: "sorting",
   difficulty: "Intermediate",
   tags: ["divide & conquer", "in-place", "unstable", "O(n log n) avg"],
+  tagsAr: ["فرّق تسد", "في المكان", "غير مستقر", "O(n log n) في المتوسط"],
   summary: "Partitions around a pivot so smaller elements go left and larger go right, then recurses on each side.",
+  summaryAr: "يُقسّم حول محور بحيث تذهب العناصر الأصغر يسارًا والأكبر يمينًا، ثم يعاود على كل جانب.",
   renderer: "array",
   pseudocode: [
     "procedure quickSort(a, lo, hi)",
@@ -284,6 +288,63 @@ Its average-case running time is O(n log n) with small constant factors and exce
       { question: "Which pivot strategy best avoids the worst case in practice?", options: ["Always first element", "Always last element", "Randomized or median-of-three", "Always the maximum"], answer: 2, explanation: "Randomization/median-of-three makes consistently bad splits vanishingly unlikely." },
       { question: "Standard quicksort is…", options: ["stable", "unstable", "always O(n) space", "non-recursive only"], answer: 1, explanation: "Partition swaps can reorder equal keys, so it is not stable." },
       { question: "Which selection algorithm reuses quicksort's partition?", options: ["Merge select", "Quickselect", "Heap select", "Bucket select"], answer: 1, explanation: "Quickselect partitions and recurses into only the side containing the k-th element, giving expected O(n)." },
+    ],
+  },
+  contentAr: {
+    overview: `الترتيب السريع هو خوارزمية الترتيب داخل الذاكرة الأكثر استخدامًا. يختار عنصر محور ويُقسّم المصفوفة بحيث ينتهي كل ما هو أصغر من المحور على يساره وكل ما هو أكبر على يمينه. يصبح المحور بعدها في موضعه النهائي المرتب، وتعاود الخوارزمية على الجانبين.
+
+زمن تشغيله في المتوسط O(n log n) بعوامل ثابتة صغيرة وموضعية ذاكرة مؤقتة ممتازة، ولهذا يقوم عليه (أو على هجين مبني عليه، مثل introsort) كثير من ترتيبات المكتبات القياسية. المأخذ هو أسوأ حالة O(n²) عند اختيار محاور سيئة — يُخفَّف ذلك عمليًا باختيار محور عشوائي أو بطريقة وسيط الثلاثة.`,
+    howItWorks: [
+      "اختر محورًا (هنا، العنصر الأخير في المجال).",
+      "التقسيم: امسح المجال، وانقل كل عنصر ≤ المحور إلى المنطقة اليسرى.",
+      "بدّل المحور إلى الحد الفاصل — أصبح الآن في موضعه النهائي.",
+      "عاود على المجال الفرعي الأيسر (العناصر < المحور).",
+      "عاود على المجال الفرعي الأيمن (العناصر > المحور).",
+    ],
+    complexity: {
+      time: { best: "O(n log n)", average: "O(n log n)", worst: "O(n²)" },
+      space: "O(log n)",
+      notes: "أسوأ حالة O(n²) تحدث على مدخلات مرتبة مسبقًا مع محاور العنصر الأخير. المحاور العشوائية أو وسيط الثلاثة تجعل ذلك مستبعدًا جدًا. مكدس العودية O(log n) عند التقسيمات المتوازنة.",
+    },
+    applications: [
+      "الترتيب العام داخل الذاكرة (أساس كثير من المكتبات القياسية)",
+      "خوارزمية quickselect لإيجاد العنصر k الأصغر",
+      "المواقف التي تُقدّر الترتيب في المكان بعبء ذاكرة منخفض",
+      "الأنظمة التي تهم فيها السرعة المتوسطة أكثر من ضمانات أسوأ حالة",
+    ],
+    advantages: [
+      "سريع عمليًا بعوامل ثابتة صغيرة وموضعية ذاكرة مؤقتة رائعة",
+      "في المكان: فقط مساحة مكدس O(log n)",
+      "قابل للضبط عبر استراتيجية المحور والبدائل الهجينة",
+      "التقسيم يتعمم إلى quickselect (إحصائيات الرتبة k)",
+    ],
+    disadvantages: [
+      "أسوأ حالة O(n²) مع اختيار محور ساذج",
+      "غير مستقر في صيغته القياسية",
+      "الأداء حساس لاختيار المحور والمدخلات كثيرة التكرارات",
+      "عمق العودية قد يصل O(n) دون حيل العودية الذيلية/الجانب الأصغر",
+    ],
+    commonMistakes: [
+      "اختيار العنصر الأول أو الأخير دائمًا كمحور — كارثي على البيانات المرتبة.",
+      "أخطاء انزياح بمقدار واحد في فهارس حدود التقسيم (i، j).",
+      "المعاودة على الجانب الأكبر أولًا، مما يخاطر بعمق مكدس O(n).",
+      "عدم التعامل مع المفاتيح المتكررة الكثيرة (فكّر في تقسيم ثلاثي / علم هولندا).",
+    ],
+    interviewQuestions: [
+      "لماذا يتدهور الترتيب السريع بمحور العنصر الأخير إلى O(n²) على مدخلات مرتبة؟",
+      "كيف تحسّن المحاور العشوائية أو وسيط الثلاثة الأداء المتوقع؟",
+      "اشرح quickselect وزمنه المتوقع O(n).",
+      "ما هو التقسيم الثلاثي (علم هولندا الوطني) ومتى يساعد؟",
+      "كيف يجمع introsort بين الترتيب السريع وترتيب الكومة لضبط أسوأ حالة؟",
+    ],
+    summary:
+      "يُقسّم الترتيب السريع حول محور إلى منطقتي أصغر/أكبر ويعاود، محققًا زمن O(n log n) في المتوسط في المكان مع موضعية ممتازة. أسوأ حالته O(n²) تُروَّض بمحاور عشوائية أو وسيط الثلاثة — ما يجعله الخيار العملي الافتراضي للترتيب داخل الذاكرة.",
+    quiz: [
+      { question: "بعد خطوة تقسيم واحدة، ما المضمون بخصوص المحور؟", options: ["أنه أصغر عنصر", "أنه في موضعه النهائي المرتب", "أنه في منتصف المصفوفة", "لا شيء مضمون"], answer: 1, explanation: "التقسيم يضع المحور بحيث تسبقه كل العناصر الأصغر وتتبعه كل العناصر الأكبر." },
+      { question: "التعقيد الزمني لأسوأ حالة في الترتيب السريع هو…", options: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], answer: 2, explanation: "التقسيمات غير المتوازنة المستمرة (مثل مدخلات مرتبة، محور العنصر الأخير) تعطي n مستوى من عمل O(n)." },
+      { question: "أي استراتيجية محور تتجنب أسوأ حالة عمليًا بأفضل شكل؟", options: ["العنصر الأول دائمًا", "العنصر الأخير دائمًا", "عشوائي أو وسيط الثلاثة", "الأكبر دائمًا"], answer: 2, explanation: "العشوائية/وسيط الثلاثة تجعل التقسيمات السيئة المستمرة مستبعدة جدًا." },
+      { question: "الترتيب السريع القياسي…", options: ["مستقر", "غير مستقر", "دائمًا مساحة O(n)", "عودي فقط"], answer: 1, explanation: "تبديلات التقسيم قد تعيد ترتيب المفاتيح المتساوية، فهو غير مستقر." },
+      { question: "أي خوارزمية اختيار تعيد استخدام تقسيم الترتيب السريع؟", options: ["اختيار الدمج", "Quickselect", "اختيار الكومة", "اختيار الدلاء"], answer: 1, explanation: "Quickselect يُقسّم ويعاود فقط على الجانب المحتوي على العنصر k، معطيًا زمنًا متوقعًا O(n)." },
     ],
   },
   inputFields: [{ key: "values", label: "Array values", placeholder: "e.g. 10, 80, 30, 90, 40, 50, 70", help: "2–40 numbers, comma or space separated." }],
