@@ -39,11 +39,10 @@ Built by **Jibreel Bornat** — Computer Engineering, Birzeit University.
   reference implementations in 12 languages (pseudocode, C, C++, Java, Python,
   JavaScript, TypeScript, C#, Go, Rust, Kotlin, Swift).
 - **Arabic localization**: complete UI translation with RTL layout (buttons, nav,
-  toasts, forms, everything). Per-algorithm **content** translation (title, tags,
-  summary, full theory/quiz, step-by-step narration) is rolling out category by
-  category — see [Translation status](#arabic-content-translation-status) below.
-  Code samples and pseudocode intentionally stay English/Latin notation in every
-  language, by design (`translation-brief.md`).
+  toasts, forms, everything) **and** complete per-algorithm content translation —
+  every one of the 87 modules has a fully bilingual title, tags, summary, theory,
+  quiz, and step-by-step narration. Code samples and pseudocode intentionally stay
+  English/Latin notation in every language, by design (`translation-brief.md`).
 - Favorites, view history, notes per algorithm, command palette (⌘K), light/dark
   theme, all persisted to `localStorage` — **no backend, fully static-exportable.**
 
@@ -155,9 +154,9 @@ config) · `@xyflow/react` (graph rendering) · `d3-hierarchy` (tree layout) ·
 
 ## Arabic content translation status
 
-Per-algorithm content (title, tags, summary, full theory, quiz, step narration) is
-being translated category by category, verified by the bilingual invariants suite
-before each category is committed. Check live status any time:
+**Complete — 87/87 modules across all 13 categories.** Every algorithm has a fully
+bilingual title, tags, summary, theory/quiz content, and per-step narration,
+verified by the bilingual invariants suite. Confirm any time:
 
 ```bash
 for d in src/lib/algorithms/*/index.ts; do
@@ -167,12 +166,8 @@ for d in src/lib/algorithms/*/index.ts; do
 done
 ```
 
-As of this writing: **backtracking, dynamic-programming, greedy, hashing,
-linked-lists, mathematics, recursion, searching, stacks-queues, strings, trees are
-done (11/13 categories, 60/87 modules)**; `sorting` and `graphs` are the two
-remaining categories. See [CODEX_HANDOFF.md](CODEX_HANDOFF.md) if you're
-continuing this specific task. Untranslated modules render correctly in English —
-this is a content gap, not a bug.
+The translation spec/glossary (`.superpowers/sdd/translation-brief.md`) remains
+useful reference if new algorithm modules are added later and need Arabic content.
 
 ## Session history (high level)
 

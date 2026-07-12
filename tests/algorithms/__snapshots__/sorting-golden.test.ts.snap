@@ -9,6 +9,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 0,
     },
     "description": "Start with 8 unsorted elements. Each pass bubbles the largest remaining value to the end.",
+    "descriptionAr": "ابدأ بـ 8 عناصر غير مرتبة. كل مرور يُصعّد أكبر قيمة متبقية إلى النهاية.",
     "frame": {
       "note": undefined,
       "states": {},
@@ -31,6 +32,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 0,
     },
     "description": "Pass 1: scan up to index 6.",
+    "descriptionAr": "المرور 1: امسح حتى الفهرس 6.",
     "frame": {
       "note": undefined,
       "states": {},
@@ -53,6 +55,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 0,
     },
     "description": "Compare a[0] = 5 with a[1] = 2.",
+    "descriptionAr": "قارن a[0] = 5 مع a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -78,6 +81,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 1,
     },
     "description": "5 > 2, so swap them.",
+    "descriptionAr": "5 > 2، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -103,6 +107,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 1,
     },
     "description": "Compare a[1] = 5 with a[2] = 9.",
+    "descriptionAr": "قارن a[1] = 5 مع a[2] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -128,6 +133,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 1,
     },
     "description": "Compare a[2] = 9 with a[3] = 1.",
+    "descriptionAr": "قارن a[2] = 9 مع a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -153,6 +159,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 2,
     },
     "description": "9 > 1, so swap them.",
+    "descriptionAr": "9 > 1، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -178,6 +185,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 2,
     },
     "description": "Compare a[3] = 9 with a[4] = 5.",
+    "descriptionAr": "قارن a[3] = 9 مع a[4] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -203,6 +211,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 3,
     },
     "description": "9 > 5, so swap them.",
+    "descriptionAr": "9 > 5، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -228,6 +237,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 3,
     },
     "description": "Compare a[4] = 9 with a[5] = 6.",
+    "descriptionAr": "قارن a[4] = 9 مع a[5] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -253,6 +263,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 4,
     },
     "description": "9 > 6, so swap them.",
+    "descriptionAr": "9 > 6، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -278,6 +289,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 4,
     },
     "description": "Compare a[5] = 9 with a[6] = 3.",
+    "descriptionAr": "قارن a[5] = 9 مع a[6] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -303,6 +315,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 5,
     },
     "description": "9 > 3, so swap them.",
+    "descriptionAr": "9 > 3، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -328,6 +341,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 5,
     },
     "description": "Compare a[6] = 9 with a[7] = 8.",
+    "descriptionAr": "قارن a[6] = 9 مع a[7] = 8.",
     "frame": {
       "note": undefined,
       "states": {
@@ -353,6 +367,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 6,
     },
     "description": "9 > 8, so swap them.",
+    "descriptionAr": "9 > 8، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -378,6 +393,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 6,
     },
     "description": "Pass 1 done — 9 is locked in its final position.",
+    "descriptionAr": "انتهى المرور 1 — استقر 9 في موضعه النهائي.",
     "frame": {
       "note": undefined,
       "states": {
@@ -402,6 +418,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 6,
     },
     "description": "Pass 2: scan up to index 5.",
+    "descriptionAr": "المرور 2: امسح حتى الفهرس 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -426,6 +443,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 6,
     },
     "description": "Compare a[0] = 2 with a[1] = 5.",
+    "descriptionAr": "قارن a[0] = 2 مع a[1] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -452,6 +470,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 6,
     },
     "description": "Compare a[1] = 5 with a[2] = 1.",
+    "descriptionAr": "قارن a[1] = 5 مع a[2] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -478,6 +497,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 7,
     },
     "description": "5 > 1, so swap them.",
+    "descriptionAr": "5 > 1، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -504,6 +524,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 7,
     },
     "description": "Compare a[2] = 5 with a[3] = 5.",
+    "descriptionAr": "قارن a[2] = 5 مع a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -530,6 +551,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 7,
     },
     "description": "Compare a[3] = 5 with a[4] = 6.",
+    "descriptionAr": "قارن a[3] = 5 مع a[4] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -556,6 +578,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 7,
     },
     "description": "Compare a[4] = 6 with a[5] = 3.",
+    "descriptionAr": "قارن a[4] = 6 مع a[5] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -582,6 +605,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 8,
     },
     "description": "6 > 3, so swap them.",
+    "descriptionAr": "6 > 3، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -608,6 +632,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 8,
     },
     "description": "Compare a[5] = 6 with a[6] = 8.",
+    "descriptionAr": "قارن a[5] = 6 مع a[6] = 8.",
     "frame": {
       "note": undefined,
       "states": {
@@ -634,6 +659,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 8,
     },
     "description": "Pass 2 done — 8 is locked in its final position.",
+    "descriptionAr": "انتهى المرور 2 — استقر 8 في موضعه النهائي.",
     "frame": {
       "note": undefined,
       "states": {
@@ -659,6 +685,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 8,
     },
     "description": "Pass 3: scan up to index 4.",
+    "descriptionAr": "المرور 3: امسح حتى الفهرس 4.",
     "frame": {
       "note": undefined,
       "states": {
@@ -684,6 +711,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 8,
     },
     "description": "Compare a[0] = 2 with a[1] = 1.",
+    "descriptionAr": "قارن a[0] = 2 مع a[1] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -711,6 +739,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 9,
     },
     "description": "2 > 1, so swap them.",
+    "descriptionAr": "2 > 1، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -738,6 +767,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 9,
     },
     "description": "Compare a[1] = 2 with a[2] = 5.",
+    "descriptionAr": "قارن a[1] = 2 مع a[2] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -765,6 +795,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 9,
     },
     "description": "Compare a[2] = 5 with a[3] = 5.",
+    "descriptionAr": "قارن a[2] = 5 مع a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -792,6 +823,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 9,
     },
     "description": "Compare a[3] = 5 with a[4] = 3.",
+    "descriptionAr": "قارن a[3] = 5 مع a[4] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -819,6 +851,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "5 > 3, so swap them.",
+    "descriptionAr": "5 > 3، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -846,6 +879,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Compare a[4] = 5 with a[5] = 6.",
+    "descriptionAr": "قارن a[4] = 5 مع a[5] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -873,6 +907,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Pass 3 done — 6 is locked in its final position.",
+    "descriptionAr": "انتهى المرور 3 — استقر 6 في موضعه النهائي.",
     "frame": {
       "note": undefined,
       "states": {
@@ -899,6 +934,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Pass 4: scan up to index 3.",
+    "descriptionAr": "المرور 4: امسح حتى الفهرس 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -925,6 +961,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Compare a[0] = 1 with a[1] = 2.",
+    "descriptionAr": "قارن a[0] = 1 مع a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -953,6 +990,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Compare a[1] = 2 with a[2] = 5.",
+    "descriptionAr": "قارن a[1] = 2 مع a[2] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -981,6 +1019,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 10,
     },
     "description": "Compare a[2] = 5 with a[3] = 3.",
+    "descriptionAr": "قارن a[2] = 5 مع a[3] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1009,6 +1048,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "5 > 3, so swap them.",
+    "descriptionAr": "5 > 3، فبدّلهما.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1037,6 +1077,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Compare a[3] = 5 with a[4] = 5.",
+    "descriptionAr": "قارن a[3] = 5 مع a[4] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1065,6 +1106,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Pass 4 done — 5 is locked in its final position.",
+    "descriptionAr": "انتهى المرور 4 — استقر 5 في موضعه النهائي.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1092,6 +1134,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Pass 5: scan up to index 2.",
+    "descriptionAr": "المرور 5: امسح حتى الفهرس 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1119,6 +1162,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Compare a[0] = 1 with a[1] = 2.",
+    "descriptionAr": "قارن a[0] = 1 مع a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1148,6 +1192,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Compare a[1] = 2 with a[2] = 3.",
+    "descriptionAr": "قارن a[1] = 2 مع a[2] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1177,6 +1222,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Compare a[2] = 3 with a[3] = 5.",
+    "descriptionAr": "قارن a[2] = 3 مع a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1206,6 +1252,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Pass 5 done — 5 is locked in its final position.",
+    "descriptionAr": "انتهى المرور 5 — استقر 5 في موضعه النهائي.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1234,6 +1281,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "No swaps in this pass — the array is already sorted. Early exit.",
+    "descriptionAr": "لا تبديل في هذا المرور — المصفوفة مرتبة بالفعل. خروج مبكر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1265,6 +1313,7 @@ exports[`comparison-sort golden steps > bubble-sort step stream is unchanged 1`]
       "swaps": 11,
     },
     "description": "Sorted! 25 comparisons and 11 swaps in total.",
+    "descriptionAr": "اكتمل الترتيب! 25 مقارنة و11 عملية تبديل إجمالًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -1301,6 +1350,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 0,
     },
     "description": "Cocktail sort bubbles in both directions each pass, sorting from both ends inward.",
+    "descriptionAr": "ترتيب الكوكتيل يُصعّد في كلا الاتجاهين كل مرور، مرتّبًا من الطرفين نحو الداخل.",
     "frame": {
       "note": "active range [0..7]",
       "states": {},
@@ -1323,6 +1373,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 0,
     },
     "description": "→ Compare a[0] = 5 and a[1] = 2.",
+    "descriptionAr": "← قارن a[0] = 5 وa[1] = 2.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1348,6 +1399,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 1,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1373,6 +1425,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 1,
     },
     "description": "→ Compare a[1] = 5 and a[2] = 9.",
+    "descriptionAr": "← قارن a[1] = 5 وa[2] = 9.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1398,6 +1451,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 1,
     },
     "description": "→ Compare a[2] = 9 and a[3] = 1.",
+    "descriptionAr": "← قارن a[2] = 9 وa[3] = 1.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1423,6 +1477,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 2,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1448,6 +1503,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 2,
     },
     "description": "→ Compare a[3] = 9 and a[4] = 5.",
+    "descriptionAr": "← قارن a[3] = 9 وa[4] = 5.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1473,6 +1529,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 3,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1498,6 +1555,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 3,
     },
     "description": "→ Compare a[4] = 9 and a[5] = 6.",
+    "descriptionAr": "← قارن a[4] = 9 وa[5] = 6.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1523,6 +1581,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 4,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1548,6 +1607,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 4,
     },
     "description": "→ Compare a[5] = 9 and a[6] = 3.",
+    "descriptionAr": "← قارن a[5] = 9 وa[6] = 3.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1573,6 +1633,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 5,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1598,6 +1659,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 5,
     },
     "description": "→ Compare a[6] = 9 and a[7] = 8.",
+    "descriptionAr": "← قارن a[6] = 9 وa[7] = 8.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1623,6 +1685,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 6,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [0..7]",
       "states": {
@@ -1648,6 +1711,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 6,
     },
     "description": "Largest is parked at the right end; shrink upper bound.",
+    "descriptionAr": "استقر الأكبر عند الطرف الأيمن؛ قلّص الحد الأعلى.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1672,6 +1736,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 6,
     },
     "description": "← Compare a[5] = 3 and a[6] = 8.",
+    "descriptionAr": "→ قارن a[5] = 3 وa[6] = 8.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1698,6 +1763,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 6,
     },
     "description": "← Compare a[4] = 6 and a[5] = 3.",
+    "descriptionAr": "→ قارن a[4] = 6 وa[5] = 3.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1724,6 +1790,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 7,
     },
     "description": "Swap — smaller bubbles left.",
+    "descriptionAr": "بدّل — الأصغر يصعد يسارًا.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1750,6 +1817,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 7,
     },
     "description": "← Compare a[3] = 5 and a[4] = 3.",
+    "descriptionAr": "→ قارن a[3] = 5 وa[4] = 3.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1776,6 +1844,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 8,
     },
     "description": "Swap — smaller bubbles left.",
+    "descriptionAr": "بدّل — الأصغر يصعد يسارًا.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1802,6 +1871,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 8,
     },
     "description": "← Compare a[2] = 1 and a[3] = 3.",
+    "descriptionAr": "→ قارن a[2] = 1 وa[3] = 3.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1828,6 +1898,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 8,
     },
     "description": "← Compare a[1] = 5 and a[2] = 1.",
+    "descriptionAr": "→ قارن a[1] = 5 وa[2] = 1.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1854,6 +1925,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 9,
     },
     "description": "Swap — smaller bubbles left.",
+    "descriptionAr": "بدّل — الأصغر يصعد يسارًا.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1880,6 +1952,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 9,
     },
     "description": "← Compare a[0] = 2 and a[1] = 1.",
+    "descriptionAr": "→ قارن a[0] = 2 وa[1] = 1.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1906,6 +1979,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 10,
     },
     "description": "Swap — smaller bubbles left.",
+    "descriptionAr": "بدّل — الأصغر يصعد يسارًا.",
     "frame": {
       "note": "active range [0..6]",
       "states": {
@@ -1932,6 +2006,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 10,
     },
     "description": "Smallest is parked at the left end; raise lower bound.",
+    "descriptionAr": "استقر الأصغر عند الطرف الأيسر؛ ارفع الحد الأدنى.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -1957,6 +2032,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 10,
     },
     "description": "→ Compare a[1] = 2 and a[2] = 5.",
+    "descriptionAr": "← قارن a[1] = 2 وa[2] = 5.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -1984,6 +2060,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 10,
     },
     "description": "→ Compare a[2] = 5 and a[3] = 3.",
+    "descriptionAr": "← قارن a[2] = 5 وa[3] = 3.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -2011,6 +2088,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "Swap — larger bubbles right.",
+    "descriptionAr": "بدّل — الأكبر يصعد يمينًا.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -2038,6 +2116,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "→ Compare a[3] = 5 and a[4] = 5.",
+    "descriptionAr": "← قارن a[3] = 5 وa[4] = 5.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -2065,6 +2144,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "→ Compare a[4] = 5 and a[5] = 6.",
+    "descriptionAr": "← قارن a[4] = 5 وa[5] = 6.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -2092,6 +2172,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "→ Compare a[5] = 6 and a[6] = 8.",
+    "descriptionAr": "← قارن a[5] = 6 وa[6] = 8.",
     "frame": {
       "note": "active range [1..6]",
       "states": {
@@ -2119,6 +2200,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "Largest is parked at the right end; shrink upper bound.",
+    "descriptionAr": "استقر الأكبر عند الطرف الأيمن؛ قلّص الحد الأعلى.",
     "frame": {
       "note": "active range [1..5]",
       "states": {
@@ -2145,6 +2227,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "← Compare a[4] = 5 and a[5] = 6.",
+    "descriptionAr": "→ قارن a[4] = 5 وa[5] = 6.",
     "frame": {
       "note": "active range [1..5]",
       "states": {
@@ -2173,6 +2256,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "← Compare a[3] = 5 and a[4] = 5.",
+    "descriptionAr": "→ قارن a[3] = 5 وa[4] = 5.",
     "frame": {
       "note": "active range [1..5]",
       "states": {
@@ -2201,6 +2285,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "← Compare a[2] = 3 and a[3] = 5.",
+    "descriptionAr": "→ قارن a[2] = 3 وa[3] = 5.",
     "frame": {
       "note": "active range [1..5]",
       "states": {
@@ -2229,6 +2314,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "← Compare a[1] = 2 and a[2] = 3.",
+    "descriptionAr": "→ قارن a[1] = 2 وa[2] = 3.",
     "frame": {
       "note": "active range [1..5]",
       "states": {
@@ -2257,6 +2343,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "Smallest is parked at the left end; raise lower bound.",
+    "descriptionAr": "استقر الأصغر عند الطرف الأيسر؛ ارفع الحد الأدنى.",
     "frame": {
       "note": "active range [2..5]",
       "states": {
@@ -2284,6 +2371,7 @@ exports[`comparison-sort golden steps > cocktail-shaker-sort step stream is unch
       "swaps": 11,
     },
     "description": "Sorted from both ends inward.",
+    "descriptionAr": "اكتمل الترتيب من الطرفين نحو الداخل.",
     "frame": {
       "states": {
         "0": "sorted",
@@ -2319,6 +2407,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 0,
     },
     "description": "Comb sort compares elements a large gap apart, shrinking the gap by 1.3× each pass.",
+    "descriptionAr": "ترتيب المشط يقارن عناصر متباعدة بفجوة كبيرة، مقلّصًا الفجوة بمعامل 1.3× في كل مرور.",
     "frame": {
       "note": "gap = 8",
       "states": {},
@@ -2341,6 +2430,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 0,
     },
     "description": "Compare a[0] = 5 with a[6] = 3 (gap 6).",
+    "descriptionAr": "قارن a[0] = 5 مع a[6] = 3 (فجوة 6).",
     "frame": {
       "note": "gap = 6",
       "states": {
@@ -2366,6 +2456,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 1,
     },
     "description": "Out of order — swap across the gap.",
+    "descriptionAr": "غير مرتب — بدّل عبر الفجوة.",
     "frame": {
       "note": "gap = 6",
       "states": {
@@ -2391,6 +2482,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 1,
     },
     "description": "Compare a[1] = 2 with a[7] = 8 (gap 6).",
+    "descriptionAr": "قارن a[1] = 2 مع a[7] = 8 (فجوة 6).",
     "frame": {
       "note": "gap = 6",
       "states": {
@@ -2416,6 +2508,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 1,
     },
     "description": "Compare a[0] = 3 with a[4] = 5 (gap 4).",
+    "descriptionAr": "قارن a[0] = 3 مع a[4] = 5 (فجوة 4).",
     "frame": {
       "note": "gap = 4",
       "states": {
@@ -2441,6 +2534,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 1,
     },
     "description": "Compare a[1] = 2 with a[5] = 6 (gap 4).",
+    "descriptionAr": "قارن a[1] = 2 مع a[5] = 6 (فجوة 4).",
     "frame": {
       "note": "gap = 4",
       "states": {
@@ -2466,6 +2560,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 1,
     },
     "description": "Compare a[2] = 9 with a[6] = 5 (gap 4).",
+    "descriptionAr": "قارن a[2] = 9 مع a[6] = 5 (فجوة 4).",
     "frame": {
       "note": "gap = 4",
       "states": {
@@ -2491,6 +2586,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 2,
     },
     "description": "Out of order — swap across the gap.",
+    "descriptionAr": "غير مرتب — بدّل عبر الفجوة.",
     "frame": {
       "note": "gap = 4",
       "states": {
@@ -2516,6 +2612,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 2,
     },
     "description": "Compare a[3] = 1 with a[7] = 8 (gap 4).",
+    "descriptionAr": "قارن a[3] = 1 مع a[7] = 8 (فجوة 4).",
     "frame": {
       "note": "gap = 4",
       "states": {
@@ -2541,6 +2638,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 2,
     },
     "description": "Compare a[0] = 3 with a[3] = 1 (gap 3).",
+    "descriptionAr": "قارن a[0] = 3 مع a[3] = 1 (فجوة 3).",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2566,6 +2664,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Out of order — swap across the gap.",
+    "descriptionAr": "غير مرتب — بدّل عبر الفجوة.",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2591,6 +2690,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[1] = 2 with a[4] = 5 (gap 3).",
+    "descriptionAr": "قارن a[1] = 2 مع a[4] = 5 (فجوة 3).",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2616,6 +2716,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[2] = 5 with a[5] = 6 (gap 3).",
+    "descriptionAr": "قارن a[2] = 5 مع a[5] = 6 (فجوة 3).",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2641,6 +2742,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[3] = 3 with a[6] = 9 (gap 3).",
+    "descriptionAr": "قارن a[3] = 3 مع a[6] = 9 (فجوة 3).",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2666,6 +2768,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[4] = 5 with a[7] = 8 (gap 3).",
+    "descriptionAr": "قارن a[4] = 5 مع a[7] = 8 (فجوة 3).",
     "frame": {
       "note": "gap = 3",
       "states": {
@@ -2691,6 +2794,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[0] = 1 with a[2] = 5 (gap 2).",
+    "descriptionAr": "قارن a[0] = 1 مع a[2] = 5 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2716,6 +2820,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[1] = 2 with a[3] = 3 (gap 2).",
+    "descriptionAr": "قارن a[1] = 2 مع a[3] = 3 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2741,6 +2846,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[2] = 5 with a[4] = 5 (gap 2).",
+    "descriptionAr": "قارن a[2] = 5 مع a[4] = 5 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2766,6 +2872,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[3] = 3 with a[5] = 6 (gap 2).",
+    "descriptionAr": "قارن a[3] = 3 مع a[5] = 6 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2791,6 +2898,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[4] = 5 with a[6] = 9 (gap 2).",
+    "descriptionAr": "قارن a[4] = 5 مع a[6] = 9 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2816,6 +2924,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[5] = 6 with a[7] = 8 (gap 2).",
+    "descriptionAr": "قارن a[5] = 6 مع a[7] = 8 (فجوة 2).",
     "frame": {
       "note": "gap = 2",
       "states": {
@@ -2841,6 +2950,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[0] = 1 with a[1] = 2 (gap 1).",
+    "descriptionAr": "قارن a[0] = 1 مع a[1] = 2 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2866,6 +2976,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[1] = 2 with a[2] = 5 (gap 1).",
+    "descriptionAr": "قارن a[1] = 2 مع a[2] = 5 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2891,6 +3002,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 3,
     },
     "description": "Compare a[2] = 5 with a[3] = 3 (gap 1).",
+    "descriptionAr": "قارن a[2] = 5 مع a[3] = 3 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2916,6 +3028,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 4,
     },
     "description": "Out of order — swap across the gap.",
+    "descriptionAr": "غير مرتب — بدّل عبر الفجوة.",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2941,6 +3054,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 4,
     },
     "description": "Compare a[3] = 5 with a[4] = 5 (gap 1).",
+    "descriptionAr": "قارن a[3] = 5 مع a[4] = 5 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2966,6 +3080,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 4,
     },
     "description": "Compare a[4] = 5 with a[5] = 6 (gap 1).",
+    "descriptionAr": "قارن a[4] = 5 مع a[5] = 6 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -2991,6 +3106,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 4,
     },
     "description": "Compare a[5] = 6 with a[6] = 9 (gap 1).",
+    "descriptionAr": "قارن a[5] = 6 مع a[6] = 9 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3016,6 +3132,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 4,
     },
     "description": "Compare a[6] = 9 with a[7] = 8 (gap 1).",
+    "descriptionAr": "قارن a[6] = 9 مع a[7] = 8 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3041,6 +3158,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Out of order — swap across the gap.",
+    "descriptionAr": "غير مرتب — بدّل عبر الفجوة.",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3066,6 +3184,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[0] = 1 with a[1] = 2 (gap 1).",
+    "descriptionAr": "قارن a[0] = 1 مع a[1] = 2 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3091,6 +3210,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[1] = 2 with a[2] = 3 (gap 1).",
+    "descriptionAr": "قارن a[1] = 2 مع a[2] = 3 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3116,6 +3236,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[2] = 3 with a[3] = 5 (gap 1).",
+    "descriptionAr": "قارن a[2] = 3 مع a[3] = 5 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3141,6 +3262,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[3] = 5 with a[4] = 5 (gap 1).",
+    "descriptionAr": "قارن a[3] = 5 مع a[4] = 5 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3166,6 +3288,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[4] = 5 with a[5] = 6 (gap 1).",
+    "descriptionAr": "قارن a[4] = 5 مع a[5] = 6 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3191,6 +3314,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[5] = 6 with a[6] = 8 (gap 1).",
+    "descriptionAr": "قارن a[5] = 6 مع a[6] = 8 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3216,6 +3340,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Compare a[6] = 8 with a[7] = 9 (gap 1).",
+    "descriptionAr": "قارن a[6] = 8 مع a[7] = 9 (فجوة 1).",
     "frame": {
       "note": "gap = 1",
       "states": {
@@ -3241,6 +3366,7 @@ exports[`comparison-sort golden steps > comb-sort step stream is unchanged 1`] =
       "swaps": 5,
     },
     "description": "Sorted! Large gaps kill 'turtles' early; gap 1 finishes like bubble sort.",
+    "descriptionAr": "اكتمل الترتيب! الفجوات الكبيرة تقضي على 'السلاحف' مبكرًا؛ الفجوة 1 تنهي العمل كالترتيب الفقاعي.",
     "frame": {
       "states": {
         "0": "sorted",
@@ -3276,6 +3402,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 0,
     },
     "description": "The first element is a trivially sorted prefix. Insert each following element into it.",
+    "descriptionAr": "العنصر الأول بادئة مرتبة بداهةً. أدرج كل عنصر تالٍ فيها.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3300,6 +3427,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 0,
     },
     "description": "Take key = a[1] = 2; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[1] = 2؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3325,6 +3453,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 0,
     },
     "description": "Compare key 2 with a[0] = 5.",
+    "descriptionAr": "قارن المفتاح 2 مع a[0] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3350,6 +3479,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "5 > 2, shift it right.",
+    "descriptionAr": "5 > 2، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3375,6 +3505,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Insert key 2 at position 0.",
+    "descriptionAr": "أدرج المفتاح 2 في الموضع 0.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3400,6 +3531,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Take key = a[2] = 9; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[2] = 9؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3426,6 +3558,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Compare key 9 with a[1] = 5.",
+    "descriptionAr": "قارن المفتاح 9 مع a[1] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3452,6 +3585,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Insert key 9 at position 2.",
+    "descriptionAr": "أدرج المفتاح 9 في الموضع 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3478,6 +3612,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Take key = a[3] = 1; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[3] = 1؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3505,6 +3640,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 1,
     },
     "description": "Compare key 1 with a[2] = 9.",
+    "descriptionAr": "قارن المفتاح 1 مع a[2] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3532,6 +3668,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 2,
     },
     "description": "9 > 1, shift it right.",
+    "descriptionAr": "9 > 1، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3559,6 +3696,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 2,
     },
     "description": "Compare key 1 with a[1] = 5.",
+    "descriptionAr": "قارن المفتاح 1 مع a[1] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3585,6 +3723,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 3,
     },
     "description": "5 > 1, shift it right.",
+    "descriptionAr": "5 > 1، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3611,6 +3750,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 3,
     },
     "description": "Compare key 1 with a[0] = 2.",
+    "descriptionAr": "قارن المفتاح 1 مع a[0] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3637,6 +3777,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 4,
     },
     "description": "2 > 1, shift it right.",
+    "descriptionAr": "2 > 1، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3663,6 +3804,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 4,
     },
     "description": "Insert key 1 at position 0.",
+    "descriptionAr": "أدرج المفتاح 1 في الموضع 0.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3690,6 +3832,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 4,
     },
     "description": "Take key = a[4] = 5; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[4] = 5؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3718,6 +3861,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 4,
     },
     "description": "Compare key 5 with a[3] = 9.",
+    "descriptionAr": "قارن المفتاح 5 مع a[3] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3746,6 +3890,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 5,
     },
     "description": "9 > 5, shift it right.",
+    "descriptionAr": "9 > 5، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3774,6 +3919,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 5,
     },
     "description": "Compare key 5 with a[2] = 5.",
+    "descriptionAr": "قارن المفتاح 5 مع a[2] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3801,6 +3947,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 5,
     },
     "description": "Insert key 5 at position 3.",
+    "descriptionAr": "أدرج المفتاح 5 في الموضع 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3829,6 +3976,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 5,
     },
     "description": "Take key = a[5] = 6; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[5] = 6؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3858,6 +4006,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 5,
     },
     "description": "Compare key 6 with a[4] = 9.",
+    "descriptionAr": "قارن المفتاح 6 مع a[4] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3887,6 +4036,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 6,
     },
     "description": "9 > 6, shift it right.",
+    "descriptionAr": "9 > 6، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3916,6 +4066,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 6,
     },
     "description": "Compare key 6 with a[3] = 5.",
+    "descriptionAr": "قارن المفتاح 6 مع a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3944,6 +4095,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 6,
     },
     "description": "Insert key 6 at position 4.",
+    "descriptionAr": "أدرج المفتاح 6 في الموضع 4.",
     "frame": {
       "note": undefined,
       "states": {
@@ -3973,6 +4125,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 6,
     },
     "description": "Take key = a[6] = 3; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[6] = 3؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4003,6 +4156,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 6,
     },
     "description": "Compare key 3 with a[5] = 9.",
+    "descriptionAr": "قارن المفتاح 3 مع a[5] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4033,6 +4187,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 7,
     },
     "description": "9 > 3, shift it right.",
+    "descriptionAr": "9 > 3، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4063,6 +4218,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 7,
     },
     "description": "Compare key 3 with a[4] = 6.",
+    "descriptionAr": "قارن المفتاح 3 مع a[4] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4092,6 +4248,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 8,
     },
     "description": "6 > 3, shift it right.",
+    "descriptionAr": "6 > 3، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4121,6 +4278,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 8,
     },
     "description": "Compare key 3 with a[3] = 5.",
+    "descriptionAr": "قارن المفتاح 3 مع a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4150,6 +4308,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 9,
     },
     "description": "5 > 3, shift it right.",
+    "descriptionAr": "5 > 3، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4179,6 +4338,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 9,
     },
     "description": "Compare key 3 with a[2] = 5.",
+    "descriptionAr": "قارن المفتاح 3 مع a[2] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4208,6 +4368,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 10,
     },
     "description": "5 > 3, shift it right.",
+    "descriptionAr": "5 > 3، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4237,6 +4398,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 10,
     },
     "description": "Compare key 3 with a[1] = 2.",
+    "descriptionAr": "قارن المفتاح 3 مع a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4266,6 +4428,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 10,
     },
     "description": "Insert key 3 at position 2.",
+    "descriptionAr": "أدرج المفتاح 3 في الموضع 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4296,6 +4459,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 10,
     },
     "description": "Take key = a[7] = 8; find where it belongs in the sorted prefix.",
+    "descriptionAr": "خذ المفتاح = a[7] = 8؛ أوجد موضعه في البادئة المرتبة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4327,6 +4491,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 10,
     },
     "description": "Compare key 8 with a[6] = 9.",
+    "descriptionAr": "قارن المفتاح 8 مع a[6] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4358,6 +4523,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 11,
     },
     "description": "9 > 8, shift it right.",
+    "descriptionAr": "9 > 8، أزحه يمينًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4389,6 +4555,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 11,
     },
     "description": "Compare key 8 with a[5] = 6.",
+    "descriptionAr": "قارن المفتاح 8 مع a[5] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4419,6 +4586,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 11,
     },
     "description": "Insert key 8 at position 6.",
+    "descriptionAr": "أدرج المفتاح 8 في الموضع 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4450,6 +4618,7 @@ exports[`comparison-sort golden steps > insertion-sort step stream is unchanged 
       "shifts": 11,
     },
     "description": "Sorted with 16 comparisons and 11 shifts.",
+    "descriptionAr": "اكتمل الترتيب بـ 16 مقارنة و11 إزاحة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4486,6 +4655,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Select the minimum of the unsorted region each pass and place it at the front.",
+    "descriptionAr": "اختر أصغر عنصر في المنطقة غير المرتبة في كل مرور وضعه في المقدمة.",
     "frame": {
       "note": undefined,
       "states": {},
@@ -4508,6 +4678,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Pass 1: assume a[0] = 5 is the minimum.",
+    "descriptionAr": "المرور 1: افترض أن a[0] = 5 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4532,6 +4703,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[1] = 2 against current min a[0] = 5.",
+    "descriptionAr": "قارن a[1] = 2 بالأصغر الحالي a[0] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4557,6 +4729,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "New minimum found: a[1] = 2.",
+    "descriptionAr": "عُثر على أصغر جديد: a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4581,6 +4754,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[2] = 9 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[2] = 9 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4606,6 +4780,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[3] = 1 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[3] = 1 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4631,6 +4806,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "New minimum found: a[3] = 1.",
+    "descriptionAr": "عُثر على أصغر جديد: a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4655,6 +4831,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[4] = 5 against current min a[3] = 1.",
+    "descriptionAr": "قارن a[4] = 5 بالأصغر الحالي a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4680,6 +4857,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[5] = 6 against current min a[3] = 1.",
+    "descriptionAr": "قارن a[5] = 6 بالأصغر الحالي a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4705,6 +4883,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[6] = 3 against current min a[3] = 1.",
+    "descriptionAr": "قارن a[6] = 3 بالأصغر الحالي a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4730,6 +4909,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 0,
     },
     "description": "Compare a[7] = 8 against current min a[3] = 1.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[3] = 1.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4755,6 +4935,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Swap the minimum into position 0.",
+    "descriptionAr": "بدّل الأصغر إلى الموضع 0.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4780,6 +4961,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Position 0 is finalized.",
+    "descriptionAr": "الموضع 0 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4804,6 +4986,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Pass 2: assume a[1] = 2 is the minimum.",
+    "descriptionAr": "المرور 2: افترض أن a[1] = 2 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4829,6 +5012,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[2] = 9 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[2] = 9 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4855,6 +5039,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[3] = 5 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[3] = 5 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4881,6 +5066,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[4] = 5 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[4] = 5 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4907,6 +5093,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[5] = 6 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[5] = 6 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4933,6 +5120,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[6] = 3 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[6] = 3 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4959,6 +5147,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[7] = 8 against current min a[1] = 2.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[1] = 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -4985,6 +5174,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "a[1] is already the minimum — no swap needed.",
+    "descriptionAr": "a[1] هو الأصغر بالفعل — لا حاجة للتبديل.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5010,6 +5200,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Position 1 is finalized.",
+    "descriptionAr": "الموضع 1 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5035,6 +5226,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Pass 3: assume a[2] = 9 is the minimum.",
+    "descriptionAr": "المرور 3: افترض أن a[2] = 9 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5061,6 +5253,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[3] = 5 against current min a[2] = 9.",
+    "descriptionAr": "قارن a[3] = 5 بالأصغر الحالي a[2] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5088,6 +5281,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "New minimum found: a[3] = 5.",
+    "descriptionAr": "عُثر على أصغر جديد: a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5114,6 +5308,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[4] = 5 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[4] = 5 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5141,6 +5336,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[5] = 6 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[5] = 6 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5168,6 +5364,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[6] = 3 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[6] = 3 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5195,6 +5392,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "New minimum found: a[6] = 3.",
+    "descriptionAr": "عُثر على أصغر جديد: a[6] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5221,6 +5419,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 1,
     },
     "description": "Compare a[7] = 8 against current min a[6] = 3.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[6] = 3.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5248,6 +5447,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Swap the minimum into position 2.",
+    "descriptionAr": "بدّل الأصغر إلى الموضع 2.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5275,6 +5475,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Position 2 is finalized.",
+    "descriptionAr": "الموضع 2 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5301,6 +5502,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Pass 4: assume a[3] = 5 is the minimum.",
+    "descriptionAr": "المرور 4: افترض أن a[3] = 5 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5328,6 +5530,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[4] = 5 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[4] = 5 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5356,6 +5559,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[5] = 6 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[5] = 6 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5384,6 +5588,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[6] = 9 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[6] = 9 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5412,6 +5617,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[7] = 8 against current min a[3] = 5.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[3] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5440,6 +5646,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "a[3] is already the minimum — no swap needed.",
+    "descriptionAr": "a[3] هو الأصغر بالفعل — لا حاجة للتبديل.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5467,6 +5674,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Position 3 is finalized.",
+    "descriptionAr": "الموضع 3 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5494,6 +5702,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Pass 5: assume a[4] = 5 is the minimum.",
+    "descriptionAr": "المرور 5: افترض أن a[4] = 5 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5522,6 +5731,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[5] = 6 against current min a[4] = 5.",
+    "descriptionAr": "قارن a[5] = 6 بالأصغر الحالي a[4] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5551,6 +5761,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[6] = 9 against current min a[4] = 5.",
+    "descriptionAr": "قارن a[6] = 9 بالأصغر الحالي a[4] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5580,6 +5791,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[7] = 8 against current min a[4] = 5.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[4] = 5.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5609,6 +5821,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "a[4] is already the minimum — no swap needed.",
+    "descriptionAr": "a[4] هو الأصغر بالفعل — لا حاجة للتبديل.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5637,6 +5850,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Position 4 is finalized.",
+    "descriptionAr": "الموضع 4 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5665,6 +5879,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Pass 6: assume a[5] = 6 is the minimum.",
+    "descriptionAr": "المرور 6: افترض أن a[5] = 6 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5694,6 +5909,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[6] = 9 against current min a[5] = 6.",
+    "descriptionAr": "قارن a[6] = 9 بالأصغر الحالي a[5] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5724,6 +5940,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[7] = 8 against current min a[5] = 6.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[5] = 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5754,6 +5971,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "a[5] is already the minimum — no swap needed.",
+    "descriptionAr": "a[5] هو الأصغر بالفعل — لا حاجة للتبديل.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5783,6 +6001,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Position 5 is finalized.",
+    "descriptionAr": "الموضع 5 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5812,6 +6031,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Pass 7: assume a[6] = 9 is the minimum.",
+    "descriptionAr": "المرور 7: افترض أن a[6] = 9 هو الأصغر.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5842,6 +6062,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "Compare a[7] = 8 against current min a[6] = 9.",
+    "descriptionAr": "قارن a[7] = 8 بالأصغر الحالي a[6] = 9.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5873,6 +6094,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 2,
     },
     "description": "New minimum found: a[7] = 8.",
+    "descriptionAr": "عُثر على أصغر جديد: a[7] = 8.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5903,6 +6125,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 3,
     },
     "description": "Swap the minimum into position 6.",
+    "descriptionAr": "بدّل الأصغر إلى الموضع 6.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5934,6 +6157,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 3,
     },
     "description": "Position 6 is finalized.",
+    "descriptionAr": "الموضع 6 أصبح نهائيًا.",
     "frame": {
       "note": undefined,
       "states": {
@@ -5964,6 +6188,7 @@ exports[`comparison-sort golden steps > selection-sort step stream is unchanged 
       "swaps": 3,
     },
     "description": "Sorted with exactly 3 swaps — selection sort minimizes writes.",
+    "descriptionAr": "اكتمل الترتيب بـ 3 عملية تبديل بالضبط — ترتيب الاختيار يقلّل الكتابة.",
     "frame": {
       "note": undefined,
       "states": {
@@ -6000,6 +6225,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Shell sort runs insertion sort on elements spaced by a shrinking gap.",
+    "descriptionAr": "ترتيب شل يُشغّل ترتيب الإدراج على عناصر متباعدة بفجوة متقلصة.",
     "frame": {
       "note": "gap sequence: n/2, n/4, … 1",
       "pointers": undefined,
@@ -6023,6 +6249,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Start a pass with gap 4.",
+    "descriptionAr": "ابدأ مرورًا بفجوة 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6046,6 +6273,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Take key a[4] = 5; compare backwards in steps of 4.",
+    "descriptionAr": "خذ المفتاح a[4] = 5؛ قارن للخلف بخطوات مقدارها 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": [
@@ -6076,6 +6304,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Compare a[0] = 5 with key 5.",
+    "descriptionAr": "قارن a[0] = 5 مع المفتاح 5.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6102,6 +6331,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Place key 5 at index 4.",
+    "descriptionAr": "ضع المفتاح 5 عند الفهرس 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6127,6 +6357,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Take key a[5] = 6; compare backwards in steps of 4.",
+    "descriptionAr": "خذ المفتاح a[5] = 6؛ قارن للخلف بخطوات مقدارها 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": [
@@ -6157,6 +6388,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Compare a[1] = 2 with key 6.",
+    "descriptionAr": "قارن a[1] = 2 مع المفتاح 6.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6183,6 +6415,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Place key 6 at index 5.",
+    "descriptionAr": "ضع المفتاح 6 عند الفهرس 5.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6208,6 +6441,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Take key a[6] = 3; compare backwards in steps of 4.",
+    "descriptionAr": "خذ المفتاح a[6] = 3؛ قارن للخلف بخطوات مقدارها 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": [
@@ -6238,6 +6472,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 0,
     },
     "description": "Compare a[2] = 9 with key 3.",
+    "descriptionAr": "قارن a[2] = 9 مع المفتاح 3.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6264,6 +6499,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "9 > 3, shift it forward by 4.",
+    "descriptionAr": "9 > 3، أزحه للأمام بمقدار 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6290,6 +6526,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Place key 3 at index 2.",
+    "descriptionAr": "ضع المفتاح 3 عند الفهرس 2.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6315,6 +6552,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Take key a[7] = 8; compare backwards in steps of 4.",
+    "descriptionAr": "خذ المفتاح a[7] = 8؛ قارن للخلف بخطوات مقدارها 4.",
     "frame": {
       "note": "gap = 4",
       "pointers": [
@@ -6345,6 +6583,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Compare a[3] = 1 with key 8.",
+    "descriptionAr": "قارن a[3] = 1 مع المفتاح 8.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6371,6 +6610,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Place key 8 at index 7.",
+    "descriptionAr": "ضع المفتاح 8 عند الفهرس 7.",
     "frame": {
       "note": "gap = 4",
       "pointers": undefined,
@@ -6396,6 +6636,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Start a pass with gap 2.",
+    "descriptionAr": "ابدأ مرورًا بفجوة 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6419,6 +6660,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Take key a[2] = 3; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[2] = 3؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6449,6 +6691,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 1,
     },
     "description": "Compare a[0] = 5 with key 3.",
+    "descriptionAr": "قارن a[0] = 5 مع المفتاح 3.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6475,6 +6718,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 2,
     },
     "description": "5 > 3, shift it forward by 2.",
+    "descriptionAr": "5 > 3، أزحه للأمام بمقدار 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6501,6 +6745,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 2,
     },
     "description": "Place key 3 at index 0.",
+    "descriptionAr": "ضع المفتاح 3 عند الفهرس 0.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6526,6 +6771,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 2,
     },
     "description": "Take key a[3] = 1; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[3] = 1؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6556,6 +6802,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 2,
     },
     "description": "Compare a[1] = 2 with key 1.",
+    "descriptionAr": "قارن a[1] = 2 مع المفتاح 1.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6582,6 +6829,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "2 > 1, shift it forward by 2.",
+    "descriptionAr": "2 > 1، أزحه للأمام بمقدار 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6608,6 +6856,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Place key 1 at index 1.",
+    "descriptionAr": "ضع المفتاح 1 عند الفهرس 1.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6633,6 +6882,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Take key a[4] = 5; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[4] = 5؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6663,6 +6913,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Compare a[2] = 5 with key 5.",
+    "descriptionAr": "قارن a[2] = 5 مع المفتاح 5.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6689,6 +6940,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Place key 5 at index 4.",
+    "descriptionAr": "ضع المفتاح 5 عند الفهرس 4.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6714,6 +6966,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Take key a[5] = 6; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[5] = 6؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6744,6 +6997,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Compare a[3] = 2 with key 6.",
+    "descriptionAr": "قارن a[3] = 2 مع المفتاح 6.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6770,6 +7024,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Place key 6 at index 5.",
+    "descriptionAr": "ضع المفتاح 6 عند الفهرس 5.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6795,6 +7050,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Take key a[6] = 9; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[6] = 9؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6825,6 +7081,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Compare a[4] = 5 with key 9.",
+    "descriptionAr": "قارن a[4] = 5 مع المفتاح 9.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6851,6 +7108,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Place key 9 at index 6.",
+    "descriptionAr": "ضع المفتاح 9 عند الفهرس 6.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6876,6 +7134,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Take key a[7] = 8; compare backwards in steps of 2.",
+    "descriptionAr": "خذ المفتاح a[7] = 8؛ قارن للخلف بخطوات مقدارها 2.",
     "frame": {
       "note": "gap = 2",
       "pointers": [
@@ -6906,6 +7165,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Compare a[5] = 6 with key 8.",
+    "descriptionAr": "قارن a[5] = 6 مع المفتاح 8.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6932,6 +7192,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Place key 8 at index 7.",
+    "descriptionAr": "ضع المفتاح 8 عند الفهرس 7.",
     "frame": {
       "note": "gap = 2",
       "pointers": undefined,
@@ -6957,6 +7218,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Start a pass with gap 1.",
+    "descriptionAr": "ابدأ مرورًا بفجوة 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -6980,6 +7242,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Take key a[1] = 1; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[1] = 1؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7010,6 +7273,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 3,
     },
     "description": "Compare a[0] = 3 with key 1.",
+    "descriptionAr": "قارن a[0] = 3 مع المفتاح 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7036,6 +7300,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "3 > 1, shift it forward by 1.",
+    "descriptionAr": "3 > 1، أزحه للأمام بمقدار 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7062,6 +7327,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Place key 1 at index 0.",
+    "descriptionAr": "ضع المفتاح 1 عند الفهرس 0.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7087,6 +7353,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Take key a[2] = 5; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[2] = 5؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7117,6 +7384,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Compare a[1] = 3 with key 5.",
+    "descriptionAr": "قارن a[1] = 3 مع المفتاح 5.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7143,6 +7411,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Place key 5 at index 2.",
+    "descriptionAr": "ضع المفتاح 5 عند الفهرس 2.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7168,6 +7437,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Take key a[3] = 2; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[3] = 2؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7198,6 +7468,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 4,
     },
     "description": "Compare a[2] = 5 with key 2.",
+    "descriptionAr": "قارن a[2] = 5 مع المفتاح 2.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7224,6 +7495,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 5,
     },
     "description": "5 > 2, shift it forward by 1.",
+    "descriptionAr": "5 > 2، أزحه للأمام بمقدار 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7250,6 +7522,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 5,
     },
     "description": "Compare a[1] = 3 with key 2.",
+    "descriptionAr": "قارن a[1] = 3 مع المفتاح 2.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7276,6 +7549,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "3 > 2, shift it forward by 1.",
+    "descriptionAr": "3 > 2، أزحه للأمام بمقدار 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7302,6 +7576,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Compare a[0] = 1 with key 2.",
+    "descriptionAr": "قارن a[0] = 1 مع المفتاح 2.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7328,6 +7603,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Place key 2 at index 1.",
+    "descriptionAr": "ضع المفتاح 2 عند الفهرس 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7353,6 +7629,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Take key a[4] = 5; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[4] = 5؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7383,6 +7660,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Compare a[3] = 5 with key 5.",
+    "descriptionAr": "قارن a[3] = 5 مع المفتاح 5.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7409,6 +7687,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Place key 5 at index 4.",
+    "descriptionAr": "ضع المفتاح 5 عند الفهرس 4.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7434,6 +7713,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Take key a[5] = 6; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[5] = 6؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7464,6 +7744,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Compare a[4] = 5 with key 6.",
+    "descriptionAr": "قارن a[4] = 5 مع المفتاح 6.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7490,6 +7771,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Place key 6 at index 5.",
+    "descriptionAr": "ضع المفتاح 6 عند الفهرس 5.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7515,6 +7797,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Take key a[6] = 9; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[6] = 9؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7545,6 +7828,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Compare a[5] = 6 with key 9.",
+    "descriptionAr": "قارن a[5] = 6 مع المفتاح 9.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7571,6 +7855,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Place key 9 at index 6.",
+    "descriptionAr": "ضع المفتاح 9 عند الفهرس 6.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7596,6 +7881,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Take key a[7] = 8; compare backwards in steps of 1.",
+    "descriptionAr": "خذ المفتاح a[7] = 8؛ قارن للخلف بخطوات مقدارها 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": [
@@ -7626,6 +7912,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 6,
     },
     "description": "Compare a[6] = 9 with key 8.",
+    "descriptionAr": "قارن a[6] = 9 مع المفتاح 8.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7652,6 +7939,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 7,
     },
     "description": "9 > 8, shift it forward by 1.",
+    "descriptionAr": "9 > 8، أزحه للأمام بمقدار 1.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7678,6 +7966,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 7,
     },
     "description": "Compare a[5] = 6 with key 8.",
+    "descriptionAr": "قارن a[5] = 6 مع المفتاح 8.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7704,6 +7993,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 7,
     },
     "description": "Place key 8 at index 6.",
+    "descriptionAr": "ضع المفتاح 8 عند الفهرس 6.",
     "frame": {
       "note": "gap = 1",
       "pointers": undefined,
@@ -7729,6 +8019,7 @@ exports[`comparison-sort golden steps > shell-sort step stream is unchanged 1`] 
       "shifts": 7,
     },
     "description": "Sorted! Gaps let elements move long distances early, beating plain insertion sort.",
+    "descriptionAr": "اكتمل الترتيب! الفجوات تتيح للعناصر التحرك مسافات طويلة مبكرًا، متفوقة على ترتيب الإدراج البسيط.",
     "frame": {
       "note": undefined,
       "pointers": undefined,
