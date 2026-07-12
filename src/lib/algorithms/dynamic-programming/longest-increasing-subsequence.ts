@@ -20,6 +20,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     done = false,
+    descriptionAr?: string,
   ): void => {
     const states: Record<number, CellState> = {};
     for (let k = 0; k < i; k++) states[k] = "visited";
@@ -38,12 +39,13 @@ function generate(input: Input): Step<ArrayFrame>[] {
         note: `Longest Increasing Subsequence — dp[i] = 1 + max dp[j] over j<i with a[j] < a[i]`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons },
     });
   };
 
-  frame(0, null, [], `dp[0] = 1: a[0] = ${a[0]} alone is an increasing subsequence of length 1.`, 1);
+  frame(0, null, [], `dp[0] = 1: a[0] = ${a[0]} alone is an increasing subsequence of length 1.`, 1, false, `dp[0] = 1: العنصر a[0] = ${a[0]} وحده تتابع فرعي متزايد بطول 1.`);
 
   for (let i = 1; i < n; i++) {
     for (let j = 0; j < i; j++) {
@@ -51,9 +53,9 @@ function generate(input: Input): Step<ArrayFrame>[] {
       if (a[j] < a[i] && dp[j] + 1 > dp[i]) {
         dp[i] = dp[j] + 1;
         prev[i] = j;
-        frame(i, j, [], `a[${j}]=${a[j]} < a[${i}]=${a[i]} and dp[${j}]+1=${dp[i]} improves dp[${i}] → ${dp[i]} (predecessor ${j}).`, 4);
+        frame(i, j, [], `a[${j}]=${a[j]} < a[${i}]=${a[i]} and dp[${j}]+1=${dp[i]} improves dp[${i}] → ${dp[i]} (predecessor ${j}).`, 4, false, `a[${j}]=${a[j]} < a[${i}]=${a[i]} و dp[${j}]+1=${dp[i]} يُحسّن dp[${i}] → ${dp[i]} (السلف ${j}).`);
       } else {
-        frame(i, j, [], `a[${j}]=${a[j]} ${a[j] < a[i] ? "<" : "≥"} a[${i}]=${a[i]}: dp[${i}] stays ${dp[i]}.`, 3);
+        frame(i, j, [], `a[${j}]=${a[j]} ${a[j] < a[i] ? "<" : "≥"} a[${i}]=${a[i]}: dp[${i}] stays ${dp[i]}.`, 3, false, `a[${j}]=${a[j]} ${a[j] < a[i] ? "<" : "≥"} a[${i}]=${a[i]}: تبقى dp[${i}] عند ${dp[i]}.`);
       }
     }
   }
@@ -75,7 +77,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
   }
   chain.reverse();
   const seq = chain.map((k) => a[k]);
-  frame(n, null, chain, `Longest increasing subsequence has length ${bestLen}: [${seq.join(", ")}] at indices [${chain.join(", ")}].`, 6, true);
+  frame(n, null, chain, `Longest increasing subsequence has length ${bestLen}: [${seq.join(", ")}] at indices [${chain.join(", ")}].`, 6, true, `أطول تتابع فرعي متزايد طوله ${bestLen}: [${seq.join(", ")}] عند الفهارس [${chain.join(", ")}].`);
   return steps;
 }
 
@@ -88,10 +90,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "longest-increasing-subsequence",
   title: "Longest Increasing Subsequence",
+  titleAr: "أطول تتابع فرعي متزايد",
   category: "dynamic-programming",
   difficulty: "Intermediate",
   tags: ["dynamic programming", "subsequence", "array", "LIS"],
+  tagsAr: ["البرمجة الديناميكية", "تتابع فرعي", "مصفوفة", "LIS"],
   summary: "Finds the longest strictly increasing subsequence via an O(n²) DP, tracking predecessors to rebuild the chain.",
+  summaryAr: "يجد أطول تتابع فرعي متزايد تمامًا عبر برمجة ديناميكية بزمن O(n²)، متتبعًا الأسلاف لإعادة بناء السلسلة.",
   renderer: "array",
   pseudocode: [
     "procedure LIS(a)",
@@ -285,6 +290,62 @@ The O(n²) dynamic program defines dp[i] as the length of the longest increasing
       { question: "The transition considers j < i only when…", options: ["a[j] > a[i]", "a[j] < a[i]", "a[j] == a[i]", "always"], answer: 1, explanation: "Element i can extend j's subsequence only if a[j] < a[i]." },
       { question: "The final answer is…", options: ["dp[n-1]", "dp[0]", "max over all dp[i]", "the sum of dp"], answer: 2, explanation: "The LIS may end anywhere, so take the maximum dp value." },
       { question: "LIS can be sped up to O(n log n) using…", options: ["Bubble sort", "Binary search over a tails array (patience sorting)", "Hashing", "A stack"], answer: 1, explanation: "Maintaining smallest tails with binary search gives O(n log n)." },
+    ],
+  },
+  contentAr: {
+    overview: `أطول تتابع فرعي متزايد (LIS) لمصفوفة هو أطول تتابع فرعي عناصره في ترتيب متزايد تمامًا — وهو تتابع فرعي أيضًا، فيُسمح بالفجوات لكن يجب الحفاظ على الترتيب. في [10, 9, 2, 5, 3, 7, 101, 18] أحد تتابعات LIS هو [2, 3, 7, 101] بطول 4.
+
+يعرّف البرنامج الديناميكي بزمن O(n²) القيمة dp[i] كطول أطول تتابع فرعي متزايد ينتهي بالضبط عند الفهرس i. يبدأ كل عنصر كتتابع فرعي بطول 1. لكل i تنظر رجوعًا إلى كل فهرس سابق j: إذا كان a[j] < a[i]، يمكن للعنصر i أن يمدد التتابع الفرعي المنتهي عند j، معطيًا طولًا مرشحًا dp[j] + 1. أخذ أفضل مرشح كهذا يملأ dp[i]. الجواب الكلي هو أكبر مُدخل في dp، وخزن سلف كل عنصر مختار يتيح إعادة بناء التتابع الفرعي الفعلي. (نسخة أكثر تقدمًا تستخدم فرز الصبر مع بحث ثنائي تعمل بزمن O(n log n).)`,
+    howItWorks: [
+      "اجعل dp[i] = 1 لكل فهرس (كل عنصر وحده بطول 1).",
+      "لكل i، افحص كل الفهارس السابقة j < i.",
+      "إذا كان a[j] < a[i]، يمكن للعنصر i أن يتبع j: المرشح = dp[j] + 1.",
+      "احتفظ بأكبر مرشح كقيمة dp[i]، وسجّل j كسلف لـ i.",
+      "الجواب هو max(dp)؛ اتبع روابط الأسلاف رجوعًا من فهرسه لاستعادة التتابع الفرعي.",
+    ],
+    complexity: {
+      time: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" },
+      space: "O(n)",
+      notes: "البرمجة الديناميكية بالحلقات المتداخلة بزمن O(n²). نهج فرز الصبر مع بحث ثنائي على مصفوفة 'الذيول' يحقق O(n log n).",
+    },
+    applications: [
+      "كشف أطول سلسلة من القيم المتحسنة في سلسلة زمنية",
+      "تكديس الصناديق/المغلفات (بعد الترتيب حسب بُعد واحد)",
+      "توافق الإصدارات وسلاسل الجدولة",
+      "النسخة O(n log n) تظهر في خوارزمية الصبر لأداة diff",
+    ],
+    advantages: [
+      "علاقة تكرارية بسيطة مفاهيميًا بحلقات متداخلة",
+      "تتبّع الأسلاف يستعيد التتابع الفرعي الفعلي",
+      "يعمل للتزايد الصارم أو غير الصارم بتعديل بسيط",
+      "يوجد تسريع مباشر إلى O(n log n)",
+    ],
+    disadvantages: [
+      "النسخة الأساسية بزمن O(n²) — بطيئة للمصفوفات الكبيرة",
+      "النسخة السريعة O(n log n) أصعب في استعادة التسلسل أيضًا",
+      "تتعامل مع تتابع LIS واحد فقط حتى عند وجود عدة تتابعات",
+    ],
+    commonMistakes: [
+      "الخلط بين التتابع الفرعي (يسمح بفجوات) والسلسلة الجزئية/التشغيل المتجاور.",
+      "استخدام ≤ بدلًا من < عندما يُطلب التزايد الصارم.",
+      "نسيان تهيئة كل dp[i] إلى 1.",
+      "قراءة الجواب كـ dp[n−1] بدلًا من أكبر قيمة على كل dp[i].",
+    ],
+    interviewQuestions: [
+      "كيف تقلل LIS من O(n²) إلى O(n log n)؟",
+      "كيف تعيد بناء التتابع الفرعي الفعلي، لا طوله فقط؟",
+      "كيف تتعامل مع التتابعات الفرعية غير المتزايدة الصارمة؟",
+      "كيف يعمل فرز الصبر / مصفوفة الذيول؟",
+      "كيف تحسب عدد أطول التتابعات الفرعية المتزايدة المميزة؟",
+    ],
+    summary:
+      "يجد LIS أطول تتابع فرعي متزايد تمامًا. البرمجة الديناميكية بزمن O(n²) تضع dp[i] = 1 + أكبر dp[j] على j سابقة مع a[j] < a[i]، والأسلاف تعيد بناء السلسلة. نسخة فرز الصبر تحسّن هذا إلى O(n log n).",
+    quiz: [
+      { question: "يجب أن يكون التتابع الفرعي المتزايد…", options: ["متجاورًا", "حافظًا للترتيب لكن قد يتخطى عناصر", "مرتبًا في مكانه", "معكوسًا"], answer: 1, explanation: "يحافظ على الترتيب لكن لا يلزم أن يكون متجاورًا." },
+      { question: "تمثّل dp[i] في LIS بزمن O(n²)…", options: ["القيمة a[i]", "طول LIS المنتهي عند الفهرس i", "طول LIS الكلي", "عدد الانقلابات"], answer: 1, explanation: "dp[i] هو أطول تتابع فرعي متزايد ينتهي عند i." },
+      { question: "يُعتبر الانتقال من أجل j < i فقط عندما…", options: ["a[j] > a[i]", "a[j] < a[i]", "a[j] == a[i]", "دائمًا"], answer: 1, explanation: "يمكن للعنصر i أن يمدد تتابع j الفرعي فقط إذا كان a[j] < a[i]." },
+      { question: "الجواب النهائي هو…", options: ["dp[n-1]", "dp[0]", "أكبر قيمة على كل dp[i]", "مجموع dp"], answer: 2, explanation: "قد ينتهي LIS في أي مكان، فتُؤخذ أكبر قيمة dp." },
+      { question: "يمكن تسريع LIS إلى O(n log n) باستخدام…", options: ["الترتيب الفقاعي", "بحث ثنائي على مصفوفة ذيول (فرز الصبر)", "التجزئة", "مكدس"], answer: 1, explanation: "الاحتفاظ بأصغر الذيول مع بحث ثنائي يعطي O(n log n)." },
     ],
   },
   inputFields: [

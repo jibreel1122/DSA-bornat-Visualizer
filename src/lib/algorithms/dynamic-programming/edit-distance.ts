@@ -25,6 +25,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     highlight?: Set<string>,
+    descriptionAr?: string,
   ): void => {
     const cells = dp.map((row, i) =>
       row.map((val, j) => {
@@ -39,7 +40,7 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilled ? val : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
   frame(
@@ -48,6 +49,8 @@ function generate(input: Input): Step<TableFrame>[] {
     [],
     `Edit distance from "${a}" to "${b}". Base cases: row 0 = insert j chars, column 0 = delete i chars.`,
     1,
+    undefined,
+    `مسافة التحرير من "${a}" إلى "${b}". الحالات الأساسية: الصف 0 = إدراج j محرفًا، العمود 0 = حذف i محرفًا.`,
   );
 
   let filled = m + 1;
@@ -64,6 +67,8 @@ function generate(input: Input): Step<TableFrame>[] {
           [[i - 1, j - 1]],
           `'${a[i - 1]}' = '${b[j - 1]}': no edit needed, copy diagonal = ${dp[i][j]}.`,
           4,
+          undefined,
+          `'${a[i - 1]}' = '${b[j - 1]}': لا حاجة لتحرير، انسخ القطر = ${dp[i][j]}.`,
         );
       } else {
         const del = dp[i - 1][j];
@@ -72,12 +77,15 @@ function generate(input: Input): Step<TableFrame>[] {
         dp[i][j] = 1 + Math.min(del, ins, sub);
         filled++;
         const op = sub <= del && sub <= ins ? "substitute" : del <= ins ? "delete" : "insert";
+        const opAr = op === "substitute" ? "استبدال" : op === "delete" ? "حذف" : "إدراج";
         frame(
           filled,
           [i, j],
           [[i - 1, j], [i, j - 1], [i - 1, j - 1]],
           `'${a[i - 1]}' ≠ '${b[j - 1]}': 1 + min(del ${del}, ins ${ins}, sub ${sub}) = ${dp[i][j]} (${op}).`,
           6,
+          undefined,
+          `'${a[i - 1]}' ≠ '${b[j - 1]}': 1 + أصغر (حذف ${del}، إدراج ${ins}، استبدال ${sub}) = ${dp[i][j]} (${opAr}).`,
         );
       }
     }
@@ -102,7 +110,7 @@ function generate(input: Input): Step<TableFrame>[] {
     }
   }
   highlight.add("0,0");
-  frame(filled, null, [], `Minimum edit distance = ${dp[n][m]}. Highlighted path shows one optimal operation sequence.`, 8, highlight);
+  frame(filled, null, [], `Minimum edit distance = ${dp[n][m]}. Highlighted path shows one optimal operation sequence.`, 8, highlight, `أقل مسافة تحرير = ${dp[n][m]}. المسار المُبرز يُظهر تسلسل عمليات أمثل واحد.`);
   return steps;
 }
 
@@ -116,10 +124,13 @@ function randomStrings(level: number, rng: { pick: <T>(a: readonly T[]) => T }):
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "edit-distance",
   title: "Edit Distance (Levenshtein)",
+  titleAr: "مسافة التحرير (ليفنشتاين)",
   category: "dynamic-programming",
   difficulty: "Intermediate",
   tags: ["dynamic programming", "strings", "levenshtein", "tabulation"],
+  tagsAr: ["البرمجة الديناميكية", "سلاسل نصية", "ليفنشتاين", "الجدولة"],
   summary: "Computes the minimum number of insertions, deletions, and substitutions to transform one string into another.",
+  summaryAr: "يحسب أقل عدد من عمليات الإدراج والحذف والاستبدال لتحويل سلسلة نصية إلى أخرى.",
   renderer: "table",
   pseudocode: [
     "procedure editDistance(A, B)",
@@ -335,6 +346,62 @@ The dynamic-programming table dp[i][j] holds the edit distance between the first
       { question: "On a character match, dp[i][j] equals…", options: ["1 + dp[i-1][j-1]", "dp[i-1][j-1]", "min of neighbors", "0"], answer: 1, explanation: "Matching characters require no edit, so it inherits the diagonal." },
       { question: "The three neighbors (up, left, diagonal) represent…", options: ["insert, delete, match", "delete, insert, substitute", "substitute, match, insert", "swap, insert, delete"], answer: 1, explanation: "Up = delete from A, left = insert into A, diagonal = substitute." },
       { question: "Edit distance and LCS are related because…", options: ["They are identical", "With only insert/delete allowed, edits = n + m − 2·LCS", "LCS is always larger", "They share no relation"], answer: 1, explanation: "Restricting to insert/delete, the distance equals n + m − 2·LCS." },
+    ],
+  },
+  contentAr: {
+    overview: `تقيس مسافة التحرير (وتُسمى أيضًا مسافة ليفنشتاين) مدى اختلاف سلسلتين نصيتين: أقل عدد من عمليات إدراج وحذف واستبدال محرف واحد اللازمة لتحويل إحداهما إلى الأخرى. تحويل "kitten" إلى "sitting" يكلّف 3 (استبدال k←s، استبدال e←i، إدراج g).
+
+يحمل جدول البرمجة الديناميكية dp[i][j] مسافة التحرير بين أول i محرف من A وأول j محرف من B. الحالات الأساسية هي تحريرات صرفة مقابل سلسلة فارغة: تحويل بادئة بطول i إلى "" يكلّف i عمليات حذف، وتحويل "" إلى بادئة بطول j يكلّف j عمليات إدراج. أما الخلايا الداخلية، فالمحارف المتطابقة لا تكلّف شيئًا (ترث القطر)، بينما عدم التطابق يكلّف تحريرًا واحدًا زائد أرخص الجيران الثلاثة — الحذف (أعلى)، أو الإدراج (يسار)، أو الاستبدال (قطري).`,
+    howItWorks: [
+      "هيّئ dp[i][0] = i و dp[0][j] = j (تحريرات مقابل السلسلة الفارغة).",
+      "املأ الجدول صفًا صفًا لكل زوج من البادئات.",
+      "إذا كان A[i] == B[j]، فلا حاجة لتحرير: dp[i][j] = dp[i−1][j−1].",
+      "وإلا فإن dp[i][j] = 1 + min(dp[i−1][j] حذف، dp[i][j−1] إدراج، dp[i−1][j−1] استبدال).",
+      "dp[n][m] هي أقل مسافة تحرير؛ تتبّع رجوعًا لسرد العمليات الفعلية.",
+    ],
+    complexity: {
+      time: { best: "O(n·m)", average: "O(n·m)", worst: "O(n·m)" },
+      space: "O(n·m)",
+      notes: "تعتمد كل خلية على ثلاثة جيران فقط، لذا يمكن تقليل المساحة إلى O(min(n, m)) بصفين متجددين عند الحاجة إلى المسافة فقط.",
+    },
+    applications: [
+      "المدققات الإملائية واقتراحات التصحيح التلقائي",
+      "المطابقة التقريبية للسلاسل النصية وإزالة التكرار من السجلات",
+      "مقارنة تسلسلات الحمض النووي وتسجيل نقاط المحاذاة",
+      "أدوات المقارنة والدمج (diff/merge)",
+    ],
+    advantages: [
+      "يعطي تكلفة تحرير دقيقة ومثلى",
+      "يتعامل طبيعيًا مع عمليات التحرير الثلاث جميعها بشكل موحد",
+      "التتبع الرجعي يستعيد تسلسل التحريرات الملموس",
+      "أوزان كل عملية سهلة التخصيص",
+    ],
+    disadvantages: [
+      "زمن ومساحة O(n·m) يزدادان بسرعة على السلاسل الطويلة",
+      "الصيغة الأساسية تعامل كل التحريرات بتكلفة متساوية",
+      "النسخة ذات المساحة المخفّضة تفقد التتبع الرجعي السهل للعمليات",
+    ],
+    commonMistakes: [
+      "نسيان صف وعمود الحالة الأساسية (i عملية حذف / j عملية إدراج).",
+      "أخذ أصغر قيمة من جارين فقط وإغفال الاستبدال.",
+      "إضافة 1 حتى عند تطابق المحارف.",
+      "عكس دوري الإدراج والحذف أثناء التتبع الرجعي.",
+    ],
+    interviewQuestions: [
+      "بماذا ترتبط الخلايا الجارة الثلاث من حيث عمليات التحرير؟",
+      "كيف تدعم تكاليف مختلفة للإدراج والحذف والاستبدال؟",
+      "كيف ترتبط مسافة التحرير بأطول تتابع فرعي مشترك؟",
+      "كيف تقلل المساحة إلى O(min(n, m))؟",
+      "كيف تضيف عملية تبديل موضعي (ليفنشتاين-دامرو)؟",
+    ],
+    summary:
+      "تحسب مسافة التحرير أقل عدد من عمليات الإدراج/الحذف/الاستبدال لتحويل سلسلة إلى أخرى عبر dp[i][j] = dp[i−1][j−1] عند التطابق، وإلا 1 + أصغر الجيران الثلاثة، بزمن O(n·m). وهي تُشغّل المدققات الإملائية والمطابقة التقريبية ومحاذاة التسلسلات.",
+    quiz: [
+      { question: "أي عمليات تحسبها مسافة التحرير؟", options: ["الاستبدال فقط", "الإدراج والحذف والاستبدال", "الدوران والتبديل", "الإدراج والحذف فقط"], answer: 1, explanation: "تسمح مسافة ليفنشتاين بإدراج وحذف واستبدال محرف واحد." },
+      { question: "الحالة الأساسية dp[i][0] تساوي…", options: ["0", "i", "1", "m"], answer: 1, explanation: "تحويل بادئة طولها i إلى السلسلة الفارغة يتطلب i عملية حذف." },
+      { question: "عند تطابق المحرفين، تساوي dp[i][j]…", options: ["1 + dp[i-1][j-1]", "dp[i-1][j-1]", "أصغر الجيران", "0"], answer: 1, explanation: "المحارف المتطابقة لا تتطلب تحريرًا، فترث القطر." },
+      { question: "تمثّل الخلايا الثلاث المجاورة (أعلى، يسار، قطري)…", options: ["إدراج، حذف، تطابق", "حذف، إدراج، استبدال", "استبدال، تطابق، إدراج", "تبديل، إدراج، حذف"], answer: 1, explanation: "أعلى = حذف من A، يسار = إدراج في A، قطري = استبدال." },
+      { question: "ترتبط مسافة التحرير بـ LCS لأن…", options: ["إنهما متطابقتان", "عند السماح بالإدراج/الحذف فقط، التحريرات = n + m − 2·LCS", "LCS دائمًا أكبر", "لا علاقة بينهما"], answer: 1, explanation: "بالاقتصار على الإدراج/الحذف، تساوي المسافة n + m − 2·LCS." },
     ],
   },
   inputFields: [

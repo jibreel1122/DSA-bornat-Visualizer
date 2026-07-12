@@ -27,6 +27,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     highlight?: Set<string>,
+    descriptionAr?: string,
   ): void => {
     const cells = dp.map((row, i) =>
       row.map((val, a) => {
@@ -40,10 +41,10 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilled ? show(val) : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `target = ${amount}` }, description, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `target = ${amount}` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  frame(1, null, [], `Coin change: fewest coins to make ${amount} from {${coins.join(", ")}}. Amount 0 needs 0 coins; the rest start at ∞.`, 1);
+  frame(1, null, [], `Coin change: fewest coins to make ${amount} from {${coins.join(", ")}}. Amount 0 needs 0 coins; the rest start at ∞.`, 1, undefined, `فكة العملات: أقل عدد من العملات لتكوين ${amount} من {${coins.join(", ")}}. المبلغ 0 يحتاج 0 عملة؛ والباقي يبدأ بـ ∞.`);
 
   for (let i = 1; i <= n; i++) {
     const coin = coins[i - 1];
@@ -67,6 +68,10 @@ function generate(input: Input): Step<TableFrame>[] {
           ? `Amount ${a} with coin ${coin}: min(skip ${show(dp[i - 1][a])}, 1+dp[${i}][${a - coin}]) = ${show(dp[i][a])}.`
           : `Amount ${a}: coin ${coin} too big, inherit ${show(dp[i][a])}.`,
         4,
+        undefined,
+        a >= coin
+          ? `المبلغ ${a} بالعملة ${coin}: أصغر (تجاوز ${show(dp[i - 1][a])}، 1+dp[${i}][${a - coin}]) = ${show(dp[i][a])}.`
+          : `المبلغ ${a}: العملة ${coin} كبيرة جدًا، رِث ${show(dp[i][a])}.`,
       );
     }
   }
@@ -98,6 +103,9 @@ function generate(input: Input): Step<TableFrame>[] {
       : `Minimum ${dp[n][amount]} coins: ${used.sort((x, y) => x - y).join(" + ")}.`,
     6,
     highlight,
+    dp[n][amount] === INF
+      ? `المبلغ ${amount} غير قابل للتكوين بهذه العملات.`
+      : `أقل عدد ${dp[n][amount]} عملة: ${used.join(" + ")}.`,
   );
   return steps;
 }
@@ -112,10 +120,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "coin-change",
   title: "Coin Change (Minimum Coins)",
+  titleAr: "فكة العملات (أقل عدد من العملات)",
   category: "dynamic-programming",
   difficulty: "Intermediate",
   tags: ["dynamic programming", "unbounded knapsack", "optimization", "tabulation"],
+  tagsAr: ["البرمجة الديناميكية", "حقيبة غير محدودة", "تحسين", "الجدولة"],
   summary: "Finds the fewest coins that sum to a target amount, allowing each denomination to be reused any number of times.",
+  summaryAr: "يجد أقل عدد من العملات التي يبلغ مجموعها مبلغًا مستهدفًا، مع السماح بإعادة استخدام كل فئة أي عدد من المرات.",
   renderer: "table",
   pseudocode: [
     "procedure coinChange(coins, amount)",
@@ -288,6 +299,62 @@ The DP builds up answers for every amount from 0 to the target. dp[a] holds the 
       { question: "The recurrence for using a coin is…", options: ["dp[a] = dp[a-coin]", "dp[a] = 1 + dp[a-coin]", "dp[a] = dp[a] + coin", "dp[a] = coin"], answer: 1, explanation: "Using one coin adds 1 to the best count for the remaining amount." },
       { question: "Greedy largest-first is unreliable because…", options: ["It is too slow", "Non-canonical coin sets can make it suboptimal", "It uses too much memory", "It cannot handle coin 1"], answer: 1, explanation: "For sets like {1,3,4}, greedy misses the optimal combination." },
       { question: "If dp[amount] stays at infinity, it means…", options: ["The amount is reachable", "The target cannot be formed", "There is a bug", "The answer is zero"], answer: 1, explanation: "Infinity signals no combination of coins reaches that amount." },
+    ],
+  },
+  contentAr: {
+    overview: `تطرح مسألة فكة العملات السؤال التالي: ما أقل عدد من العملات يبلغ مجموعها مبلغًا مستهدفًا، بمعلومية إمداد غير محدود من كل فئة؟ بالعملات {1, 3, 4} والهدف 6، فإن جواب الجشِع "الأكبر أولًا" (4 + 1 + 1 = 3 عملات) يُهزم أمام الأمثل 3 + 3 = عملتين — وهذا بالضبط سبب حاجة هذه المسألة إلى البرمجة الديناميكية بدلًا من الجشِع.
+
+تبني البرمجة الديناميكية أجوبة لكل مبلغ من 0 إلى الهدف. تحمل dp[a] أقل عدد من العملات لتكوين المبلغ a؛ تبدأ بـ 0 عند a = 0 و"اللانهاية" (غير قابل للتكوين) في باقي الحالات. لكل عملة، يمكن تحسين كل مبلغ a ≥ العملة إلى 1 + dp[a − العملة]. ولأن العملة قد تُستخدم مرارًا، تسير الحلقة الداخلية للأمام — وهذا نمط الحقيبة غير المحدودة. العرض ثنائي الأبعاد هنا يضيف فئة عملة واحدة لكل صف كي تُشاهد أفضل عدد لكل مبلغ يتحسن مع توفر مزيد من العملات.`,
+    howItWorks: [
+      "اجعل dp[0] = 0 (لا عملات تكوّن المبلغ 0) وكل dp[a] الأخرى = ∞.",
+      "اعتبر كل فئة عملة بدورها.",
+      "لكل مبلغ a من العملة حتى الهدف، جرّب استخدام هذه العملة: المرشح = 1 + dp[a − العملة].",
+      "احتفظ بالأصغر بين تجاوز العملة واستخدامها: dp[a] = min(dp[a], المرشح).",
+      "dp[amount] هو الجواب؛ إذا بقي ∞ فالهدف غير قابل للتكوين (أعِد −1). تتبّع رجوعًا لسرد العملات.",
+    ],
+    complexity: {
+      time: { best: "O(amount · coins)", average: "O(amount · coins)", worst: "O(amount · coins)" },
+      space: "O(amount)",
+      notes: "تعيد المصفوفة أحادية البعد استخدام كل عملة دون حد بمسح المبالغ من اليسار لليمين. الجدول ثنائي الأبعاد المعروض هنا يستخدم مساحة O(coins · amount) لوضوح التتبع الرجعي.",
+    },
+    applications: [
+      "إعطاء الفكة بأقل عدد من العملات/الأوراق في الأنظمة النقدية",
+      "مسائل أقل عدد من الطوابع/الأوزان في التوليفات",
+      "تعبئة الموارد حيث الوحدات قابلة لإعادة الاستخدام",
+      "المثال التعليمي الكلاسيكي للحقيبة غير المحدودة",
+    ],
+    advantages: [
+      "يجد دائمًا الحد الأدنى الحقيقي، حيث قد يفشل الجشِع",
+      "يتعامل مع أنظمة عملات عشوائية غير قانونية (non-canonical)",
+      "مساحة خطية في الهدف باستخدام المصفوفة أحادية البعد",
+      "التتبع الرجعي يستعيد العملات الواجب استخدامها",
+    ],
+    disadvantages: [
+      "شبه كثيرة الحدود — تتناسب التكلفة مع القيمة العددية للهدف لا حجم المدخلات",
+      "غير عملي لمبالغ هدف كبيرة جدًا",
+      "يحسب العملات فقط؛ يلزم تمرير منفصل لسردها",
+    ],
+    commonMistakes: [
+      "استخدام استراتيجية الجشِع بالعملة الأكبر أولًا، وهي خاطئة للأنظمة غير القانونية.",
+      "تكرار المبالغ من اليمين لليسار، مما يحوّلها إلى نسخة 0/1 (كل عملة مرة واحدة).",
+      "نسيان تعيين المبالغ غير القابلة للتكوين إلى اللانهاية، مما يفسد الحد الأدنى.",
+      "الخلط بين 'أقل عدد عملات' و'عدد الطرق' (علاقة تكرارية مختلفة للبرمجة الديناميكية).",
+    ],
+    interviewQuestions: [
+      "لماذا يفشل النهج الجشِع مع عملات مثل {1, 3, 4} ومبلغ 6؟",
+      "كيف يميز اتجاه الحلقة بين الاستخدام غير المحدود واستخدام 0/1 للعملة؟",
+      "كيف تحسب بدلًا من ذلك عدد الطرق المميزة لتكوين المبلغ؟",
+      "كيف تعيد بناء العملات التي استُخدمت؟",
+      "متى يكون النهج الجشِع فعلًا أمثل (أنظمة العملات القانونية)؟",
+    ],
+    summary:
+      "تجد فكة العملات أقل عدد من العملات القابلة لإعادة الاستخدام والتي يبلغ مجموعها هدفًا عبر dp[a] = min(dp[a], 1 + dp[a − العملة])، وهي علاقة تكرارية للحقيبة غير المحدودة، بزمن O(amount · coins). إنها المثال القياسي الذي يفشل فيه الجشِع بينما تكون البرمجة الديناميكية مثلى إثباتًا.",
+    quiz: [
+      { question: "تسمح فكة العملات (أقل عدد عملات) باستخدام كل فئة…", options: ["مرة واحدة بالضبط", "مرتين على الأكثر", "أي عدد من المرات", "أبدًا مرتين"], answer: 2, explanation: "إنها النسخة غير المحدودة — يمكن إعادة استخدام العملات بحرية." },
+      { question: "الحالة الأساسية dp[0] تساوي…", options: ["∞", "1", "0", "عدد العملات"], answer: 2, explanation: "المبلغ صفر يتطلب صفر عملة." },
+      { question: "العلاقة التكرارية لاستخدام عملة هي…", options: ["dp[a] = dp[a-coin]", "dp[a] = 1 + dp[a-coin]", "dp[a] = dp[a] + coin", "dp[a] = coin"], answer: 1, explanation: "استخدام عملة واحدة يضيف 1 إلى أفضل عدد للمبلغ المتبقي." },
+      { question: "الجشِع بالعملة الأكبر أولًا غير موثوق لأن…", options: ["إنه بطيء جدًا", "أنظمة العملات غير القانونية قد تجعله غير أمثل", "يستخدم ذاكرة كثيرة", "لا يتعامل مع العملة 1"], answer: 1, explanation: "لأنظمة مثل {1,3,4}، يفوّت الجشِع التوليفة المثلى." },
+      { question: "إذا بقيت dp[amount] عند اللانهاية، فهذا يعني…", options: ["المبلغ قابل للتكوين", "لا يمكن تكوين الهدف", "يوجد خطأ برمجي", "الجواب صفر"], answer: 1, explanation: "اللانهاية تشير إلى عدم وجود توليفة عملات تصل إلى ذلك المبلغ." },
     ],
   },
   inputFields: [

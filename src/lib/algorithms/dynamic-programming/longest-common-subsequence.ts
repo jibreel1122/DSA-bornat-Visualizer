@@ -23,6 +23,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     highlight?: Set<string>,
+    descriptionAr?: string,
   ): void => {
     const cells = dp.map((row, i) =>
       row.map((val, j) => {
@@ -37,10 +38,10 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilled ? val : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  frame(0, null, [], `Longest Common Subsequence of "${a}" and "${b}". Row 0 and column 0 (empty prefixes) are all zeros.`, 0);
+  frame(0, null, [], `Longest Common Subsequence of "${a}" and "${b}". Row 0 and column 0 (empty prefixes) are all zeros.`, 0, undefined, `أطول تتابع فرعي مشترك بين "${a}" و"${b}". الصف 0 والعمود 0 (البادئات الفارغة) كلها أصفار.`);
 
   let filled = m + 1; // row 0 done
   for (let i = 1; i <= n; i++) {
@@ -56,6 +57,8 @@ function generate(input: Input): Step<TableFrame>[] {
           [[i - 1, j - 1]],
           `A[${i}]='${a[i - 1]}' = B[${j}]='${b[j - 1]}': extend diagonal → dp[${i - 1}][${j - 1}]+1 = ${dp[i][j]}.`,
           3,
+          undefined,
+          `A[${i}]='${a[i - 1]}' = B[${j}]='${b[j - 1]}': مدّد القطر → dp[${i - 1}][${j - 1}]+1 = ${dp[i][j]}.`,
         );
       } else {
         dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
@@ -66,6 +69,8 @@ function generate(input: Input): Step<TableFrame>[] {
           [[i - 1, j], [i, j - 1]],
           `A[${i}]='${a[i - 1]}' ≠ B[${j}]='${b[j - 1]}': take max(up ${dp[i - 1][j]}, left ${dp[i][j - 1]}) = ${dp[i][j]}.`,
           5,
+          undefined,
+          `A[${i}]='${a[i - 1]}' ≠ B[${j}]='${b[j - 1]}': خذ أعظم (الأعلى ${dp[i - 1][j]}، اليسار ${dp[i][j - 1]}) = ${dp[i][j]}.`,
         );
       }
     }
@@ -89,7 +94,7 @@ function generate(input: Input): Step<TableFrame>[] {
     }
   }
   seq.reverse();
-  frame(filled, null, [], `LCS length = ${dp[n][m]}. Traceback recovers "${seq.join("")}".`, 7, highlight);
+  frame(filled, null, [], `LCS length = ${dp[n][m]}. Traceback recovers "${seq.join("")}".`, 7, highlight, `طول أطول تتابع فرعي مشترك = ${dp[n][m]}. التتبع الرجعي يستعيد "${seq.join("")}".`);
   return steps;
 }
 
@@ -103,10 +108,13 @@ function randomStrings(level: number, rng: { int: (a: number, b: number) => numb
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "longest-common-subsequence",
   title: "Longest Common Subsequence",
+  titleAr: "أطول تتابع فرعي مشترك",
   category: "dynamic-programming",
   difficulty: "Intermediate",
   tags: ["dynamic programming", "strings", "tabulation", "subsequence"],
+  tagsAr: ["البرمجة الديناميكية", "سلاسل نصية", "الجدولة", "تتابع فرعي"],
   summary: "Finds the longest subsequence common to two strings by filling a 2-D DP table, then tracing it back.",
+  summaryAr: "يجد أطول تتابع فرعي مشترك بين سلسلتين نصيتين بملء جدول برمجة ديناميكية ثنائي الأبعاد، ثم التتبع الرجعي.",
   renderer: "table",
   pseudocode: [
     "procedure LCS(A, B)",
@@ -294,6 +302,62 @@ The dynamic-programming solution builds a table dp[i][j] = the LCS length of the
       { question: "When the characters differ, dp[i][j] is…", options: ["dp[i-1][j-1]", "max(dp[i-1][j], dp[i][j-1])", "min of the neighbors", "dp[i-1][j-1] + 1"], answer: 1, explanation: "You keep the better of dropping A's or B's current character." },
       { question: "The time complexity of the table method is…", options: ["O(n + m)", "O(n·m)", "O(n log m)", "O(2^n)"], answer: 1, explanation: "Each of the n·m cells is filled in constant time." },
       { question: "The LCS length is found in which cell?", options: ["dp[0][0]", "dp[n][m]", "dp[1][1]", "the maximum cell anywhere"], answer: 1, explanation: "The full-string subproblem sits at the bottom-right corner." },
+    ],
+  },
+  contentAr: {
+    overview: `أطول تتابع فرعي مشترك (LCS) بين سلسلتين هو أطول تسلسل من المحارف يظهر في كليهما، بنفس الترتيب النسبي لكن ليس بالضرورة متجاورًا. بالنسبة لـ"ABCBDAB" و"BDCAB" فإن LCS هو "BCAB" (بطول 4). وخلافًا للسلسلة الجزئية، يمكن للتتابع الفرعي أن يتخطى محارف.
+
+يبني حل البرمجة الديناميكية جدولًا dp[i][j] = طول LCS لأول i محرف من A وأول j محرف من B. عندما تتطابق المحارف الحالية، يمتد الجواب على القطر (dp[i−1][j−1] + 1)؛ وعندما تختلف، يرث الأفضل بين إسقاط محرف A (dp[i−1][j]) أو محرف B (dp[i][j−1]). تحمل الخلية اليمنى السفلية الطول النهائي، ويعيد المشي رجوعًا عبر الجدول بناء التتابع الفرعي نفسه.`,
+    howItWorks: [
+      "أنشئ جدولًا dp[0..n][0..m]؛ الصف والعمود ذوا البادئة الفارغة كلاهما أصفار.",
+      "امسح الجدول صفًا صفًا. من أجل A[i] و B[j]، قارن المحرفين.",
+      "إذا تطابقا، dp[i][j] = dp[i−1][j−1] + 1 (مدّد التتابع الفرعي المشترك قطريًا).",
+      "إذا اختلفا، dp[i][j] = max(dp[i−1][j], dp[i][j−1]) (احمل الأفضل حتى الآن).",
+      "dp[n][m] هو طول LCS؛ تتبّع منه رجوعًا (قطريًا عند التطابق، نحو الجار الأكبر خلاف ذلك) لاستعادة التتابع.",
+    ],
+    complexity: {
+      time: { best: "O(n·m)", average: "O(n·m)", worst: "O(n·m)" },
+      space: "O(n·m)",
+      notes: "تُحسب كل خلية مرة واحدة بزمن ثابت. يمكن تقليل المساحة إلى O(min(n, m)) بصفين متجددين إذا كان الطول فقط مطلوبًا (لكن هذا يفقد التتبع الرجعي السهل).",
+    },
+    applications: [
+      "أدوات المقارنة (diff) والتحكم بالإصدارات (LCS على مستوى الأسطر)",
+      "محاذاة تسلسلات الحمض النووي/البروتين في المعلوماتية الحيوية",
+      "كشف الانتحال والتشابه",
+      "أساسيات التدقيق الإملائي والمطابقة التقريبية",
+    ],
+    advantages: [
+      "يضمن أطول تتابع فرعي مشترك أمثل",
+      "علاقة تكرارية بسيطة ومنتظمة لملء الجدول",
+      "التتبع الرجعي يعيد بناء التتابع الفرعي نفسه، لا طوله فقط",
+      "قابل لتقليل المساحة إلى O(min(n, m)) من أجل الطول",
+    ],
+    disadvantages: [
+      "زمن ومساحة O(n·m) مكلفان للسلاسل الطويلة جدًا",
+      "النسخة ذات المساحة المخفّضة تجعل استعادة التتابع أصعب",
+      "يجد تتابعًا فرعيًا واحدًا فقط حتى عند وجود عدة تتابعات بنفس الطول",
+    ],
+    commonMistakes: [
+      "الخلط بين التتابع الفرعي (يحافظ على الترتيب، يسمح بفجوات) والسلسلة الجزئية (متجاورة).",
+      "أخطاء انزياح بمقدار واحد بين الجدول المبني على 1 والسلاسل المبنية على 0.",
+      "نسيان تهيئة الصف/العمود الصفري.",
+      "التتبع رجوعًا نحو الجار الخاطئ مما ينتج تتابعًا غير صالح.",
+    ],
+    interviewQuestions: [
+      "كيف يختلف LCS عن أطول سلسلة جزئية مشتركة، وكيف تختلف علاقاتهما التكرارية؟",
+      "كيف تقلل تعقيد المساحة إلى O(min(n, m))؟",
+      "كيف تعيد بناء التتابع الفرعي الفعلي من الجدول؟",
+      "كيف ترتبط مسافة التحرير بـ LCS؟",
+      "كيف تجد طول أقصر تتابع فوقي مشترك باستخدام LCS؟",
+    ],
+    summary:
+      "يجد LCS أطول تتابع فرعي مشترك حافظ للترتيب بين سلسلتين بملء dp[i][j] = dp[i−1][j−1]+1 عند التطابق، وإلا max(dp[i−1][j], dp[i][j−1])، بزمن ومساحة O(n·m). وهو أساس أدوات المقارنة ومحاذاة التسلسلات، والتتبع الرجعي يستعيد التتابع الفرعي نفسه.",
+    quiz: [
+      { question: "يختلف التتابع الفرعي عن السلسلة الجزئية في أنه…", options: ["يجب أن يكون متجاورًا", "قد يتخطى محارف لكنه يحافظ على الترتيب", "يجب أن يُعكس", "يتجاهل الترتيب"], answer: 1, explanation: "يحافظ التتابع الفرعي على الترتيب النسبي لكنه لا يلزم أن يكون متجاورًا." },
+      { question: "عندما يكون A[i] == B[j]، تساوي dp[i][j]…", options: ["dp[i-1][j]", "dp[i][j-1]", "dp[i-1][j-1] + 1", "0"], answer: 2, explanation: "يمدّد التطابق المسألة الفرعية القطرية بمحرف واحد." },
+      { question: "عندما تختلف المحارف، تكون dp[i][j]…", options: ["dp[i-1][j-1]", "max(dp[i-1][j], dp[i][j-1])", "أصغر الجارين", "dp[i-1][j-1] + 1"], answer: 1, explanation: "تحتفظ بالأفضل بين إسقاط محرف A أو محرف B الحالي." },
+      { question: "التعقيد الزمني لطريقة الجدول هو…", options: ["O(n + m)", "O(n·m)", "O(n log m)", "O(2^n)"], answer: 1, explanation: "تُملأ كل خلية من خلايا n·m بزمن ثابت." },
+      { question: "في أي خلية يوجد طول LCS؟", options: ["dp[0][0]", "dp[n][m]", "dp[1][1]", "أكبر خلية أينما كانت"], answer: 1, explanation: "تقع المسألة الفرعية للسلسلتين الكاملتين في الزاوية اليمنى السفلية." },
     ],
   },
   inputFields: [

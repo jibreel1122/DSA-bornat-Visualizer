@@ -23,6 +23,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     highlightCells?: Set<string>,
+    descriptionAr?: string,
   ): void => {
     const cells = dp.map((row, i) =>
       row.map((val, c) => {
@@ -36,10 +37,10 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilledCell ? val : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `capacity W = ${W}` }, description, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `capacity W = ${W}` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  frame(0, null, [], `0/1 Knapsack: maximize value within capacity ${W}. Row 0 (no items) is all zeros.`, 0);
+  frame(0, null, [], `0/1 Knapsack: maximize value within capacity ${W}. Row 0 (no items) is all zeros.`, 0, undefined, `حقيبة 0/1: عظّم القيمة ضمن السعة ${W}. الصف 0 (بلا عناصر) كله أصفار.`);
 
   let filledCount = W + 1; // row 0 done
   for (let i = 1; i <= n; i++) {
@@ -49,7 +50,7 @@ function generate(input: Input): Step<TableFrame>[] {
       if (w > c) {
         dp[i][c] = dp[i - 1][c];
         filledCount++;
-        frame(filledCount, [i, c], [[i - 1, c]], `Item ${i} (w=${w}) doesn't fit in capacity ${c}: copy above = ${dp[i][c]}.`, 3);
+        frame(filledCount, [i, c], [[i - 1, c]], `Item ${i} (w=${w}) doesn't fit in capacity ${c}: copy above = ${dp[i][c]}.`, 3, undefined, `العنصر ${i} (w=${w}) لا يناسب السعة ${c}: انسخ الخلية أعلاه = ${dp[i][c]}.`);
       } else {
         const exclude = dp[i - 1][c];
         const include = v + dp[i - 1][c - w];
@@ -61,6 +62,8 @@ function generate(input: Input): Step<TableFrame>[] {
           [[i - 1, c], [i - 1, c - w]],
           `Item ${i}: max(exclude ${exclude}, include ${v}+dp[${i - 1}][${c - w}]=${include}) = ${dp[i][c]}.`,
           5,
+          undefined,
+          `العنصر ${i}: أعظم القيمتين (استبعاد ${exclude}، تضمين ${v}+dp[${i - 1}][${c - w}]=${include}) = ${dp[i][c]}.`,
         );
       }
     }
@@ -77,7 +80,7 @@ function generate(input: Input): Step<TableFrame>[] {
       c -= items[i - 1].w;
     }
   }
-  frame(filledCount, null, [], `Optimal value ${dp[n][W]}. Traceback selects items: ${chosen.reverse().join(", ") || "none"}.`, 7, highlight);
+  frame(filledCount, null, [], `Optimal value ${dp[n][W]}. Traceback selects items: ${chosen.reverse().join(", ") || "none"}.`, 7, highlight, `القيمة المثلى ${dp[n][W]}. التتبع الرجعي يختار العناصر: ${chosen.join(", ") || "لا شيء"}.`);
   return steps;
 }
 
@@ -91,10 +94,13 @@ function randomItems(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "knapsack-01",
   title: "0/1 Knapsack",
+  titleAr: "حقيبة 0/1",
   category: "dynamic-programming",
   difficulty: "Intermediate",
   tags: ["dynamic programming", "tabulation", "optimization", "NP-hard (pseudo-poly)"],
+  tagsAr: ["البرمجة الديناميكية", "الجدولة", "تحسين", "NP-صعبة (شبه كثيرة الحدود)"],
   summary: "Maximizes value under a weight limit where each item is taken whole or not at all, via a DP table.",
+  summaryAr: "يعظّم القيمة ضمن حد وزني حيث يُؤخذ كل عنصر كاملًا أو يُترك، عبر جدول برمجة ديناميكية.",
   renderer: "table",
   pseudocode: [
     "procedure knapsack(items, W)",
@@ -284,6 +290,62 @@ The dynamic-programming solution fills a table dp[i][c] = the best value achieva
       { question: "The time complexity O(n·W) is called…", options: ["Logarithmic", "Pseudo-polynomial", "Constant", "Exponential"], answer: 1, explanation: "It depends on the numeric value of W, not just the input size." },
       { question: "Why is greedy (value/weight) not optimal for 0/1 knapsack?", options: ["It's too slow", "Indivisible items can make a locally best choice globally suboptimal", "It needs sorting", "It always is optimal"], answer: 1, explanation: "Without fractions, a high-ratio item may crowd out a better-fitting combination." },
       { question: "The 1D space-optimized version must iterate capacity…", options: ["Left to right", "Right to left", "In any order", "Twice"], answer: 1, explanation: "Right-to-left ensures each item is used at most once (true 0/1 behavior)." },
+    ],
+  },
+  contentAr: {
+    overview: `تطرح مسألة حقيبة 0/1 السؤال التالي: بمعلومية عناصر لكل منها وزن وقيمة، وحقيبة تتحمل وزنًا لا يتجاوز W، أي مجموعة جزئية تعظّم القيمة الإجمالية إذا كان كل عنصر إما يُؤخذ كاملًا أو يُترك؟ يعني "0/1" ألا كسور — لا يمكنك أخذ نصف عنصر.
+
+يملأ حل البرمجة الديناميكية جدولًا dp[i][c] = أفضل قيمة يمكن تحقيقها باستخدام أول i عنصر بسعة c. كل خلية تطرح سؤالًا واحدًا: هل من الأفضل تجاهل العنصر i (وراثة dp[i−1][c]) أم تضمينه (قيمته زائد dp[i−1][c − وزنه])؟ الجواب عند dp[n][W] هو الأمثل، والتتبع الرجعي يستعيد العناصر المختارة.`,
+    howItWorks: [
+      "أنشئ جدولًا dp[0..n][0..W]؛ الصف 0 (بلا عناصر) كله أصفار.",
+      "املأ الجدول صفًا صفًا: للعنصر i والسعة c، اعتبر أولًا استبعاده (dp[i−1][c]).",
+      "إذا كان العنصر i يناسب (الوزن ≤ c)، اعتبر أيضًا تضمينه: القيمة + dp[i−1][c − الوزن].",
+      "خذ الأكبر بين الاستبعاد والتضمين — هذا هو dp[i][c].",
+      "dp[n][W] هي القيمة المثلى؛ تتبّع منها رجوعًا لاستعادة العناصر المختارة.",
+    ],
+    complexity: {
+      time: { best: "O(n·W)", average: "O(n·W)", worst: "O(n·W)" },
+      space: "O(n·W)",
+      notes: "شبه كثيرة الحدود: خطية في عدد العناصر مضروبة في السعة W (التي تعتمد على قيمة W نفسها لا حجم المدخلات فقط). يمكن تقليل المساحة إلى O(W) بمصفوفة أحادية البعد متجددة تُعالج من اليمين لليسار.",
+    },
+    applications: [
+      "الميزانية وتخصيص الموارد ضمن حد صارم",
+      "مسائل تحميل البضائع وقص المخزون",
+      "اختيار المحفظة الاستثمارية والمشاريع بسقف تكلفة",
+      "مسائل مجموع المجموعة الجزئية والتقسيم (حالات خاصة)",
+    ],
+    advantages: [
+      "يضمن المجموعة الجزئية المثلى (بخلاف الجشِع)",
+      "علاقة تكرارية بسيطة ومنهجية لملء الجدول",
+      "التتبع الرجعي يستعيد العناصر المختارة بدقة",
+      "قابل لتحسين المساحة إلى O(W)",
+    ],
+    disadvantages: [
+      "شبه كثيرة الحدود — O(nW) ينفجر عندما تكون W كبيرة",
+      "المسألة الأساسية NP-صعبة؛ لا توجد خوارزمية كثيرة حدود دقيقة معروفة",
+      "تتطلب أوزانًا صحيحة (أو مُقسّمة إلى وحدات منفصلة)",
+    ],
+    commonMistakes: [
+      "استخدام أسلوب الحقيبة الكسرية الجشِع، وهو غير أمثل لمسألة 0/1.",
+      "خطأ في فهرسة العناصر بين الجدول المبني على 1 والمصفوفات المبنية على 0.",
+      "تكرار التحسين أحادي البعد من اليسار لليمين (هذا يحل الحقيبة غير المحدودة بدلًا منها).",
+      "نسيان صف/عمود الأصفار الأساسي.",
+    ],
+    interviewQuestions: [
+      "لماذا لا تعطي استراتيجية القيمة/الوزن الجشعة الحل الأمثل لمسألة 0/1؟",
+      "كيف تقلل المساحة من O(nW) إلى O(W)؟",
+      "لماذا تُسمى الحقيبة شبه كثيرة الحدود؟",
+      "كيف تستعيد العناصر الموجودة في الحل الأمثل؟",
+      "كيف تختلف حقيبة 0/1 عن الحقيبة غير المحدودة في العلاقة التكرارية؟",
+    ],
+    summary:
+      "تعظّم حقيبة 0/1 القيمة ضمن سقف وزني بملء dp[i][c] = أعظم (استبعاد العنصر i، تضمين العنصر i) بزمن ومساحة O(nW). إنها مسألة تحسين البرمجة الديناميكية الكلاسيكية، مثلى حيث يفشل الجشِع، وقابلة لتقليل المساحة إلى O(W).",
+    quiz: [
+      { question: "في حقيبة 0/1، كل عنصر يمكن أن يُؤخذ…", options: ["جزئيًا", "كاملًا أو لا يُؤخذ إطلاقًا", "عدة مرات", "استبعاده فقط"], answer: 1, explanation: "يعني '0/1' اختيار ثنائي بين التضمين والاستبعاد لكل عنصر." },
+      { question: "تمثّل dp[i][c]…", options: ["قيمة العنصر رقم i", "أفضل قيمة باستخدام أول i عنصر ضمن السعة c", "الوزن الإجمالي", "عدد العناصر"], answer: 1, explanation: "إنها القيمة المثلى لمسألة فرعية بأول i عنصر وسعة c." },
+      { question: "يُسمى التعقيد الزمني O(n·W)…", options: ["لوغاريتميًا", "شبه كثير الحدود", "ثابتًا", "أسيًا"], answer: 1, explanation: "يعتمد على القيمة العددية لـ W، لا على حجم المدخلات فقط." },
+      { question: "لماذا لا يكون الجشِع (قيمة/وزن) أمثل لحقيبة 0/1؟", options: ["إنه بطيء جدًا", "العناصر غير القابلة للتجزئة قد تجعل الاختيار الأفضل محليًا غير أمثل كليًا", "يحتاج إلى ترتيب", "إنه دائمًا أمثل"], answer: 1, explanation: "دون كسور، قد يزاحم عنصر ذو نسبة عالية توليفة أنسب." },
+      { question: "النسخة أحادية البعد المحسّنة للمساحة يجب أن تكرر السعة…", options: ["من اليسار لليمين", "من اليمين لليسار", "بأي ترتيب", "مرتين"], answer: 1, explanation: "التكرار من اليمين لليسار يضمن استخدام كل عنصر مرة واحدة على الأكثر (سلوك 0/1 الحقيقي)." },
     ],
   },
   inputFields: [
