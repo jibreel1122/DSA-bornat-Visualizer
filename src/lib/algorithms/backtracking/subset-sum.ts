@@ -20,7 +20,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   const suffix = new Array(n + 1).fill(0);
   for (let i = n - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + items[i];
 
-  const snap = (topState: "active" | "found" | "swap" | "discarded" | undefined, sum: number, description: string, codeLine: number): void => {
+  const snap = (topState: "active" | "found" | "swap" | "discarded" | undefined, sum: number, description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -37,25 +37,27 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `subset-sum of [${items.join(", ")}] → ${target} · include or exclude each element, prune impossible branches`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { decisions, prunes },
     });
   };
 
-  snap(undefined, 0, `Does any subset of [${items.join(", ")}] sum to ${target}? Try include/exclude for each element with pruning.`, 0);
+  snap(undefined, 0, `Does any subset of [${items.join(", ")}] sum to ${target}? Try include/exclude for each element with pruning.`, 0, `هل تجمع أي مجموعة جزئية من [${items.join(", ")}] إلى ${target}؟ جرّب التضمين/الاستبعاد لكل عنصر مع التقليم.`);
 
   const solve = (i: number, sum: number): boolean => {
     if (truncated) return false;
     if (sum === target) {
       found = true;
-      snap("found", sum, `Sum ${sum} equals the target ${target} — found a subset: {${chosen.join(", ")}}!`, 1);
+      snap("found", sum, `Sum ${sum} equals the target ${target} — found a subset: {${chosen.join(", ")}}!`, 1, `المجموع ${sum} يساوي الهدف ${target} — عُثِر على مجموعة جزئية: {${chosen.join(", ")}}!`);
       return true;
     }
     if (i >= n || sum > target || sum + suffix[i] < target) {
       // prune this branch
       prunes++;
       const reason = sum > target ? `sum ${sum} > ${target}` : i >= n ? `no elements left` : `even taking all remaining can't reach ${target}`;
-      snap("discarded", sum, `Dead end: ${reason}. Backtrack.`, 5);
+      const reasonAr = sum > target ? `المجموع ${sum} > ${target}` : i >= n ? `لا عناصر متبقية` : `حتى أخذ كل ما تبقّى لا يبلغ ${target}`;
+      snap("discarded", sum, `Dead end: ${reason}. Backtrack.`, 5, `طريق مسدود: ${reasonAr}. تراجع.`);
       return false;
     }
 
@@ -63,28 +65,28 @@ function generate(input: Input): Step<CallStackFrame>[] {
     chosen.push(items[i]);
     stack.push({ id: `s${pid++}`, label: `include ${items[i]}`, detail: `sum = ${sum + items[i]}`, state: "active" });
     decisions++;
-    snap("active", sum + items[i], `Include ${items[i]} → sum becomes ${sum + items[i]}.`, 3);
+    snap("active", sum + items[i], `Include ${items[i]} → sum becomes ${sum + items[i]}.`, 3, `ضمِّن ${items[i]} ← يصبح المجموع ${sum + items[i]}.`);
     if (solve(i + 1, sum + items[i])) return true;
     chosen.pop();
     stack.pop();
-    snap("swap", sum, `Backtrack: exclude ${items[i]} instead.`, 4);
+    snap("swap", sum, `Backtrack: exclude ${items[i]} instead.`, 4, `تراجع: استبعد ${items[i]} بدلًا من ذلك.`);
 
     // Branch 2: exclude items[i]
     stack.push({ id: `s${pid++}`, label: `exclude ${items[i]}`, detail: `sum = ${sum}`, state: "active" });
     decisions++;
-    snap("active", sum, `Exclude ${items[i]} → sum stays ${sum}.`, 4);
+    snap("active", sum, `Exclude ${items[i]} → sum stays ${sum}.`, 4, `استبعد ${items[i]} ← يبقى المجموع ${sum}.`);
     if (solve(i + 1, sum)) return true;
     stack.pop();
-    snap("swap", sum, `Backtrack from excluding ${items[i]}.`, 5);
+    snap("swap", sum, `Backtrack from excluding ${items[i]}.`, 5, `تراجع عن استبعاد ${items[i]}.`);
     return false;
   };
 
   solve(0, 0);
   stack.length = 0;
   if (found) {
-    snap("found", target, `Success: the subset {${chosen.join(", ")}} sums to ${target}.`, 6);
+    snap("found", target, `Success: the subset {${chosen.join(", ")}} sums to ${target}.`, 6, `نجاح: المجموعة الجزئية {${chosen.join(", ")}} تجمع إلى ${target}.`);
   } else if (!truncated) {
-    snap(undefined, 0, `Exhausted all include/exclude choices — no subset sums to ${target}.`, 6);
+    snap(undefined, 0, `Exhausted all include/exclude choices — no subset sums to ${target}.`, 6, `استُنفِدت كل خيارات التضمين/الاستبعاد — لا مجموعة جزئية تجمع إلى ${target}.`);
   }
   return steps;
 }
@@ -102,10 +104,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "subset-sum",
   title: "Subset Sum (Backtracking)",
+  titleAr: "مجموع المجموعة الجزئية (بالتراجع)",
   category: "backtracking",
   difficulty: "Intermediate",
   tags: ["backtracking", "recursion", "subset", "pruning"],
+  tagsAr: ["التراجع", "العودية", "مجموعة جزئية", "التقليم"],
   summary: "Decides whether any subset of numbers adds up to a target, exploring include/exclude choices with pruning.",
+  summaryAr: "يقرّر ما إذا كانت أي مجموعة جزئية من الأعداد تجمع إلى هدف، مستكشفًا خيارات التضمين/الاستبعاد مع التقليم.",
   renderer: "callstack",
   pseudocode: [
     "procedure solve(i, sum)",
@@ -247,6 +252,63 @@ The backtracking solution walks the elements one by one, and for each makes a bi
       { question: "A valid pruning rule (non-negative numbers) is…", options: ["Stop when sum > target", "Stop when sum is even", "Never prune", "Stop at the first element"], answer: 0, explanation: "Exceeding the target can never be undone with non-negative numbers." },
       { question: "The worst-case number of leaves explored is about…", options: ["n", "n²", "2ⁿ", "n!"], answer: 2, explanation: "Each element doubles the branches, giving up to 2ⁿ." },
       { question: "A pseudo-polynomial alternative runs in…", options: ["O(n·target)", "O(2ⁿ)", "O(n log n)", "O(target²)"], answer: 0, explanation: "The DP over sums up to target costs O(n·target)." },
+    ],
+  },
+  contentAr: {
+    overview: `تطرح مسألة مجموع المجموعة الجزئية سؤالًا بسيطًا بنعم/لا ذا عمق مفاجئ: بمعطى مجموعة أعداد وهدف، هل تجمع مجموعة جزئية ما إلى ذلك الهدف بالضبط؟ من أجل [3, 34, 4, 12, 5, 2] والهدف 9، الجواب نعم (4 + 5). مجموع المجموعة الجزئية مسألة كلاسيكية مكتملة-NP — لا خوارزمية معروفة تحلّها بزمن كثير الحدود عمومًا — لكن التراجع مع التقليم يعالج الحالات الصغيرة جيدًا ويُظهر بنية القرار بوضوح.
+
+يمشي حل التراجع على العناصر واحدًا واحدًا، ولكل منها يتخذ قرارًا ثنائيًّا: تضمينه في المجموع الجاري، أو استبعاده. ينتج عن ذلك شجرة قرار ثنائية بعمق n. قاعدتا تقليم تُبقيان البحث محكمًا: إذا تجاوز المجموع الجاري الهدف بالفعل، فتخلَّ عن الفرع (بافتراض أعداد غير سالبة)؛ وإذا كان حتى إضافة كل العناصر المتبقية لا تبلغ الهدف، فتخلَّ عنه أيضًا. حين يبلغ المجموع الجاري الهدف بالضبط، تكون مجموعة جزئية صالحة قد وُجدت. دون تقليم، يستكشف البحث حتى 2ⁿ ورقة؛ والتقليم يقطع مناطق كبيرة يائسة.`,
+    howItWorks: [
+      "عالج العناصر من اليسار إلى اليمين، متتبعًا المجموع الجاري الحالي.",
+      "إذا ساوى المجموع الجاري الهدف، فقد وُجدت مجموعة جزئية مؤهَّلة.",
+      "قلّم إذا تجاوز المجموع الهدف، أو نفدت العناصر، أو تعذّر على المجموع المتبقي بلوغ الهدف.",
+      "وإلا تفرّع في اتجاهين: ضمّن العنصر الحالي (أضِفه) ثم استدعِ العودية.",
+      "إذا فشل ذلك، استبعد العنصر الحالي واستدعِ العودية — متراجعًا بين الخيارين.",
+    ],
+    complexity: {
+      time: { best: "O(n) with lucky pruning", average: "exponential", worst: "O(2ⁿ)" },
+      space: "O(n)",
+      notes: "لشجرة القرار حتى 2ⁿ ورقة، فأسوأ حالة أسّية (مجموع المجموعة الجزئية مكتمل-NP). التقليم يساعد كثيرًا عمليًّا. عمق العودية O(n). يوجد برنامج ديناميكي شبه-كثير-حدود O(n·target) للأهداف المحدودة.",
+    },
+    applications: [
+      "توزيع الموارد وموازنة الحمل إلى سعات دقيقة",
+      "التعمية (المخططات القائمة على حقيبة الظهر) ومسائل العملات/الفكّة",
+      "تجزئة مجموعة إلى مجموعات متساوية المجموع",
+      "التحقق من أن التوافيق تجمع إلى إجمالي مطلوب",
+    ],
+    advantages: [
+      "بنية ثنائية بسيطة للتضمين/الاستبعاد",
+      "التقليم يزيل أشجارًا فرعية كبيرة يائسة",
+      "يستخدم مساحة إضافية O(n) فقط",
+      "يُوسَّع بسهولة لسرد جميع المجموعات الجزئية المؤهَّلة",
+    ],
+    disadvantages: [
+      "زمن أسّي في أسوأ حالة (مسألة مكتملة-NP)",
+      "يعتمد التقليم على الأعداد غير السالبة",
+      "غير صالح لقيم n كبيرة دون بديل البرمجة الديناميكية",
+      "يجيب عن الوجود فقط ما لم يُوسَّع لجمع المجموعات الجزئية",
+    ],
+    commonMistakes: [
+      "تطبيق تقليم المجموع > الهدف حين يُسمح بأعداد سالبة.",
+      "نسيان حالة أساس، مما يسبب عودية لا نهائية أو أخطاء فهرسة.",
+      "عدم استكشاف فرع الاستبعاد، ففوات مجموعات جزئية صالحة.",
+      "الخلط بين مجموع المجموعة الجزئية (أي مجموعة جزئية) ومجموع مصفوفة جزئية متجاورة.",
+    ],
+    interviewQuestions: [
+      "كيف يعمل البرنامج الديناميكي شبه-كثير-الحدود لمجموع المجموعة الجزئية، ومتى يُفضَّل؟",
+      "لماذا تتطلب قواعد التقليم أعدادًا غير سالبة؟",
+      "كيف تسرد كل مجموعة جزئية تبلغ الهدف، لا مجرد تقرير الوجود؟",
+      "كيف يرتبط مجموع المجموعة الجزئية بمسألتي التجزئة وحقيبة الظهر؟",
+      "لماذا يكون مجموع المجموعة الجزئية مكتمل-NP رغم العلاقة العودية البسيطة؟",
+    ],
+    summary:
+      "يقرّر مجموع المجموعة الجزئية ما إذا كانت أي مجموعة جزئية تبلغ هدفًا بالتفرّع تضمينًا/استبعادًا على كل عنصر مع التقليم. إنه مكتمل-NP (أسوأ حالة O(2ⁿ)) لكن التقليم يجعل الحالات الصغيرة سريعة، ويوجد برنامج ديناميكي شبه-كثير-حدود O(n·target) للأهداف المحدودة.",
+    quiz: [
+      { question: "عند كل عنصر، يختار تراجع مجموع المجموعة الجزئية أن…", options: ["يرتّب أو لا", "يضمّنه أو يستبعده", "يضاعفه أو ينصّفه", "يعكس القائمة"], answer: 1, explanation: "كل عنصر إمّا يُضاف إلى المجموع الجاري أو يُتخطّى." },
+      { question: "يُصنَّف مجموع المجموعة الجزئية على أنه…", options: ["O(n log n)", "مكتمل-NP", "خطي دائمًا", "زمن ثابت"], answer: 1, explanation: "لا خوارزمية عامة معروفة بزمن كثير الحدود." },
+      { question: "قاعدة تقليم صالحة (لأعداد غير سالبة) هي…", options: ["توقّف حين يكون المجموع > الهدف", "توقّف حين يكون المجموع زوجيًّا", "لا تقلّم أبدًا", "توقّف عند العنصر الأول"], answer: 0, explanation: "تجاوز الهدف لا يمكن التراجع عنه أبدًا بأعداد غير سالبة." },
+      { question: "عدد الأوراق المستكشَفة في أسوأ حالة هو نحو…", options: ["n", "n²", "2ⁿ", "n!"], answer: 2, explanation: "كل عنصر يضاعف الفروع، مما يعطي حتى 2ⁿ." },
+      { question: "بديل شبه-كثير-الحدود يعمل بزمن…", options: ["O(n·target)", "O(2ⁿ)", "O(n log n)", "O(target²)"], answer: 0, explanation: "البرمجة الديناميكية على المجاميع حتى الهدف تكلّف O(n·target)." },
     ],
   },
   inputFields: [

@@ -38,7 +38,7 @@ function generate(input: Input): Step<GridFrame>[] {
     return { rows: n, cols: n, cells, note };
   };
 
-  const snap = (active: [number, number] | null, conflict: [number, number] | null, description: string, codeLine: number) => {
+  const snap = (active: [number, number] | null, conflict: [number, number] | null, description: string, codeLine: number, descriptionAr?: string) => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -46,6 +46,7 @@ function generate(input: Input): Step<GridFrame>[] {
     steps.push({
       frame: buildFrame(active, conflict, `solutions: ${solutions}`),
       description,
+      descriptionAr,
       codeLine,
       counters: { placements, backtracks, solutions },
     });
@@ -59,47 +60,50 @@ function generate(input: Input): Step<GridFrame>[] {
     return { ok: true, conflict: null };
   };
 
-  snap(null, null, `Place ${n} queens so none attack each other — one per row, backtracking on conflicts.`, 0);
+  snap(null, null, `Place ${n} queens so none attack each other — one per row, backtracking on conflicts.`, 0, `ضع ${n} ملكات بحيث لا تهاجم أيٌّ منها الأخرى — واحدة لكل صف، مع التراجع عند التعارض.`);
 
   const solve = (row: number): boolean => {
     if (truncated) return true;
     if (row === n) {
       solutions++;
-      snap(null, null, `Solution ${solutions} found! All ${n} queens are safe.`, 5);
+      snap(null, null, `Solution ${solutions} found! All ${n} queens are safe.`, 5, `عُثِر على الحل ${solutions}! جميع الملكات الـ ${n} في أمان.`);
       return true; // stop at the first solution to keep step count bounded
     }
     for (let col = 0; col < n; col++) {
       if (truncated) return true;
-      snap([row, col], null, `Try placing a queen at row ${row}, column ${col}.`, 1);
+      snap([row, col], null, `Try placing a queen at row ${row}, column ${col}.`, 1, `جرّب وضع ملكة في الصف ${row}، العمود ${col}.`);
       const { ok, conflict } = safe(row, col);
       if (ok) {
         cols[row] = col;
         placements++;
-        snap([row, col], null, `Safe — place queen at (${row}, ${col}) and advance to row ${row + 1}.`, 2);
+        snap([row, col], null, `Safe — place queen at (${row}, ${col}) and advance to row ${row + 1}.`, 2, `آمن — ضع الملكة عند (${row}, ${col}) وتقدّم إلى الصف ${row + 1}.`);
         if (solve(row + 1)) return true;
         cols[row] = -1;
         backtracks++;
-        snap([row, col], null, `Dead end below — backtrack, remove queen from (${row}, ${col}).`, 4);
+        snap([row, col], null, `Dead end below — backtrack, remove queen from (${row}, ${col}).`, 4, `طريق مسدود بالأسفل — تراجع وأزل الملكة من (${row}, ${col}).`);
       } else {
-        snap([row, col], conflict, `Conflict with the queen at (${conflict![0]}, ${conflict![1]}). Skip.`, 3);
+        snap([row, col], conflict, `Conflict with the queen at (${conflict![0]}, ${conflict![1]}). Skip.`, 3, `تعارض مع الملكة عند (${conflict![0]}, ${conflict![1]}). تخطَّ.`);
       }
     }
     return false;
   };
 
   solve(0);
-  if (solutions === 0) snap(null, null, `No solution exists for ${n} queens.`, 6);
-  else snap(null, null, `Done — a valid ${n}-queens arrangement.${truncated ? " (search truncated)" : ""}`, 6);
+  if (solutions === 0) snap(null, null, `No solution exists for ${n} queens.`, 6, `لا يوجد حل من أجل ${n} ملكات.`);
+  else snap(null, null, `Done — a valid ${n}-queens arrangement.${truncated ? " (search truncated)" : ""}`, 6, `انتهى — ترتيب صالح لمسألة ${n} ملكات.${truncated ? " (تم اقتطاع البحث)" : ""}`);
   return steps;
 }
 
 const mod: AlgorithmModule<GridFrame, Input> = {
   slug: "n-queens",
   title: "N-Queens",
+  titleAr: "الملكات الـ N",
   category: "backtracking",
   difficulty: "Intermediate",
   tags: ["backtracking", "constraint satisfaction", "recursion"],
+  tagsAr: ["التراجع", "إرضاء القيود", "العودية"],
   summary: "Places N queens on an N×N board so none attack each other, backtracking whenever a conflict arises.",
+  summaryAr: "يضع N ملكة على رقعة N×N بحيث لا يهاجم أيٌّ منها الأخرى، متراجعًا كلما نشأ تعارض.",
   renderer: "grid",
   pseudocode: [
     "procedure solve(row)",
@@ -312,6 +316,62 @@ The key insight is that exactly one queen goes in each row, so the search reduce
       { question: "Placing exactly one queen per row means the search chooses…", options: ["A row for each column", "A column for each row", "Two queens per row", "Diagonals only"], answer: 1, explanation: "The problem reduces to picking a safe column for each successive row." },
       { question: "The space complexity of the standard solution is…", options: ["O(1)", "O(N)", "O(N²)", "O(N!)"], answer: 1, explanation: "One column index per row plus O(N) recursion depth." },
       { question: "When a row has no safe column, the algorithm…", options: ["Stops entirely", "Backtracks to the previous row", "Restarts", "Places a queen anyway"], answer: 1, explanation: "It removes the previous queen and tries its next column." },
+    ],
+  },
+  contentAr: {
+    overview: `تطلب مسألة الملكات الـ N وضع N ملكة شطرنج على رقعة N×N بحيث لا تهاجم أيّ ملكتين إحداهما الأخرى — لا اشتراك في صف أو عمود أو قطر. إنها المثال المدرسي على التراجع: ابنِ حلًّا جزئيًّا ملكةً تلو الأخرى، وتخلَّ (تراجع) عن أي وضع لا يمكن أن يقود إلى حل كامل.
+
+الفكرة الأساسية أن ملكة واحدة بالضبط تقع في كل صف، فيتقلّص البحث إلى اختيار عمود لكل صف. حين يتعارض وضع مرشَّح مع ملكة سابقة، تُقلَّم تلك الفرع فورًا؛ وحين يُبلَغ طريق مسدود، تُزيل الخوارزمية الملكة الأخيرة وتجرّب العمود التالي — مستكشفةً الفضاء بشكل منهجي مع تخطي مساحات شاسعة منه.`,
+    howItWorks: [
+      "عالج الصفوف من الأعلى إلى الأسفل، واضعًا ملكة واحدة لكل صف.",
+      "من أجل الصف الحالي، جرّب كل عمود من اليسار إلى اليمين.",
+      "افحص الأمان في مواجهة جميع الملكات الموضوعة سابقًا (العمود ذاته أو القطر).",
+      "إذا كان آمنًا، ضع الملكة واستدعِ العودية في الصف التالي.",
+      "إذا فشلت العودية (لا وضع صالح بالأسفل)، تراجع: أزل الملكة وجرّب العمود التالي.",
+    ],
+    complexity: {
+      time: { best: "O(N!)", average: "O(N!)", worst: "O(N!)" },
+      space: "O(N)",
+      notes: "شجرة البحث محدودة بـ N! والتقليم يقلّصها بشكل كبير عمليًّا. المساحة O(N) لمصفوفة العمود-لكل-صف زائد O(N) لعمق العودية.",
+    },
+    applications: [
+      "المثال المعياري لتعليم التراجع والتقليم",
+      "معايير قياس مسائل إرضاء القيود (CSP)",
+      "اختبار إرشادات البحث والبحث المتوازي",
+      "مسائل الجدولة/التوزيع ذات قيود الاستبعاد المتبادل",
+    ],
+    advantages: [
+      "التراجع يقلّم الفروع غير الصالحة مبكرًا، متجنبًا القوة الغاشمة",
+      "بنية عودية بسيطة",
+      "ذاكرة O(N) باستخدام تمثيل العمود-لكل-صف",
+      "يمتد طبيعيًّا إلى عدّ جميع الحلول",
+    ],
+    disadvantages: [
+      "زمن أسّي في أسوأ حالة (O(N!))",
+      "النسخ الساذجة تعيد فحص التعارضات دون فحوص تزايدية",
+      "غير عملي لقيم N كبيرة جدًّا دون إرشادات أقوى أو كسر التماثل",
+    ],
+    commonMistakes: [
+      "فحص الصفوف/الأعمدة فقط ونسيان القطرين.",
+      "عدم التراجع عن وضعٍ ما عند التراجع (تسرّب الحالة إلى فروع أخرى).",
+      "وضع أكثر من ملكة واحدة في الصف بدلًا من استغلال بنية الواحدة-لكل-صف.",
+      "خطأ انزياح بمقدار واحد في اختبار القطر |c1 − c2| == |r1 − r2|.",
+    ],
+    interviewQuestions: [
+      "كيف تفحص ما إذا كانت ملكتان تشتركان في قطر بزمن O(1)؟",
+      "كيف تَعُدّ جميع الحلول المتمايزة بدلًا من إيجاد حل واحد؟",
+      "كيف يمكن لأقنعة البتات تسريع فحص الأمان؟",
+      "كيف يساعد التماثل في تقليص البحث؟",
+      "لماذا تُعدّ ملكة-واحدة-لكل-صف افتراضًا صحيحًا ومفيدًا؟",
+    ],
+    summary:
+      "تضع مسألة الملكات الـ N ملكةً واحدة لكل صف على رقعة N×N، مستخدمةً التراجع لتجريب الأعمدة وتقليم التعارضات على الأعمدة أو الأقطار المشتركة. تعمل بزمن O(N!) في أسوأ حالة بمساحة O(N)، وهي المقدّمة النهائية لبحث التراجع.",
+    quiz: [
+      { question: "تتهاجم ملكتان إذا اشتركتا في صف أو عمود أو…", options: ["اللون", "القطر", "الزاوية", "حركة الحصان"], answer: 1, explanation: "تهاجم الملكات أيضًا على طول القطرين، ويُفحَص ذلك عبر |Δrow| == |Δcol|." },
+      { question: "يتفوق التراجع على القوة الغاشمة عبر…", options: ["ترتيب الرقعة", "تقليم الفروع التي لا يمكن أن تقود إلى حل", "استخدام ذاكرة أكثر", "تجريب أوضاع عشوائية"], answer: 1, explanation: "يتخلى عن وضع جزئي فور أن يصبح غير صالح." },
+      { question: "وضع ملكة واحدة بالضبط لكل صف يعني أن البحث يختار…", options: ["صفًّا لكل عمود", "عمودًا لكل صف", "ملكتين لكل صف", "الأقطار فقط"], answer: 1, explanation: "تتقلص المسألة إلى انتقاء عمود آمن لكل صف متتالٍ." },
+      { question: "تعقيد المساحة للحل القياسي هو…", options: ["O(1)", "O(N)", "O(N²)", "O(N!)"], answer: 1, explanation: "فهرس عمود واحد لكل صف زائد O(N) لعمق العودية." },
+      { question: "حين لا يوجد للصف عمود آمن، فإن الخوارزمية…", options: ["تتوقف كليًّا", "تتراجع إلى الصف السابق", "تعيد البدء", "تضع ملكة على أي حال"], answer: 1, explanation: "تزيل الملكة السابقة وتجرّب عمودها التالي." },
     ],
   },
   inputFields: [{ key: "n", label: "Board size N", placeholder: "6", help: "4–10 (shows the first solution)." }],

@@ -20,7 +20,7 @@ function generate(input: Input): Step<GridFrame>[] {
   let truncated = false;
   let solved = false;
 
-  const frame = (cur: [number, number] | null, dead: [number, number] | null, description: string, codeLine: number): void => {
+  const frame = (cur: [number, number] | null, dead: [number, number] | null, description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -54,6 +54,7 @@ function generate(input: Input): Step<GridFrame>[] {
     steps.push({
       frame: { rows: n, cols: n, cells, note: `rat starts top-left 🐁, cheese bottom-right 🧀 · move on open cells (1)` },
       description,
+      descriptionAr,
       codeLine,
       counters: { moves, backtracks },
     });
@@ -65,10 +66,10 @@ function generate(input: Input): Step<GridFrame>[] {
     if (!inBounds(r, c) || g[r][c] === 0 || visited[r][c]) return false;
     visited[r][c] = true;
     moves++;
-    frame([r, c], null, `Move to (${r}, ${c}) and mark it as part of the current path.`, 3);
+    frame([r, c], null, `Move to (${r}, ${c}) and mark it as part of the current path.`, 3, `تحرّك إلى (${r}, ${c}) وعلّمها كجزء من المسار الحالي.`);
     if (r === n - 1 && c === n - 1) {
       solved = true;
-      frame([r, c], null, `Reached the cheese at (${r}, ${c})! A path exists.`, 4);
+      frame([r, c], null, `Reached the cheese at (${r}, ${c})! A path exists.`, 4, `وصلنا إلى الجبن عند (${r}, ${c})! يوجد مسار.`);
       return true;
     }
     for (const [dr, dc] of DIRS) {
@@ -81,20 +82,20 @@ function generate(input: Input): Step<GridFrame>[] {
     // dead end: backtrack
     visited[r][c] = false;
     backtracks++;
-    frame(null, [r, c], `(${r}, ${c}) leads to a dead end — backtrack and un-mark it.`, 6);
+    frame(null, [r, c], `(${r}, ${c}) leads to a dead end — backtrack and un-mark it.`, 6, `(${r}, ${c}) تقود إلى طريق مسدود — تراجع وأزل تعليمها.`);
     return false;
   };
 
-  frame([0, 0], null, `Backtracking: try to walk from the top-left to the bottom-right, undoing moves that dead-end.`, 0);
+  frame([0, 0], null, `Backtracking: try to walk from the top-left to the bottom-right, undoing moves that dead-end.`, 0, `التراجع: حاول السير من أعلى اليسار إلى أسفل اليمين، متراجعًا عن الحركات التي تنتهي إلى طريق مسدود.`);
   if (g[0][0] === 0 || g[n - 1][n - 1] === 0) {
-    frame(null, null, `The start or the goal is blocked — no path is possible.`, 1);
+    frame(null, null, `The start or the goal is blocked — no path is possible.`, 1, `البداية أو الهدف محجوبة — لا مسار ممكن.`);
     return steps;
   }
   solve(0, 0);
   if (solved) {
-    frame(null, null, `Solved! The green cells trace a valid path from start to cheese.`, 7);
+    frame(null, null, `Solved! The green cells trace a valid path from start to cheese.`, 7, `حُلَّت! الخلايا الخضراء ترسم مسارًا صالحًا من البداية إلى الجبن.`);
   } else if (!truncated) {
-    frame(null, null, `Explored every route — the maze has no path from start to goal.`, 7);
+    frame(null, null, `Explored every route — the maze has no path from start to goal.`, 7, `استُكشِفت كل الطرق — لا يملك المتاه مسارًا من البداية إلى الهدف.`);
   }
   return steps;
 }
@@ -115,10 +116,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GridFrame, Input> = {
   slug: "rat-in-maze",
   title: "Rat in a Maze",
+  titleAr: "الفأر في المتاه",
   category: "backtracking",
   difficulty: "Intermediate",
   tags: ["backtracking", "maze", "grid", "recursion"],
+  tagsAr: ["التراجع", "متاه", "شبكة", "العودية"],
   summary: "Finds a path through a grid maze from the top-left to the bottom-right using recursive backtracking.",
+  summaryAr: "يجد مسارًا عبر متاه شبكي من أعلى اليسار إلى أسفل اليمين باستخدام التراجع العودي.",
   renderer: "grid",
   pseudocode: [
     "procedure solve(r, c)",
@@ -318,6 +322,63 @@ The solver performs a depth-first exploration. From the current cell it attempts
       { question: "Marking cells as visited prevents…", options: ["Reaching the goal", "Infinite loops / revisiting", "Backtracking", "Using recursion"], answer: 1, explanation: "It stops the rat from cycling back onto its own path." },
       { question: "To find the SHORTEST path instead, you'd use…", options: ["The same backtracking", "Breadth-first search", "A stack of walls", "Sorting"], answer: 1, explanation: "BFS explores by distance, yielding the shortest path first." },
       { question: "The worst-case time complexity is…", options: ["O(n²)", "Exponential", "O(n log n)", "O(1)"], answer: 1, explanation: "Branching in up to four directions per cell is exponential in the worst case." },
+    ],
+  },
+  contentAr: {
+    overview: `الفأر في المتاه أُحجية تراجع كلاسيكية: بمعطى شبكة تكون فيها بعض الخلايا مفتوحة (1) وأخرى جدرانًا (0)، جد مسارًا لـ«فأر» من الزاوية العليا اليسرى إلى الزاوية السفلى اليمنى، متحركًا بين الخلايا المفتوحة المتجاورة فقط. إنها مقدّمة لطيفة وبصرية لنموذج التراجع — جرّب حركة، استدعِ العودية، وإذا لم تقُد إلى شيء فتراجع عنها وجرّب أخرى.
+
+يجري الحلّال استكشافًا بالعمق أولًا. من الخلية الحالية يحاول كل اتجاه بالتناوب؛ تكون الحركة مشروعة فقط إذا كان الهدف داخل الشبكة ومفتوحًا وليس على المسار الحالي بالفعل (تجنبًا للدورات). يعلّم الخلية كمزارة، يستدعي العودية، والأهم — إذا لم تصل أيٌّ من الحركات اللاحقة إلى الهدف، يُزيل تعليم الخلية ويُعيد الفشل. إزالة التعليم تلك هي خطوة التراجع: تحرّر الخلية كي يستطيع مسار مختلف استخدامها لاحقًا. يُبلَّغ عن أول مسار يبلغ الهدف؛ والخلايا المزارة التي تبقى معلَّمة في تلك اللحظة تُهجّئ الحل.`,
+    howItWorks: [
+      "ابدأ من الخلية العليا اليسرى؛ إذا كانت هي أو الهدف جدارًا، فلا حل.",
+      "علّم الخلية الحالية كمزارة (جزء من المسار المؤقت).",
+      "إذا كانت الخلية الحالية هي الهدف السفلي الأيمن، فقد وُجد مسار.",
+      "وإلا فجرّب كل اتجاه (أسفل، يمين، أعلى، يسار) عوديًّا.",
+      "إذا فشل كل اتجاه، أزل تعليم الخلية الحالية (تراجع) وأبلغ المستدعي بالفشل.",
+    ],
+    complexity: {
+      time: { best: "O(4^(n²)) worst case", average: "depends on maze", worst: "O(4^(n²))" },
+      space: "O(n²)",
+      notes: "في أسوأ حالة تتفرّع كل خلية من الخلايا n² حتى أربع جهات، مما يعطي زمنًا أسّيًّا، وإن كانت المتاهات الحقيقية تُقلَّم بسرعة. المساحة O(n²) لشبكة المزارة زائد O(n²) لعمق العودية.",
+    },
+    applications: [
+      "أحاجي إيجاد المسار وذكاء اصطناعي بسيط للألعاب",
+      "تعليم نموذج التراجع / البحث بالعمق أولًا",
+      "أدوات توليد المتاهات وحلّها",
+      "تسخين لإرضاء القيود قبل الملكات الـ N/سودوكو",
+    ],
+    advantages: [
+      "بنية عودية بسيطة وبديهية",
+      "مضمون إيجاد مسار إن وُجد",
+      "يستكشف الطرق المسدودة ويقلّمها طبيعيًّا",
+      "سهل التوسيع لعدّ جميع المسارات أو سردها",
+    ],
+    disadvantages: [
+      "زمن أسّي في أسوأ حالة",
+      "يجد *مسارًا* وليس بالضرورة الأقصر (استخدم البحث بالعرض أولًا لذلك)",
+      "العودية العميقة قد تُفيض المكدس على الشبكات الكبيرة",
+      "استكشاف زائد دون تخزين مؤقت للنتائج أو تقليم",
+    ],
+    commonMistakes: [
+      "نسيان إزالة تعليم خلية عند التراجع، مما يحجب مسارات مستقبلية صالحة.",
+      "عدم فحص الحدود قبل فهرسة الشبكة.",
+      "السماح بإعادة الزيارة وإنشاء حلقات لا نهائية.",
+      "الخلط بين «مسار» و«المسار الأقصر» (يلزم البحث بالعرض أولًا للأقصر).",
+    ],
+    interviewQuestions: [
+      "كيف تعدّل هذا لإيجاد المسار الأقصر بدلًا من أي مسار؟",
+      "كيف تَعُدّ العدد الكلي للمسارات المتمايزة إلى الهدف؟",
+      "لماذا تُعدّ إزالة التعليم عند التراجع ضرورية للصحة؟",
+      "كيف يغيّر حصر الحركات في أسفل/يمين فقط التعقيد؟",
+      "كيف تطبع تسلسل الاتجاهات (D/R/U/L) للحل؟",
+    ],
+    summary:
+      "يستخدم الفأر في المتاه التراجع العودي لإيجاد مسار من أعلى يسار الشبكة إلى أسفل يمينها: علّم خلية، استدعِ العودية في كل اتجاه، وأزل التعليم عند الطرق المسدودة. إنها مسألة التراجع التمهيدية النموذجية، مضمونة إيجاد مسار إن وُجد.",
+    quiz: [
+      { question: "بأيّ نموذج يُحلّ الفأر في المتاه؟", options: ["الجشِع", "التراجع (البحث بالعمق أولًا)", "البرمجة الديناميكية", "فرّق تسد"], answer: 1, explanation: "يستكشف الحركات عوديًّا ويتراجع عن الطرق المسدودة." },
+      { question: "تتكوّن خطوة التراجع من…", options: ["تعليم خلية كمزارة", "إزالة تعليم خلية حين لا تقود إلى شيء", "إضافة جدار", "إعادة البدء"], answer: 1, explanation: "إزالة التعليم تحرّر الخلية للمسارات البديلة." },
+      { question: "تعليم الخلايا كمزارة يمنع…", options: ["بلوغ الهدف", "الحلقات اللانهائية / إعادة الزيارة", "التراجع", "استخدام العودية"], answer: 1, explanation: "يمنع الفأر من الدوران عائدًا إلى مساره." },
+      { question: "لإيجاد المسار الأقصر بدلًا من ذلك، تستخدم…", options: ["التراجع ذاته", "البحث بالعرض أولًا", "مكدس جدران", "الترتيب"], answer: 1, explanation: "يستكشف البحث بالعرض أولًا حسب المسافة، فيعطي المسار الأقصر أولًا." },
+      { question: "تعقيد الزمن في أسوأ حالة هو…", options: ["O(n²)", "أسّي", "O(n log n)", "O(1)"], answer: 1, explanation: "التفرّع في حتى أربع جهات لكل خلية أسّي في أسوأ حالة." },
     ],
   },
   inputFields: [

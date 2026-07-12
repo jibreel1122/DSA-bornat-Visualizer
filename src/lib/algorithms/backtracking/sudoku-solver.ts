@@ -30,12 +30,12 @@ function generate(input: Input): Step<GridFrame>[] {
     return { rows: 9, cols: 9, cells, note: `${placements} placements, ${backtracks} backtracks` };
   };
 
-  const snap = (active: [number, number] | null, conflict: [number, number] | null, description: string, codeLine: number) => {
+  const snap = (active: [number, number] | null, conflict: [number, number] | null, description: string, codeLine: number, descriptionAr?: string) => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
     }
-    steps.push({ frame: buildFrame(active, conflict), description, codeLine, counters: { placements, backtracks } });
+    steps.push({ frame: buildFrame(active, conflict), description, descriptionAr, codeLine, counters: { placements, backtracks } });
   };
 
   const findEmpty = (): [number, number] | null => {
@@ -54,32 +54,32 @@ function generate(input: Input): Step<GridFrame>[] {
     return null;
   };
 
-  snap(null, null, `Solve the 9×9 Sudoku by backtracking: at the first empty cell, try digits 1–9 in order, checking the row/column/3×3-box constraint each time, and recurse; backtrack when no digit works.`, 0);
+  snap(null, null, `Solve the 9×9 Sudoku by backtracking: at the first empty cell, try digits 1–9 in order, checking the row/column/3×3-box constraint each time, and recurse; backtrack when no digit works.`, 0, `حُلَّ سودوكو 9×9 بالتراجع: عند أول خلية فارغة، جرّب الأرقام 1–9 بالترتيب، فاحصًا قيد الصف/العمود/صندوق 3×3 في كل مرة، ثم استدعِ العودية؛ وتراجع حين لا يعمل أي رقم.`);
 
   const solve = (): boolean => {
     if (truncated) return true;
     const empty = findEmpty();
     if (!empty) {
       solved = true;
-      snap(null, null, `No empty cells remain — the board is fully and validly filled. Solved!`, 4);
+      snap(null, null, `No empty cells remain — the board is fully and validly filled. Solved!`, 4, `لم تبقَ خلايا فارغة — امتلأت الرقعة كليًّا وبشكل صالح. حُلَّت!`);
       return true;
     }
     const [r, c] = empty;
     for (let v = 1; v <= 9; v++) {
       if (truncated) return true;
-      snap([r, c], null, `Try ${v} at row ${r + 1}, column ${c + 1}.`, 1);
+      snap([r, c], null, `Try ${v} at row ${r + 1}, column ${c + 1}.`, 1, `جرّب ${v} في الصف ${r + 1}، العمود ${c + 1}.`);
       const conflict = conflictFor(r, c, v);
       if (conflict) {
-        snap([r, c], conflict, `${v} conflicts with (${conflict[0] + 1}, ${conflict[1] + 1}) — try the next digit.`, 2);
+        snap([r, c], conflict, `${v} conflicts with (${conflict[0] + 1}, ${conflict[1] + 1}) — try the next digit.`, 2, `${v} يتعارض مع (${conflict[0] + 1}, ${conflict[1] + 1}) — جرّب الرقم التالي.`);
         continue;
       }
       board[idx(r, c)] = v;
       placements++;
-      snap([r, c], null, `${v} is valid at (${r + 1}, ${c + 1}) — place it and move to the next empty cell.`, 3);
+      snap([r, c], null, `${v} is valid at (${r + 1}, ${c + 1}) — place it and move to the next empty cell.`, 3, `${v} صالح عند (${r + 1}, ${c + 1}) — ضعه وانتقل إلى الخلية الفارغة التالية.`);
       if (solve()) return true;
       board[idx(r, c)] = 0;
       backtracks++;
-      snap([r, c], null, `Every completion below failed — backtrack and clear (${r + 1}, ${c + 1}).`, 5);
+      snap([r, c], null, `Every completion below failed — backtrack and clear (${r + 1}, ${c + 1}).`, 5, `فشل كل إكمال بالأسفل — تراجع وامسح (${r + 1}, ${c + 1}).`);
     }
     return false;
   };
@@ -94,6 +94,11 @@ function generate(input: Input): Step<GridFrame>[] {
         ? `Step budget reached — this puzzle needs more backtracking than this visualizer displays.`
         : `No solution exists for this board.`,
     6,
+    solved
+      ? `حُلَّت بـ ${placements} عملية وضع و${backtracks} تراجعًا.`
+      : truncated
+        ? `بُلِغت ميزانية الخطوات — تحتاج هذه الأحجية تراجعًا أكثر مما يعرضه هذا المُصوِّر.`
+        : `لا يوجد حل لهذه الرقعة.`,
   );
   return steps;
 }
@@ -164,10 +169,13 @@ function gridToText(grid: number[]): string {
 const mod: AlgorithmModule<GridFrame, Input> = {
   slug: "sudoku-solver",
   title: "Sudoku Solver (Backtracking)",
+  titleAr: "حلّال سودوكو (بالتراجع)",
   category: "backtracking",
   difficulty: "Advanced",
   tags: ["backtracking", "constraint satisfaction", "pruning", "grid"],
+  tagsAr: ["التراجع", "إرضاء القيود", "التقليم", "شبكة"],
   summary: "Fills the first empty cell with each candidate digit 1–9 that doesn't violate row/column/box rules, recursing and backtracking on dead ends.",
+  summaryAr: "يملأ أول خلية فارغة بكل رقم مرشَّح من 1–9 لا يخالف قواعد الصف/العمود/الصندوق، مستدعيًا العودية ومتراجعًا عند الطرق المسدودة.",
   renderer: "grid",
   pseudocode: [
     "procedure solve(board)",
@@ -476,6 +484,61 @@ This is the same include/exclude, try/undo skeleton behind N-Queens and combinat
       { question: "Why is naive Sudoku backtracking usually fast in practice despite exponential worst case?", options: ["Sudoku puzzles are always small", "The row/column/box constraints prune most invalid branches almost immediately", "It uses machine learning", "It caches all previous solutions"], answer: 1, explanation: "Real puzzles are constrained enough that very few full guesses are ever needed before a conflict is detected." },
       { question: "What must happen when backtracking from a placed digit?", options: ["Nothing", "The cell must be reset to empty (0) before trying the next digit", "The whole board resets", "The digit stays but is marked invalid"], answer: 1, explanation: "Leaving a stale digit would corrupt subsequent validity checks for that cell and others." },
       { question: "This same try/recurse/backtrack pattern also solves…", options: ["Binary search", "N-Queens and general constraint satisfaction problems", "Merge sort", "Dijkstra's algorithm"], answer: 1, explanation: "Sudoku is one instance of the general CSP backtracking template shared with N-Queens, map coloring, and scheduling." },
+    ],
+  },
+  contentAr: {
+    overview: `سودوكو أحجية إرضاء قيود: املأ شبكة 9×9 بالأرقام 1–9 بحيث يحوي كل صف وعمود وصندوق 3×3 كل رقم مرة واحدة بالضبط. يحلّها التراجع مباشرةً من القواعد دون أي براعة خاصة بالأحجية: جد أول خلية فارغة، جرّب كل رقم 1–9، ولأي رقم لا يخالف فورًا قيود الصف/العمود/الصندوق، ضعه واستدعِ العودية في بقية الرقعة. إذا لم يستطع الاستدعاء العودي إكمال الأحجية، فتراجع عن الوضع وجرّب الرقم التالي؛ وإذا لم يعمل أي رقم إطلاقًا، فأبلغ بالفشل كي يتراجع المستدعي أعلى في السلسلة.
+
+هذا هو هيكل التضمين/الاستبعاد، جرّب/تراجع نفسه الكامن خلف الملكات الـ N والبحث التوافيقي عمومًا — قيود سودوكو الغنية (الصف والعمود والصندوق معًا) تعني أن معظم التخمينات الخاطئة تُكتشَف على الفور تقريبًا بفحص الصلاحية، ولهذا يحلّ تراجع القوة الغاشمة، رغم غياب أي إرشادات فاخرة، معظم أحاجي سودوكو المنشورة بسرعة عمليًّا، وإن كان سلوكه في أسوأ حالة أسّيًّا.`,
+    howItWorks: [
+      "امسح الرقعة (سطرًا سطرًا) بحثًا عن أول خلية ما زالت فارغة.",
+      "إذا لم توجد أي خلية، فكل خلية ممتلئة بشكل صالح — حُلَّت الأحجية.",
+      "وإلا، جرّب الأرقام 1 حتى 9 في تلك الخلية؛ ولكلٍّ، افحص أنه لا يظهر بالفعل في الصف أو العمود أو صندوق 3×3 ذاته.",
+      "إذا كان رقمٌ صالحًا، ضعه وحاول عوديًّا حل بقية الرقعة.",
+      "إذا نجح الحل العودي، مرّر النجاح للأعلى؛ وإذا فشل، أزل الرقم (تراجع) وجرّب المرشّح التالي — وإذا لم يعمل أيٌّ من 1–9، فأبلغ المستدعي بالفشل.",
+    ],
+    complexity: {
+      time: { best: "O(1) (already solved)", average: "fast in practice for well-constrained puzzles", worst: "O(9^(81))" },
+      space: "O(81) recursion depth (one call per empty cell)",
+      notes: "أسوأ حالة نظرية أسّية (تجريب حتى 9 أرقام لكل خلية فارغة)، لكن الأحاجي الحقيقية مقيَّدة بما يكفي لأن تُقلّم فحوص الصف/العمود/الصندوق تقريبًا كل الفروع غير الصالحة فورًا، فأزمنة الحل العملية سريعة عادةً. نشر القيود (النظر فقط إلى المرشّحين المتّسقين مع القواعد الثلاث معًا) هو ما يُبقي هذا قابلًا للحل دون أي إرشادات خاصة بسودوكو.",
+    },
+    applications: [
+      "المثال المعياري لحل مسائل إرضاء القيود (CSP) ببحث التراجع",
+      "قالب عام لمسائل الجدولة وتوزيع الموارد والتهيئة ذات القيود الصارمة",
+      "مولّدات الأحاجي تستخدم حلّالًا كهذا داخليًّا للتحقق من أن للأحجية المرشّحة حلًّا وحيدًا",
+      "أداة تعليمية للبحث التوافيقي والتقليم والعودية",
+    ],
+    advantages: [
+      "مضمون إيجاد حل إن وُجد، أو الإبلاغ بصحة أنه لا يوجد",
+      "لا يتطلب معرفة خاصة بالأحجية — يعمل من تعريفات القيود وحدها",
+      "سريع عمليًّا، لأن قيود سودوكو الثلاثة المتزامنة (صف/عمود/صندوق) تقلّم فضاء البحث بقوة",
+    ],
+    disadvantages: [
+      "أسوأ حالة أسّية — الرقع المَرَضية أو شبه الفارغة قد تتطلب بحثًا هائلًا",
+      "لا نظر مستقبلي: لا يستخدم تقنيات نشر القيود (المفردات الظاهرة/المخفية إلخ) التي يستخدمها الحلّالون الأسرع للتقليم أبكر بكثير",
+      "الأداء يعتمد على الأحجية؛ رقعة سيئة التقييد قد تُفجّر شجرة البحث",
+    ],
+    commonMistakes: [
+      "فحص الصف فقط عند التحقق من رقم — يجب فحص الصف والعمود وصندوق 3×3 معًا.",
+      "نسيان تصفير الخلية أثناء التراجع، فتبقى أرقام قديمة تُفسِد فحوص الصلاحية لاحقًا.",
+      "أخطاء انزياح بمقدار واحد في حساب زاوية الصندوق العليا اليسرى (يجب القسمة الصحيحة على 3 ثم الضرب في 3).",
+      "افتراض أن أحجية بقليل جدًّا من الأدلة تُحلّ دائمًا بسرعة — الرقع ضعيفة التقييد قد يكون لها شجرة بحث أكبر بكثير.",
+    ],
+    interviewQuestions: [
+      "استعرض فحص الصلاحية لرقم مرشَّح — ما الأشياء الثلاثة التي يجب التحقق منها؟",
+      "لماذا يؤدي هذا النهج (القوة الغاشمة) جيدًا عمليًّا رغم أسوأ حالة أسّية؟",
+      "كيف يسرّع نشر القيود (مثل حذف المرشّحين عبر المفردات الظاهرة) هذا أكثر؟",
+      "كيف يتعمم قالب التراجع هذا إلى الملكات الـ N أو مسائل إرضاء القيود العامة؟",
+      "كيف تكتشف أن أحجية سودوكو لا حل لها، أو لها أكثر من حل؟",
+    ],
+    summary:
+      "يجد تراجع سودوكو أول خلية فارغة، ويجرّب الأرقام 1–9 فاحصًا قيد الصف/العمود/الصندوق في كل مرة، ويستدعي العودية عند النجاح، ويتراجع عن الوضع عند الفشل لتجريب الرقم التالي — وهو بالضبط هيكل جرّب/استدعِ العودية/تراجع المستخدَم عبر البحث التوافيقي. قيده الثلاثي المتزامن يجعل الأحاجي الحقيقية تُقلَّم بسرعة عمليًّا رغم أن أسوأ حالة أسّية.",
+    quiz: [
+      { question: "قبل وضع رقم، يفحص تراجع سودوكو…", options: ["الصف فقط", "الصف والعمود وصندوق 3×3 معًا", "الصندوق فقط", "لا شيء — يضع دائمًا ويفحص في النهاية"], answer: 1, explanation: "يجب أن تتحقق القيود الثلاثة معًا كي يكون رقم صالحًا في خلية." },
+      { question: "حين لا يعمل أي رقم 1–9 في خلية، فإن الخوارزمية…", options: ["تضع 0 وتتابع", "تبلغ بالفشل كي يتراجع المستدعي ويجرّب رقمه التالي", "تعيد البدء من الصفر", "تتخطى الخلية دائمًا"], answer: 1, explanation: "ينتشر الفشل صعودًا في العودية كي يُلغى وضعٌ سابق ويُعاد تجريبه." },
+      { question: "لماذا يكون تراجع سودوكو الساذج سريعًا عادةً عمليًّا رغم أسوأ حالة أسّية؟", options: ["أحاجي سودوكو صغيرة دائمًا", "قيود الصف/العمود/الصندوق تقلّم معظم الفروع غير الصالحة فورًا تقريبًا", "يستخدم التعلّم الآلي", "يخزّن كل الحلول السابقة مؤقتًا"], answer: 1, explanation: "الأحاجي الحقيقية مقيَّدة بما يكفي لأن نادرًا ما تلزم تخمينات كاملة قبل اكتشاف تعارض." },
+      { question: "ماذا يجب أن يحدث عند التراجع عن رقم موضوع؟", options: ["لا شيء", "يجب تصفير الخلية (0) قبل تجريب الرقم التالي", "تُصفَّر الرقعة كلها", "يبقى الرقم لكن يُعلَّم غير صالح"], answer: 1, explanation: "ترك رقم قديم يُفسِد فحوص الصلاحية اللاحقة لتلك الخلية وغيرها." },
+      { question: "نمط جرّب/استدعِ العودية/تراجع نفسه يحلّ أيضًا…", options: ["البحث الثنائي", "الملكات الـ N ومسائل إرضاء القيود العامة", "الترتيب بالدمج", "خوارزمية دايكسترا"], answer: 1, explanation: "سودوكو حالة واحدة من قالب تراجع إرضاء القيود العام المشترك مع الملكات الـ N وتلوين الخرائط والجدولة." },
     ],
   },
   inputFields: [

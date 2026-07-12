@@ -21,7 +21,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   let calls = 0;
   let truncated = false;
 
-  const snap = (topState: CallStackItem["state"], description: string, codeLine: number): void => {
+  const snap = (topState: CallStackItem["state"], description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -35,23 +35,24 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `C(${n}, ${k}) — choose ${k} of [${items.join(", ")}] with start-index pruning to avoid duplicates.`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { calls, combinations: output.length },
     });
   };
 
-  snap(undefined, `Generate all C(${n}, ${k}) = ${nCk(n, k)} combinations of [${items.join(", ")}] taken ${k} at a time — order doesn't matter, so we only ever move the start index forward.`, 0);
+  snap(undefined, `Generate all C(${n}, ${k}) = ${nCk(n, k)} combinations of [${items.join(", ")}] taken ${k} at a time — order doesn't matter, so we only ever move the start index forward.`, 0, `ولّد جميع توافيق [${items.join(", ")}] البالغة C(${n}, ${k}) = ${nCk(n, k)}، مأخوذة ${k} في المرة — الترتيب لا يهم، لذا نحرّك فهرس البداية إلى الأمام فقط.`);
 
   const recurse = (start: number): void => {
     if (truncated) return;
     calls++;
     if (current.length === k) {
       output.push(`{${current.join(", ")}}`);
-      snap("found", `${k} elements chosen → record combination {${current.join(", ")}}.`, 1);
+      snap("found", `${k} elements chosen → record combination {${current.join(", ")}}.`, 1, `اختير ${k} من العناصر ← سجّل التوفيقة {${current.join(", ")}}.`);
       return;
     }
     if (n - start < k - current.length) {
-      snap("discarded", `Only ${n - start} elements remain but ${k - current.length} more are needed — prune this branch.`, 2);
+      snap("discarded", `Only ${n - start} elements remain but ${k - current.length} more are needed — prune this branch.`, 2, `تبقّى ${n - start} عنصرًا فقط لكن يلزم ${k - current.length} إضافية — قلّم هذا الفرع.`);
       return;
     }
     for (let i = start; i < n; i++) {
@@ -59,27 +60,30 @@ function generate(input: Input): Step<CallStackFrame>[] {
       current.push(items[i]);
       const id = `c${pid++}`;
       stack.push({ id, label: `choose ${items[i]}`, detail: `{${current.join(", ")}}`, state: "active" });
-      snap("active", `Choose items[${i}] = ${items[i]} → current = {${current.join(", ")}}.`, 3);
+      snap("active", `Choose items[${i}] = ${items[i]} → current = {${current.join(", ")}}.`, 3, `اختر items[${i}] = ${items[i]} ← الحالي = {${current.join(", ")}}.`);
       recurse(i + 1);
       current.pop();
       stack.pop();
-      snap("swap", `Backtrack: remove ${items[i]}, try the next candidate after index ${i}.`, 4);
+      snap("swap", `Backtrack: remove ${items[i]}, try the next candidate after index ${i}.`, 4, `تراجع: أزل ${items[i]}، وجرّب المرشّح التالي بعد الفهرس ${i}.`);
     }
   };
 
   recurse(0);
   stack.length = 0;
-  snap(undefined, `Done. All ${output.length} combinations: ${output.join(", ")}.`, 5);
+  snap(undefined, `Done. All ${output.length} combinations: ${output.join(", ")}.`, 5, `انتهى. جميع التوافيق الـ ${output.length}: ${output.join(", ")}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "combinations",
   title: "Combinations (C(n,k) by Backtracking)",
+  titleAr: "التوافيق (C(n,k) بالتراجع)",
   category: "backtracking",
   difficulty: "Intermediate",
   tags: ["backtracking", "combinatorics", "pruning", "C(n,k)"],
+  tagsAr: ["التراجع", "التوافيق", "التقليم", "C(n,k)"],
   summary: "Generates every k-element subset of n items using a start-index that only moves forward, so each combination is produced exactly once.",
+  summaryAr: "يولّد كل مجموعة جزئية من k عنصرًا من n عنصرًا باستخدام فهرس بداية يتحرك إلى الأمام فقط، فتُنتَج كل توفيقة مرة واحدة بالضبط.",
   renderer: "callstack",
   pseudocode: [
     "procedure combine(start, current)",
@@ -286,6 +290,61 @@ This also enables a natural pruning rule: if the number of remaining candidates 
       { question: "How many combinations does C(n, k) backtracking ultimately produce?", options: ["n!", "2ⁿ", "C(n, k) = n! / (k!(n−k)!)", "n·k"], answer: 2, explanation: "That's the exact count of k-element subsets of an n-element set, with no duplicates and no omissions." },
       { question: "Combinations differ from permutations in that…", options: ["Combinations use more memory always", "Order doesn't matter for combinations, but does for permutations", "Combinations don't use recursion", "There's no difference"], answer: 1, explanation: "{A,B} and {B,A} are the same combination but two different permutations." },
       { question: "What must happen after the recursive call inside the for-loop?", options: ["Nothing", "Pop the just-added element off current (backtrack)", "Sort current", "Return immediately"], answer: 1, explanation: "Without popping, the next iteration's current would incorrectly include the previous element too." },
+    ],
+  },
+  contentAr: {
+    overview: `توليد جميع التوافيق المكوَّنة من k عنصرًا من n عنصرًا يشبه ظاهريًّا التباديل، لكن باختلاف حاسم واحد: الترتيب لا يهم، فـ {A, B} و{B, A} توفيقة واحدة يجب أن تُنتَج مرة واحدة فقط. الطريقة النظيفة لفرض ذلك هي فهرس بداية لا يتحرك إلا إلى الأمام — عند كل استدعاء عودي، لا يُنظَر إلا إلى العناصر عند الاختيار السابق أو بعده، فتُبنى كل توفيقة بعناصرها في ترتيب قانوني وحيد (بفهرس متزايد).
+
+يتيح ذلك أيضًا قاعدة تقليم طبيعية: إذا كان عدد المرشّحين المتبقين (n − start) أصغر من عدد العناصر التي ما زالت مطلوبة (k − |current|)، فلا يمكن لذلك الفرع أبدًا بلوغ توفيقة صالحة، فيُقطَع فورًا بدلًا من استكشافه إلى طريق مسدود. النتيجة بحث تراجع نظيف يزور بالضبط توافيق C(n, k) الصالحة، زائد عدد محدود من الفروع المسدودة المقلَّمة.`,
+    howItWorks: [
+      "استدعِ العودية بفهرس بداية وتوفيقة حالية مبنية جزئيًّا.",
+      "حالة الأساس: حين تحوي الحالية k عنصرًا، سجّل نسخة منها كتوفيقة كاملة واحدة.",
+      "التقليم: إذا تبقّى أقل من k − |current| مرشّحًا (n − start صغير جدًّا)، فتخلَّ عن هذا الفرع فورًا.",
+      "وإلا، لكل فهرس i من start إلى n−1: أضِف items[i] إلى الحالية، استدعِ العودية بـ start = i + 1 (دون إعادة زيارة فهارس سابقة)، ثم أزل items[i] (تراجع) قبل تجريب الـ i التالية.",
+      "لأن فهرس البداية لا يتقدّم إلا للأمام، لا تُولَّد أي توفيقة بأكثر من ترتيب نسبي واحد — تظهر كل نتيجة من C(n, k) مرة واحدة بالضبط.",
+    ],
+    complexity: {
+      time: { best: "O(C(n,k))", average: "O(C(n,k) · k)", worst: "O(C(n,k) · k)" },
+      space: "O(k)",
+      notes: "هناك بالضبط C(n, k) = n!/(k!(n−k)!) توفيقة؛ كلٌّ يكلّف O(k) لنسخها إلى الخرج، مما يعطي O(C(n,k)·k) إجمالًا. قاعدة التقليم تتخلّص من الفروع المسدودة دون استكشاف كامل، فتُبقي البحث قريبًا من الحساسية للخرج.",
+    },
+    applications: [
+      "اختيار اللجان أو الفرق أو مجموعات أرقام اليانصيب",
+      "انتقاء السمات/المجموعات الجزئية حين تهمّ التوافيق ذات الحجم الثابت فقط",
+      "تعداد الحلول المرشَّحة في التحسين التوافيقي (قبل التقييم/التصفية)",
+      "توليد حالات اختبار تغطّي كل توافيق المعاملات k-اتجاهية",
+    ],
+    advantages: [
+      "حيلة فهرس البداية تتجنّب توليد أي توفيقة مكرَّرة — لا حاجة لإزالة تكرار لاحقة",
+      "قاعدة تقليم بسيطة تقطع الفروع اليائسة مبكرًا",
+      "يتعمم مباشرةً إلى التوافيق مع التكرار أو المتغيّرات المقيَّدة",
+    ],
+    disadvantages: [
+      "C(n, k) قد تكون هائلة (تبلغ ذروتها عند k = n/2)، مما يجعل التعداد الكامل غير عملي لقيم n كبيرة",
+      "تخزين كل التوافيق يستخدم ذاكرة O(C(n,k) · k) إن لم تُعالَج كسولًا",
+      "اختيار k قريبًا من n/2 يُعظِّم كلًّا من العدد والعمل — لا مفرّ من الانفجار التوافيقي",
+    ],
+    commonMistakes: [
+      "الاستدعاء العودي بـ start = 0 بدلًا من i + 1 — هذا يعيد توليد تباديل التوفيقة نفسها بدلًا من توافيق فريدة.",
+      "نسيان فحص التقليم، فيُهدر الوقت في استكشاف فروع لا يمكنها بلوغ الحجم k.",
+      "خطأ انزياح بمقدار واحد في شرط التقليم (n − start < k − |current|) — اعكِسه فتُقطَع فروع صحيحة.",
+      "الخلط بين التوافيق (الترتيب لا يهم) والتباديل (الترتيب يهم) عند اختيار قالب العودية.",
+    ],
+    interviewQuestions: [
+      "لماذا يمنع استخدام فهرس بداية (بدلًا من مصفوفة used[]) التوافيق المكرَّرة؟",
+      "اشتقّ شرط التقليم واشرح لماذا يكون قطع تلك الفروع آمنًا.",
+      "كيف يتغيّر هذا لتوليد توافيق مع السماح بالتكرار؟",
+      "قارن بنية العودية هنا بخوارزمية التباديل — ما الاختلاف ولماذا؟",
+      "كم استدعاءً عوديًّا كليًّا يُجري هذا بدلالة n وk؟",
+    ],
+    summary:
+      "تُولَّد التوافيق بالاستدعاء العودي بفهرس بداية يتقدّم للأمام فقط — كل استدعاء لا ينظر إلا إلى العناصر عند آخر اختيار أو بعده — فتُنتَج كل توفيقة من C(n, k) مرة واحدة بالضبط دون تكرار. وقاعدة تقليم بسيطة «لم يتبقّ ما يكفي من العناصر» تقطع الفروع المسدودة مبكرًا، فتُبقي البحث كفؤًا نسبةً إلى حجم الخرج.",
+    quiz: [
+      { question: "لماذا تمرّر العودية i + 1 (لا 0) كفهرس البداية التالي؟", options: ["لجعلها أسرع", "كي تُولَّد كل توفيقة مرة واحدة فقط، بترتيب فهرس متزايد", "إنه مطلوب لحالة الأساس", "لمعالجة التكرارات في المدخلات"], answer: 1, explanation: "حصر الاختيارات المستقبلية بالفهارس بعد الحالي يمنع توليد {A,B} و{B,A} معًا." },
+      { question: "يفحص شرط التقليم ما إذا كان…", options: ["الحالي فارغًا", "n − start < k − |current| (لم يتبقّ ما يكفي من العناصر)", "k يساوي n", "العناصر مرتبة"], answer: 1, explanation: "إذا تبقّى مرشّحون أقل من الخانات المطلوبة، فلا يمكن لهذا الفرع إنتاج توفيقة صالحة." },
+      { question: "كم توفيقة يُنتِج تراجع C(n, k) في النهاية؟", options: ["n!", "2ⁿ", "C(n, k) = n! / (k!(n−k)!)", "n·k"], answer: 2, explanation: "هذا هو العدد الدقيق للمجموعات الجزئية من k عنصرًا لمجموعة من n عنصرًا، دون تكرار أو إغفال." },
+      { question: "تختلف التوافيق عن التباديل في أن…", options: ["التوافيق تستخدم ذاكرة أكثر دائمًا", "الترتيب لا يهم للتوافيق، لكنه يهم للتباديل", "التوافيق لا تستخدم العودية", "لا فرق"], answer: 1, explanation: "{A,B} و{B,A} توفيقة واحدة لكن تبديلان مختلفان." },
+      { question: "ماذا يجب أن يحدث بعد الاستدعاء العودي داخل حلقة for؟", options: ["لا شيء", "أخرِج العنصر المُضاف للتوّ من الحالي (تراجع)", "رتّب الحالي", "ارجع فورًا"], answer: 1, explanation: "دون الإخراج، سيتضمّن الحالي في التكرار التالي العنصر السابق أيضًا بشكل خاطئ." },
     ],
   },
   inputFields: [

@@ -16,7 +16,7 @@ function generate(input: Input): Step<CallStackFrame>[] {
   let backtracks = 0;
   let truncated = false;
 
-  const snap = (topState: "active" | "found" | "swap" | undefined, description: string, codeLine: number): void => {
+  const snap = (topState: "active" | "found" | "swap" | undefined, description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -30,18 +30,19 @@ function generate(input: Input): Step<CallStackFrame>[] {
         note: `permute [${items.join(", ")}] — place one unused element at each depth, backtrack after`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { placements, permutations: output.length, backtracks },
     });
   };
 
-  snap(undefined, `Generate all ${n}! = ${factorial(n)} permutations of [${items.join(", ")}] by choosing an unused element at each level.`, 0);
+  snap(undefined, `Generate all ${n}! = ${factorial(n)} permutations of [${items.join(", ")}] by choosing an unused element at each level.`, 0, `ولّد جميع تباديل [${items.join(", ")}] البالغة ${n}! = ${factorial(n)} باختيار عنصر غير مستخدم عند كل مستوى.`);
 
   const recurse = (depth: number): void => {
     if (truncated) return;
     if (depth === n) {
       output.push(current.join(""));
-      snap("found", `Depth ${depth}: all elements placed → permutation "${current.join("")}" recorded.`, 2);
+      snap("found", `Depth ${depth}: all elements placed → permutation "${current.join("")}" recorded.`, 2, `العمق ${depth}: وُضِعت كل العناصر ← سُجِّل التبديل "${current.join("")}".`);
       return;
     }
     for (let i = 0; i < n; i++) {
@@ -51,20 +52,20 @@ function generate(input: Input): Step<CallStackFrame>[] {
       const id = `p${pid++}`;
       stack.push({ id, label: `place ${items[i]}`, detail: `[${current.join(" ")}]`, state: "active" });
       placements++;
-      snap("active", `Depth ${depth}: place ${items[i]} → current = [${current.join(" ")}].`, 4);
+      snap("active", `Depth ${depth}: place ${items[i]} → current = [${current.join(" ")}].`, 4, `العمق ${depth}: ضع ${items[i]} ← الحالي = [${current.join(" ")}].`);
       recurse(depth + 1);
       // backtrack
       current.pop();
       used[i] = false;
       stack.pop();
       backtracks++;
-      snap("swap", `Backtrack: remove ${items[i]}, try the next unused element.`, 6);
+      snap("swap", `Backtrack: remove ${items[i]}, try the next unused element.`, 6, `تراجع: أزل ${items[i]}، وجرّب العنصر التالي غير المستخدم.`);
     }
   };
 
   recurse(0);
   stack.length = 0;
-  snap(undefined, `Done. All ${output.length} permutations: ${output.join(", ")}.`, 7);
+  snap(undefined, `Done. All ${output.length} permutations: ${output.join(", ")}.`, 7, `انتهى. جميع التباديل الـ ${output.length}: ${output.join(", ")}.`);
   return steps;
 }
 
@@ -83,10 +84,13 @@ function randomInput(level: number, rng: { shuffle: <T>(a: readonly T[]) => T[] 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "permutations",
   title: "Permutations (Backtracking)",
+  titleAr: "التباديل (بالتراجع)",
   category: "backtracking",
   difficulty: "Intermediate",
   tags: ["backtracking", "recursion", "permutations", "combinatorics"],
+  tagsAr: ["التراجع", "العودية", "تباديل", "التوافيق"],
   summary: "Generates every ordering of a set by placing each unused element at the next position and backtracking.",
+  summaryAr: "يولّد كل ترتيب لمجموعة بوضع كل عنصر غير مستخدم في الموضع التالي ثم التراجع.",
   renderer: "callstack",
   pseudocode: [
     "procedure permute(current)",
@@ -274,6 +278,63 @@ The algorithm builds a permutation one position at a time. At each level of recu
       { question: "Why copy 'current' when recording a permutation?", options: ["For speed", "Otherwise every stored result aliases the same mutating list", "To sort it", "It isn't necessary"], answer: 1, explanation: "Without a copy, later mutations corrupt previously stored results." },
       { question: "The time complexity is…", options: ["O(n!)", "O(n·n!)", "O(2^n)", "O(n²)"], answer: 1, explanation: "n! permutations each cost O(n) to build/copy." },
       { question: "The 'used' flags exist to…", options: ["Count permutations", "Avoid reusing an element within one permutation", "Sort elements", "Save memory"], answer: 1, explanation: "They ensure each element appears exactly once per ordering." },
+    ],
+  },
+  contentAr: {
+    overview: `توليد جميع تباديل مجموعة يعني سرد كل ترتيب ممكن لعناصرها. لمجموعة من n عنصرًا متمايزًا n! تبديلًا — 6 لثلاثة عناصر، و24 لأربعة، و120 لخمسة — فينمو الخرج بشكل انفجاري. التراجع هو الطريقة الطبيعية لتعدادها جميعًا دون تكرار.
+
+تبني الخوارزمية تبديلًا موضعًا تلو الآخر. عند كل مستوى من العودية تنتقي عنصرًا لم يُستخدم بعد، تُلحِقه بالتسلسل الحالي، وتستدعي العودية لملء الموضع التالي. حين يبلغ التسلسل الطول n، يصبح تبديلًا كاملًا ويُسجَّل. الحركة الحاسمة تقع في طريق العودة إلى الأعلى: بعد العودية، تُزيل الخوارزمية العنصر وتعلّمه غير مستخدم مجددًا — أي تتراجع — كي يُملأ الموضع نفسه باختيار مختلف. إيقاع «اختر ← استكشف ← ألغِ الاختيار» هذا هو جوهر التراجع، ويتكرر في الملكات الـ N والمجموعات الجزئية وسودوكو.`,
+    howItWorks: [
+      "احتفظ بعلَم 'مستخدم' لكل عنصر وتسلسل 'حالي' متنامٍ.",
+      "إذا بلغ الحالي الطول n، فهو تبديل كامل — سجّله وارجع.",
+      "وإلا فمُرّ على كل العناصر؛ وتخطَّ أي عنصر مستخدم بالفعل.",
+      "اختر عنصرًا غير مستخدم: علّمه مستخدمًا وألحِقه، ثم استدعِ العودية.",
+      "بعد العودية، ألغِ اختياره (أزل التعليم واحذفه) كي يُجرَّب الاختيار التالي — هذا هو التراجع.",
+    ],
+    complexity: {
+      time: { best: "O(n·n!)", average: "O(n·n!)", worst: "O(n·n!)" },
+      space: "O(n)",
+      notes: "هناك n! تبديلًا ونسخ كلٍّ بطول n يكلّف O(n)، مما يعطي O(n·n!) إجمالًا. عمق العودية ومصفوفتا مستخدم/حالي يستخدمان مساحة مساعدة O(n) (باستثناء الخرج).",
+    },
+    applications: [
+      "بحث القوة الغاشمة عبر كل الترتيبات (مثل مسألة البائع المتجول الصغيرة)",
+      "توليد حالات اختبار وجداول شاملة",
+      "مسائل الجناس وترتيب الكلمات",
+      "تعليم قالب التراجع اختر/استكشف/ألغِ الاختيار",
+    ],
+    advantages: [
+      "يعدّ كل ترتيب مرة واحدة بالضبط",
+      "قالب عودي بسيط وموحَّد",
+      "يستخدم مساحة إضافية O(n) فقط فوق الخرج",
+      "يتكيّف بسهولة مع التباديل ذات القيود أو التكرارات",
+    ],
+    disadvantages: [
+      "حجم الخرج n! أسّي-وزيادة لا مفرّ منه",
+      "غير عملي بعد نحو 10–11 عنصرًا",
+      "النسخة الساذجة تسيء التعامل مع العناصر المكرَّرة (تكرارات)",
+      "عودية عميقة لقيم n كبيرة",
+    ],
+    commonMistakes: [
+      "نسيان إزالة تعليم العنصر عند التراجع، مما ينتج تباديل ناقصة/خاطئة.",
+      "تخزين مراجع إلى 'الحالي' بدلًا من نسخ، فتشير كل المخرجات إلى القائمة نفسها.",
+      "عدم تخطي العناصر المستخدمة، مما يولّد تسلسلات غير صالحة.",
+      "تجاهل معالجة التكرار حين تحتوي المدخلات على مكرَّرات.",
+    ],
+    interviewQuestions: [
+      "كيف تولّد التباديل حين تحتوي المدخلات على تكرارات؟",
+      "كيف تُنتج التبديل التالي بالترتيب المعجمي في المكان؟",
+      "لماذا يجب نسخ التسلسل الحالي عند تسجيله؟",
+      "ما تعقيد الزمن، ولماذا العامل الإضافي n؟",
+      "كيف يتعمم نمط اختر/استكشف/ألغِ الاختيار إلى مسائل التراجع الأخرى؟",
+    ],
+    summary:
+      "يضع توليد التباديل بالتراجع كل عنصر غير مستخدم في الموضع التالي، يستدعي العودية، ويلغي الاختيار في طريق العودة، معدِّدًا جميع الترتيبات البالغة n! بزمن O(n·n!). إنه القالب النموذجي للتراجع اختر/استكشف/ألغِ الاختيار.",
+    quiz: [
+      { question: "كم تبديلًا لمجموعة من n عنصرًا متمايزًا؟", options: ["n²", "2^n", "n!", "n log n"], answer: 2, explanation: "يُحسَب كل ترتيب مرة واحدة، مما يعطي n مضروبًا." },
+      { question: "خطوة التراجع في توليد التباديل هي…", options: ["تسجيل التبديل", "إلغاء اختيار عنصر بعد العودية", "ترتيب المصفوفة", "تخطي العنصر الأول"], answer: 1, explanation: "إزالة العنصر وتعليمه يتيحان لاختيارات أخرى ملء تلك الخانة." },
+      { question: "لماذا تنسخ 'الحالي' عند تسجيل تبديل؟", options: ["للسرعة", "وإلا أشارت كل نتيجة مخزَّنة إلى القائمة المتغيّرة نفسها", "لترتيبه", "ليس ضروريًّا"], answer: 1, explanation: "دون نسخ، تُفسِد التغييرات اللاحقة النتائج المخزَّنة سابقًا." },
+      { question: "تعقيد الزمن هو…", options: ["O(n!)", "O(n·n!)", "O(2^n)", "O(n²)"], answer: 1, explanation: "n! تبديلًا يكلّف كلٌّ منها O(n) للبناء/النسخ." },
+      { question: "توجد أعلام 'مستخدم' كي…", options: ["تعدّ التباديل", "تتجنب إعادة استخدام عنصر داخل تبديل واحد", "ترتّب العناصر", "توفّر الذاكرة"], answer: 1, explanation: "تضمن أن يظهر كل عنصر مرة واحدة بالضبط لكل ترتيب." },
     ],
   },
   inputFields: [
