@@ -19,7 +19,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     return c;
   };
 
-  const frame = (nodeStates: Record<string, CellState>, description: string, codeLine: number): void => {
+  const frame = (nodeStates: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string): void => {
     const edges = [];
     for (let i = 0; i < n; i++) {
       if (parent[i] !== i) edges.push({ from: String(i), to: String(parent[i]) });
@@ -37,6 +37,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         note: `disjoint-set forest — arrows point to parents; roots represent sets`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { finds, unions },
     });
@@ -55,13 +56,13 @@ function generate(input: Input): Step<GraphFrame>[] {
       finds++;
       const st: Record<string, CellState> = { [String(x)]: "active", [String(root)]: "special" };
       for (const p of path) st[String(p)] = "compare";
-      frame(st, `find(${x}): follow parent pointers up to the root ${root}.`, 2);
+      frame(st, `find(${x}): follow parent pointers up to the root ${root}.`, 2, `find(${x}): اتبع مؤشرات الأب حتى الجذر ${root}.`);
       // path compression
       if (path.length > 0) {
         for (const node of path) parent[node] = root;
         const st2: Record<string, CellState> = { [String(root)]: "special" };
         for (const p of path) st2[String(p)] = "visited";
-        frame(st2, `Path compression: point ${path.join(", ")} directly at root ${root}.`, 3);
+        frame(st2, `Path compression: point ${path.join(", ")} directly at root ${root}.`, 3, `ضغط المسار: اجعل ${path.join(", ")} تشير مباشرة إلى الجذر ${root}.`);
       }
     } else {
       for (const node of path) parent[node] = root;
@@ -69,14 +70,14 @@ function generate(input: Input): Step<GraphFrame>[] {
     return root;
   };
 
-  frame({}, `Union-Find (disjoint set union). Every element starts in its own set (it is its own root).`, 0);
+  frame({}, `Union-Find (disjoint set union). Every element starts in its own set (it is its own root).`, 0, `اتحاد-بحث (اتحاد المجموعات المنفصلة). يبدأ كل عنصر في مجموعته الخاصة (هو جذر نفسه).`);
 
   for (const [a, b] of input.ops) {
-    frame({ [String(a)]: "active", [String(b)]: "active" }, `union(${a}, ${b}): find the root of each, then link them.`, 5);
+    frame({ [String(a)]: "active", [String(b)]: "active" }, `union(${a}, ${b}): find the root of each, then link them.`, 5, `union(${a}, ${b}): جِد جذر كل منهما، ثم اربطهما.`);
     const ra = find(a, true);
     const rb = find(b, true);
     if (ra === rb) {
-      frame({ [String(ra)]: "discarded" }, `${a} and ${b} already share root ${ra} — already in the same set, nothing to do.`, 6);
+      frame({ [String(ra)]: "discarded" }, `${a} and ${b} already share root ${ra} — already in the same set, nothing to do.`, 6, `${a} و${b} يتشاركان الجذر ${ra} بالفعل — في المجموعة نفسها، لا شيء لفعله.`);
       continue;
     }
     // union by rank
@@ -93,6 +94,7 @@ function generate(input: Input): Step<GraphFrame>[] {
       { [String(root)]: "special", [String(child)]: "found" },
       `Attach smaller-rank root ${child} under ${root}${rank[ra] === rank[rb] ? ` and bump ${root}'s rank to ${rank[root]}` : ""}. Sets merged.`,
       7,
+      `اربط الجذر الأصغر رتبة ${child} تحت ${root}${rank[ra] === rank[rb] ? ` وارفع رتبة ${root} إلى ${rank[root]}` : ""}. اندمجت المجموعتان.`,
     );
   }
 
@@ -106,7 +108,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     if (!rootColor.has(r)) rootColor.set(r, palette[ci++ % palette.length]);
     finalStates[String(i)] = rootColor.get(r)!;
   }
-  frame(finalStates, `Done. ${componentCount()} disjoint set(s) remain; nodes sharing a color are connected.`, 8);
+  frame(finalStates, `Done. ${componentCount()} disjoint set(s) remain; nodes sharing a color are connected.`, 8, `اكتمل. تبقّت ${componentCount()} مجموعة منفصلة؛ العقد المتشاركة في اللون متصلة.`);
   return steps;
 }
 
@@ -126,10 +128,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "union-find",
   title: "Union-Find (Disjoint Set Union)",
+  titleAr: "اتحاد-بحث (اتحاد المجموعات المنفصلة)",
   category: "graphs",
   difficulty: "Intermediate",
   tags: ["disjoint set", "union by rank", "path compression", "connectivity"],
+  tagsAr: ["مجموعة منفصلة", "الاتحاد حسب الرتبة", "ضغط المسار", "الاتصال"],
   summary: "Maintains a partition of elements into disjoint sets with near-constant-time union and find via rank and path compression.",
+  summaryAr: "يحافظ على تجزئة العناصر إلى مجموعات منفصلة بعمليتي اتحاد وبحث بزمن شبه ثابت عبر الرتبة وضغط المسار.",
   renderer: "graph",
   pseudocode: [
     "structure DSU(n)",
@@ -380,6 +385,63 @@ Each set is represented as a tree whose root is the set's canonical representati
       { question: "Union by rank attaches…", options: ["The taller tree under the shorter", "The shorter tree under the taller", "Randomly", "Always a under b"], answer: 1, explanation: "Hanging the shorter tree under the taller keeps height minimal." },
       { question: "The amortized time per operation is…", options: ["O(log n)", "O(α(n)) ≈ constant", "O(n)", "O(n log n)"], answer: 1, explanation: "With both optimizations it is inverse-Ackermann, effectively constant." },
       { question: "Union-Find is a core part of which algorithm?", options: ["Dijkstra's", "Kruskal's MST", "Quicksort", "BFS"], answer: 1, explanation: "Kruskal's uses it to detect cycles while adding edges." },
+    ],
+  },
+  contentAr: {
+    overview: `يحافظ هيكل بيانات اتحاد-بحث، أو اتحاد المجموعات المنفصلة (DSU)، على مجموعة من العناصر مُجزّأة إلى مجموعات غير متداخلة، ويجيب على سؤالين بسرعة فائقة: "في أي مجموعة يقع هذا العنصر؟" (find) و"ادمج هاتين المجموعتين" (union). إنه العمود الفقري لخوارزمية كروسكال للشجرة الممتدة الصغرى ولأي مسألة عن الاتصال أو التجميع أو أصناف التكافؤ.
+
+تُمثَّل كل مجموعة كشجرة جذرها الممثل القانوني للمجموعة؛ يحمل كل عنصر مؤشرًا إلى أبيه، ويشير الجذر إلى نفسه. تتبع find مؤشرات الأب حتى الجذر؛ وتربط union جذرًا تحت آخر. تحسينان يجعلان هذا شبه O(1): الاتحاد حسب الرتبة يُعلِّق دومًا الشجرة الأقصر تحت الأطول للحفاظ على تسطّح الأشجار، وضغط المسار يعيد توجيه كل عقدة زُيرت أثناء find لتشير مباشرة إلى الجذر. معًا يعطيان تكلفة مطفأة قدرها O(α(n)) لكل عملية، حيث α هي دالة أكرمان العكسية — وهي فعليًا ثابت صغير لأي n عملي.`,
+    howItWorks: [
+      "هيّئ كل عنصر كأبٍ لنفسه (n مجموعة أحادية) برتبة 0.",
+      "find(x): اتبع مؤشرات الأب حتى الجذر؛ وفي الطريق، اضغط المسار بجعل العقد تشير إلى الجذر.",
+      "union(a, b): جِد جذري a وb؛ إن تساويا، فهما مندمجان بالفعل.",
+      "وإلا اربط الجذر الأقل رتبة تحت الجذر الأعلى رتبة (الاتحاد حسب الرتبة).",
+      "إذا تساوى الجذران في الرتبة، اختر أيًا منهما كجذر جديد وزِد رتبته.",
+    ],
+    complexity: {
+      time: { best: "O(α(n)) amortized", average: "O(α(n)) amortized", worst: "O(α(n)) amortized" },
+      space: "O(n)",
+      notes: "مع الاتحاد حسب الرتبة وضغط المسار معًا، تكلّف m عملية O(m·α(n))، حيث α هي دالة أكرمان العكسية (≤ 4 لأي n واقعي) — فعليًا ثابتة. بدون التحسينات تتدهور نحو O(log n) أو O(n).",
+    },
+    applications: [
+      "الشجرة الممتدة الصغرى لكروسكال (اكتشاف الدورات)",
+      "المكوّنات المتصلة في رسم بياني غير موجه",
+      "اتصال الشبكة/التسرب وتجزئة الصور",
+      "مسائل أصناف التكافؤ وتجميع الحسابات/الأصدقاء",
+    ],
+    advantages: [
+      "اتحاد وبحث بزمن مطفأ شبه ثابت",
+      "تنفيذ صغير جدًا وبسيط",
+      "ضغط المسار يُبقي الأشجار مسطّحة تلقائيًا",
+      "مثالي لاستعلامات الاتصال التزايدية",
+    ],
+    disadvantages: [
+      "لا يدعم حذف أو تقسيم المجموعات بكفاءة",
+      "يجيب فقط على استعلامات المجموعة نفسها، لا المسار بين العناصر",
+      "النسخ الساذجة (بلا رتبة/ضغط) قد تكون بطيئة",
+      "غير مصمم لفصل الاتصال الديناميكي",
+    ],
+    commonMistakes: [
+      "تخطي ضغط المسار أو الاتحاد حسب الرتبة، مما يضر بالأداء.",
+      "الربط باختيار اعتباطي بدلًا من الرتبة/الحجم، مما يُنشئ أشجارًا طويلة.",
+      "مقارنة العناصر مباشرة بدلًا من مقارنة جذورها.",
+      "نسيان فحص الاتصال المسبق، مما يرفع الرتبة خطأً.",
+    ],
+    interviewQuestions: [
+      "كيف يُحسِّن كل من الاتحاد حسب الرتبة وضغط المسار الأداء؟",
+      "ما التعقيد المطفأ، وما دالة أكرمان العكسية؟",
+      "كيف تستخدم خوارزمية كروسكال اتحاد-بحث لاكتشاف الدورات؟",
+      "كيف تعدّ المكوّنات المتصلة باستخدام DSU؟",
+      "هل يدعم اتحاد-بحث الحذف، وإن لم يكن، فلماذا؟",
+    ],
+    summary:
+      "يحافظ اتحاد-بحث على مجموعات منفصلة بعمليتين — find (بضغط المسار) وunion (حسب الرتبة) — محققًا زمنًا مطفأً شبه ثابت O(α(n)). إنه أساس شجرة كروسكال الممتدة الصغرى واستعلامات الاتصال، ممثِّلًا كل مجموعة كشجرة ضحلة جذرها ممثِّلها.",
+    quiz: [
+      { question: "على أي سؤال يجيب اتحاد-بحث بشكل أساسي؟", options: ["طول أقصر مسار", "هل عنصران في المجموعة نفسها؟", "ما الترتيب المرتب؟", "ما أصغر حافة؟"], answer: 1, explanation: "يتتبع عضوية المجموعات ويدمجها بكفاءة." },
+      { question: "يعمل ضغط المسار عبر…", options: ["حذف العقد", "جعل العقد المزارة تشير مباشرة إلى الجذر", "ترتيب الشجرة", "مضاعفة الرتب"], answer: 1, explanation: "يُسطِّح الشجرة كي تكون عمليات find المستقبلية أسرع." },
+      { question: "الاتحاد حسب الرتبة يربط…", options: ["الشجرة الأطول تحت الأقصر", "الشجرة الأقصر تحت الأطول", "عشوائيًا", "دومًا a تحت b"], answer: 1, explanation: "تعليق الشجرة الأقصر تحت الأطول يُبقي الارتفاع أدنى." },
+      { question: "الزمن المطفأ لكل عملية هو…", options: ["O(log n)", "O(α(n)) ≈ ثابت", "O(n)", "O(n log n)"], answer: 1, explanation: "مع التحسينين معًا يكون معكوس أكرمان، أي ثابت فعليًا." },
+      { question: "اتحاد-بحث جزء أساسي من أي خوارزمية؟", options: ["دايكسترا", "شجرة كروسكال الممتدة الصغرى", "الترتيب السريع", "BFS"], answer: 1, explanation: "تستخدمه كروسكال لاكتشاف الدورات أثناء إضافة الحواف." },
     ],
   },
   inputFields: [

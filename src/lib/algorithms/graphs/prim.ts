@@ -37,7 +37,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     return es;
   };
 
-  const snap = (nodeStates: Record<string, CellState>, es: Record<string, CellState>, description: string, codeLine: number) => {
+  const snap = (nodeStates: Record<string, CellState>, es: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string) => {
     steps.push({
       frame: {
         ...base(),
@@ -46,6 +46,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         aux: [{ label: "MST weight", values: [totalWeight] }, { label: "In tree", values: [...inMST] }],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, treeSize: inMST.size },
     });
@@ -53,7 +54,7 @@ function generate(input: Input): Step<GraphFrame>[] {
 
   const start = nodes[0];
   inMST.add(start);
-  snap({ [start]: "active" }, edgeStates(), `Prim's MST from ${start}: grow a tree by always adding the cheapest edge to a new node.`, 0);
+  snap({ [start]: "active" }, edgeStates(), `Prim's MST from ${start}: grow a tree by always adding the cheapest edge to a new node.`, 0, `شجرة برايم الممتدة الصغرى من ${start}: نمِّ شجرة بإضافة أرخص حافة إلى عقدة جديدة دومًا.`);
 
   while (inMST.size < nodes.length) {
     // find cheapest edge from tree to a non-tree node
@@ -66,7 +67,7 @@ function generate(input: Input): Step<GraphFrame>[] {
       }
     }
     if (!best) {
-      snap(Object.fromEntries([...inMST].map((n) => [n, "sorted" as CellState])), edgeStates(), `Graph is disconnected — no MST spans all nodes.`, 5);
+      snap(Object.fromEntries([...inMST].map((n) => [n, "sorted" as CellState])), edgeStates(), `Graph is disconnected — no MST spans all nodes.`, 5, `الرسم البياني غير متصل — لا توجد شجرة ممتدة صغرى تغطي كل العقد.`);
       return steps;
     }
     snap(
@@ -74,23 +75,27 @@ function generate(input: Input): Step<GraphFrame>[] {
       edgeStates({ [`${best.from}->${best.to}`]: "compare", [`${best.to}->${best.from}`]: "compare" }),
       `Cheapest crossing edge: ${best.from}–${best.to} (weight ${best.w}). Add ${best.to} to the tree.`,
       2,
+      `أرخص حافة عابرة: ${best.from}–${best.to} (الوزن ${best.w}). أضف ${best.to} إلى الشجرة.`,
     );
     inMST.add(best.to);
     mstEdges.add(`${best.from}->${best.to}`);
     totalWeight += best.w;
-    snap(Object.fromEntries([...inMST].map((n) => [n, "sorted" as CellState])), edgeStates(), `Tree now has ${inMST.size} nodes, total weight ${totalWeight}.`, 3);
+    snap(Object.fromEntries([...inMST].map((n) => [n, "sorted" as CellState])), edgeStates(), `Tree now has ${inMST.size} nodes, total weight ${totalWeight}.`, 3, `تحوي الشجرة الآن ${inMST.size} عقدة، الوزن الإجمالي ${totalWeight}.`);
   }
-  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStates(), `Minimum spanning tree complete — total weight ${totalWeight}.`, 4);
+  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStates(), `Minimum spanning tree complete — total weight ${totalWeight}.`, 4, `اكتملت الشجرة الممتدة الصغرى — الوزن الإجمالي ${totalWeight}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "prim",
   title: "Prim's MST",
+  titleAr: "شجرة برايم الممتدة الصغرى (Prim)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["minimum spanning tree", "greedy", "priority queue", "weighted"],
+  tagsAr: ["شجرة ممتدة صغرى", "جشِع", "طابور أولوية", "موزون"],
   summary: "Grows a minimum spanning tree from a start node by repeatedly adding the cheapest edge to a new vertex.",
+  summaryAr: "ينمّي شجرة ممتدة صغرى من عقدة بداية بإضافة أرخص حافة إلى رأس جديد مرارًا.",
   renderer: "graph",
   pseudocode: [
     "procedure Prim(G, start)",
@@ -336,6 +341,62 @@ This greedy strategy is provably optimal thanks to the cut property: for any par
       { question: "With a binary heap, Prim's runs in…", options: ["O(V²)", "O(E log V)", "O(VE)", "O(2ⁿ)"], answer: 1, explanation: "Each edge may trigger a heap operation costing O(log V)." },
       { question: "Prim's requires the graph to be…", options: ["Directed", "Connected and undirected", "A tree already", "Unweighted"], answer: 1, explanation: "A spanning tree exists only for connected, undirected weighted graphs." },
       { question: "An MST edge is…", options: ["Always on a shortest path", "Not necessarily on any shortest path", "The heaviest edge", "A back edge"], answer: 1, explanation: "MSTs minimize total weight, not pairwise path distances." },
+    ],
+  },
+  contentAr: {
+    overview: `تبني خوارزمية برايم شجرة ممتدة صغرى (MST) — مجموعة فرعية من الحواف تصل كل رؤوس رسم بياني موزون غير موجه بأقل وزن إجمالي ممكن. تبدأ من عقدة عشوائية وتنمّي الشجرة رأسًا واحدًا في كل مرة، مختارة دومًا أرخص حافة تصل رأسًا موجودًا في الشجرة برأس خارجها.
+
+هذه الاستراتيجية الجشِعة مثالية بشكل مثبت بفضل خاصية القطع: لأي تقسيم لمجموعة الرؤوس، تكون الحافة الأقل وزنًا العابرة للتقسيم آمنة للإدراج في شجرة ممتدة صغرى ما. باستخدام طابور أولوية بكومة ثنائية مرتب حسب أرخص حافة وصل، تعمل خوارزمية برايم بزمن O(E log V).`,
+    howItWorks: [
+      "ابدأ الشجرة برأس واحد اعتباطي.",
+      "اعتبر كل الحواف العابرة من الشجرة إلى رأس ليس فيها بعد.",
+      "أضف أرخص حافة عابرة كهذه، مُدخِلًا طرفها الخارجي إلى الشجرة.",
+      "حدّث أرخص الوصلات للرؤوس القابلة للوصول حديثًا.",
+      "كرّر حتى يصبح كل رأس في الشجرة — الحواف المختارة تشكّل الشجرة الممتدة الصغرى.",
+    ],
+    complexity: {
+      time: { best: "O(E log V)", average: "O(E log V)", worst: "O(E log V)" },
+      space: "O(V + E)",
+      notes: "بكومة ثنائية: O(E log V). بمصفوفة تجاور ومسح مصفوفة: O(V²)، وهو أفضل للرسوم البيانية الكثيفة. كومة فيبوناتشي تعطي O(E + V log V).",
+    },
+    applications: [
+      "تصميم شبكات أقل تكلفة (طرق، كابلات، أنابيب)",
+      "خوارزميات التقريب (مثل مسألة البائع المتجول المتري)",
+      "تحليل العناقيد وتجزئة الصور",
+      "بناء أشجار البث/التوجيه",
+    ],
+    advantages: [
+      "شجرة ممتدة صغرى مثالية عبر خاصية القطع الجشِعة",
+      "فعّالة بزمن O(E log V) باستخدام كومة",
+      "ممتازة للرسوم البيانية الكثيفة (نسخة المصفوفة O(V²))",
+      "تنمّي شجرة متصلة واحدة طوال العملية",
+    ],
+    disadvantages: [
+      "تتطلب رسمًا بيانيًا متصلًا لوجود شجرة ممتدة",
+      "محاسبة طابور الأولوية تضيف عبئًا",
+      "قد تكون كروسكال أبسط للرسوم البيانية المتناثرة/قوائم الحواف",
+      "لا تنطبق مباشرة على الرسوم البيانية الموجهة",
+    ],
+    commonMistakes: [
+      "إضافة حافة إلى رأس موجود بالفعل في الشجرة (مما يُنشئ دورة).",
+      "عدم تحديث أرخص وصلة عند ظهور حافة أقصر.",
+      "استخدامها على رسم بياني غير متصل وتوقع شجرة ممتدة.",
+      "الخلط بين حواف الشجرة الممتدة الصغرى وحواف أقصر المسار (فهما مختلفتان).",
+    ],
+    interviewQuestions: [
+      "اذكر خاصية القطع واستخدمها لتبرير صحة خوارزمية برايم.",
+      "قارن بين برايم وكروسكال — متى يُفضَّل كل منهما؟",
+      "لماذا لا تكون حافة الشجرة الممتدة الصغرى بالضرورة على أي أقصر مسار؟",
+      "كيف يغيّر اختيار هيكل البيانات تعقيد خوارزمية برايم؟",
+    ],
+    summary:
+      "تنمّي خوارزمية برايم شجرة ممتدة صغرى من رأس بداية بإضافة أرخص حافة إلى رأس جديد مرارًا، مبرَّرة بخاصية القطع. باستخدام كومة تعمل بزمن O(E log V)، منتجةً شجرة أقل وزن إجمالي تصل كل الرؤوس.",
+    quiz: [
+      { question: "تبني خوارزمية برايم شجرة ممتدة صغرى عبر…", options: ["ترتيب كل الحواف أولًا", "تنمية شجرة، بإضافة أرخص حافة عابرة في كل خطوة", "إجراء BFS", "إزالة الحواف الثقيلة"], answer: 1, explanation: "توسّع جشعًا شجرة متصلة واحدة عبر أرخص حافة إلى رأس جديد." },
+      { question: "تنبع صحة خوارزمية برايم من…", options: ["مبدأ برج الحمام", "خاصية القطع", "مبرهنة الأستاذ", "مصافحة اليد"], answer: 1, explanation: "الحافة الأصغر وزنًا العابرة لأي قطع آمنة للإضافة إلى شجرة ممتدة صغرى." },
+      { question: "باستخدام كومة ثنائية، تعمل خوارزمية برايم بزمن…", options: ["O(V²)", "O(E log V)", "O(VE)", "O(2ⁿ)"], answer: 1, explanation: "قد تستدعي كل حافة عملية كومة بتكلفة O(log V)." },
+      { question: "تتطلب خوارزمية برايم أن يكون الرسم البياني…", options: ["موجهًا", "متصلًا وغير موجه", "شجرة بالفعل", "غير موزون"], answer: 1, explanation: "توجد شجرة ممتدة فقط للرسوم البيانية الموزونة المتصلة غير الموجهة." },
+      { question: "حافة الشجرة الممتدة الصغرى…", options: ["دومًا على أقصر مسار", "ليست بالضرورة على أي أقصر مسار", "أثقل حافة", "حافة خلفية"], answer: 1, explanation: "تُصغِّر الأشجار الممتدة الصغرى الوزن الإجمالي، لا مسافات المسار الزوجية." },
     ],
   },
   inputFields: [

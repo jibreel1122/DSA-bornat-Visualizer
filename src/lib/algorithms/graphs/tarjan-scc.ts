@@ -26,7 +26,7 @@ function generate(input: Input): Step<GraphFrame>[] {
   const annotations = () =>
     Object.fromEntries(nodes.map((n) => [n, index[n] === undefined ? "–" : `${index[n]}/${low[n]}`]));
 
-  const snap = (nodeStates: Record<string, CellState>, edgeStates: Record<string, CellState>, description: string, codeLine: number): void => {
+  const snap = (nodeStates: Record<string, CellState>, edgeStates: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string): void => {
     steps.push({
       frame: {
         nodes: nodes.map((id) => ({ id, label: id, ...layout[id] })),
@@ -42,6 +42,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         note: `Tarjan: node label = index/lowlink; an SCC root has index == lowlink`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { visits, sccs: sccCount },
     });
@@ -56,18 +57,18 @@ function generate(input: Input): Step<GraphFrame>[] {
     stack.push(v);
     onStack[v] = true;
     visits++;
-    snap({ [v]: "active" }, {}, `Visit ${v}: assign index=${index[v]}, lowlink=${low[v]}, push onto the stack.`, 2);
+    snap({ [v]: "active" }, {}, `Visit ${v}: assign index=${index[v]}, lowlink=${low[v]}, push onto the stack.`, 2, `زر ${v}: عيّن index=${index[v]}، lowlink=${low[v]}، وادفعها إلى المكدس.`);
 
     for (const w of adj.get(v)!) {
       const ek = `${v}->${w}`;
       if (index[w] === undefined) {
-        snap({ [v]: "active", [w]: "compare" }, { [ek]: "active" }, `${v}→${w}: ${w} unvisited, recurse into it.`, 4);
+        snap({ [v]: "active", [w]: "compare" }, { [ek]: "active" }, `${v}→${w}: ${w} unvisited, recurse into it.`, 4, `${v}→${w}: ${w} غير مُزارة، انتقل إليها عوديًا.`);
         strongconnect(w);
         low[v] = Math.min(low[v], low[w]);
-        snap({ [v]: "active", [w]: "visited" }, { [ek]: "compare" }, `Back at ${v}: lowlink[${v}] = min(itself, lowlink[${w}]) = ${low[v]}.`, 5);
+        snap({ [v]: "active", [w]: "visited" }, { [ek]: "compare" }, `Back at ${v}: lowlink[${v}] = min(itself, lowlink[${w}]) = ${low[v]}.`, 5, `عودة إلى ${v}: lowlink[${v}] = min(نفسه، lowlink[${w}]) = ${low[v]}.`);
       } else if (onStack[w]) {
         low[v] = Math.min(low[v], index[w]);
-        snap({ [v]: "active", [w]: "special" }, { [ek]: "swap" }, `${v}→${w}: ${w} is on the stack (back/cross edge) → lowlink[${v}] = min(itself, index[${w}]) = ${low[v]}.`, 6);
+        snap({ [v]: "active", [w]: "special" }, { [ek]: "swap" }, `${v}→${w}: ${w} is on the stack (back/cross edge) → lowlink[${v}] = min(itself, index[${w}]) = ${low[v]}.`, 6, `${v}→${w}: ${w} على المكدس (حافة خلفية/عابرة) → lowlink[${v}] = min(نفسه، index[${w}]) = ${low[v]}.`);
       }
     }
 
@@ -84,14 +85,14 @@ function generate(input: Input): Step<GraphFrame>[] {
       } while (w !== v);
       sccCount++;
       const st: Record<string, CellState> = { ...sccColors };
-      snap(st, {}, `${v} is an SCC root (index == lowlink == ${index[v]}). Pop the stack to form SCC #${sccCount}: {${members.join(", ")}}.`, 6);
+      snap(st, {}, `${v} is an SCC root (index == lowlink == ${index[v]}). Pop the stack to form SCC #${sccCount}: {${members.join(", ")}}.`, 6, `${v} هي جذر مكوّن متصل بقوة (index == lowlink == ${index[v]}). أخرج من المكدس لتشكيل المكوّن رقم ${sccCount}: {${members.join(", ")}}.`);
     }
   };
 
-  snap({}, {}, `Tarjan's algorithm finds strongly connected components in one DFS using discovery indices and "lowlink" values.`, 0);
+  snap({}, {}, `Tarjan's algorithm finds strongly connected components in one DFS using discovery indices and "lowlink" values.`, 0, `تجد خوارزمية تارجان المكوّنات المتصلة بقوة في اجتياز DFS واحد باستخدام فهارس الاكتشاف وقيم "lowlink".`);
   for (const v of nodes) if (index[v] === undefined) strongconnect(v);
 
-  snap({ ...sccColors }, {}, `Done. ${sccCount} strongly connected component(s) found — nodes sharing a color can all reach each other.`, 8);
+  snap({ ...sccColors }, {}, `Done. ${sccCount} strongly connected component(s) found — nodes sharing a color can all reach each other.`, 8, `اكتمل. عُثر على ${sccCount} مكوّن متصل بقوة — العقد المتشاركة في اللون يمكن أن يصل بعضها إلى بعض.`);
   return steps;
 }
 
@@ -111,10 +112,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "tarjan-scc",
   title: "Tarjan's Strongly Connected Components",
+  titleAr: "مكوّنات تارجان المتصلة بقوة (Tarjan)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "SCC", "DFS", "lowlink"],
+  tagsAr: ["رسم بياني", "مكوّن متصل بقوة", "بحث بالعمق أولًا", "lowlink"],
   summary: "Finds all strongly connected components of a directed graph in a single DFS using discovery indices and lowlink values.",
+  summaryAr: "يجد كل المكوّنات المتصلة بقوة في رسم بياني موجه ضمن اجتياز DFS واحد باستخدام فهارس الاكتشاف وقيم lowlink.",
   renderer: "graph",
   pseudocode: [
     "procedure strongconnect(v)",
@@ -338,6 +342,63 @@ Tarjan's algorithm (1972) finds all SCCs in a single depth-first search — an e
       { question: "A vertex v is an SCC root when…", options: ["index[v] == 0", "lowlink[v] == index[v]", "it has no edges", "it is on the stack"], answer: 1, explanation: "Equal lowlink and index means nothing in its subtree reaches an earlier stacked vertex." },
       { question: "For an edge to an on-stack, already-visited w, you update lowlink[v] with…", options: ["lowlink[w]", "index[w]", "0", "index[v]"], answer: 1, explanation: "Cross/back edges use the discovery index of w, not its lowlink." },
       { question: "The time complexity is…", options: ["O(V·E)", "O(V + E)", "O(V²)", "O(E log V)"], answer: 1, explanation: "Each vertex and edge is processed exactly once." },
+    ],
+  },
+  contentAr: {
+    overview: `المكوّن المتصل بقوة (SCC) في رسم بياني موجه هو مجموعة عظمى من الرؤوس يستطيع فيها كل رأس الوصول إلى كل رأس آخر. طيّ كل مكوّن متصل بقوة إلى عقدة واحدة يحوّل أي رسم بياني موجه إلى رسم بياني موجه غير دوري (هو "تكثيفه")، ولهذا تهم المكوّنات المتصلة بقوة في تحليل التبعيات، واكتشاف التعثر، ومسألة 2-SAT.
+
+تجد خوارزمية تارجان (1972) كل المكوّنات المتصلة بقوة في اجتياز بحث بالعمق أولًا واحد — تحسين أنيق على طريقة كوساراجو ذات المرحلتين. أثناء زيارة DFS لكل رأس، تُسند إليه رقمين: index (ترتيب الاكتشاف) وlowlink (أصغر فهرس يمكن الوصول إليه من شجرة DFS الفرعية لذلك الرأس، بما في ذلك عبر حافة خلفية أو عابرة واحدة إلى رأس ما زال على المكدس). تُدفع الرؤوس إلى مكدس مساعد عند اكتشافها. عندما يساوي lowlink لرأس ما فهرسه الخاص، يكون "جذر" مكوّن متصل بقوة، وكل ما فوقه على المكدس — نزولًا إليه وشاملًا له — يشكّل مكوّنًا واحدًا. ولأن كل رأس وحافة يُعالَجان مرة واحدة، تعمل الخوارزمية بأكملها بزمن O(V + E).`,
+    howItWorks: [
+      "شغّل DFS؛ عند زيارة v لأول مرة، اجعل index[v] = lowlink[v] بقيمة العدّاد التالية وادفع v إلى مكدس.",
+      "لكل حافة v→w: إن كانت w غير مُزارة، انتقل إليها عوديًا ثم lowlink[v] = min(lowlink[v], lowlink[w]).",
+      "إن كانت w مُزارة بالفعل وما زالت على المكدس، lowlink[v] = min(lowlink[v], index[w]).",
+      "بعد استكشاف حواف v، إن كان lowlink[v] == index[v]، فـv جذر مكوّن متصل بقوة.",
+      "أخرج من المكدس نزولًا إلى v؛ تلك الرؤوس تشكّل مكوّنًا متصلًا بقوة واحدًا.",
+    ],
+    complexity: {
+      time: { best: "O(V + E)", average: "O(V + E)", worst: "O(V + E)" },
+      space: "O(V)",
+      notes: "اجتياز DFS واحد يلمس كل رأس وحافة مرة واحدة. يستخدم المكدس المساعد ومصفوفتا index وlowlink مساحة O(V). أسرع عمليًا من اجتيازي DFS في خوارزمية كوساراجو.",
+    },
+    applications: [
+      "تكثيف رسم بياني إلى رسم بياني موجه غير دوري من المكوّنات",
+      "حل مسألة 2-SAT (مكوّنات متصلة بقوة في رسم بياني الاستلزام)",
+      "اكتشاف التعثر والتبعيات الدورية",
+      "تحليل بنية روابط الويب وقابلية الوصول الاجتماعية",
+    ],
+    advantages: [
+      "اجتياز DFS واحد — لا حاجة لعكس الرسم البياني",
+      "زمن أمثل O(V + E)",
+      "تُنتج المكوّنات المتصلة بقوة بترتيب طوبولوجي عكسي للتكثيف",
+      "صياغة lowlink أنيقة ومكتفية بذاتها",
+    ],
+    disadvantages: [
+      "قد يفيض DFS العودي المكدس في الرسوم البيانية العميقة",
+      "ثابت lowlink دقيق وعرضة للخطأ",
+      "فقط للرسوم البيانية الموجهة (المكوّنات المتصلة بقوة غير معرَّفة لغيرها)",
+      "أصعب قليلًا في التفكير مقارنة بكوساراجو",
+    ],
+    commonMistakes: [
+      "تحديث lowlink بـ lowlink[w] للحواف العابرة/الخلفية بدلًا من index[w].",
+      "التحديث عبر index[w] فقط لحواف الشجرة (يجب استخدام lowlink[w]).",
+      "نسيان فحص onStack، مستخدمًا خطأً حوافًا إلى مكوّنات متصلة بقوة انتهت بالفعل.",
+      "عدم معاملة كل رأس غير مُزار كجذر DFS جديد.",
+    ],
+    interviewQuestions: [
+      "ما الفرق بين استخدام index[w] وlowlink[w] عند تحديث lowlink[v]؟",
+      "لماذا يحدد lowlink[v] == index[v] جذر مكوّن متصل بقوة؟",
+      "كيف تقارن خوارزمية تارجان بخوارزمية كوساراجو؟",
+      "ما تكثيف الرسم البياني وكيف تشكّله المكوّنات المتصلة بقوة؟",
+      "كيف تُستخدم المكوّنات المتصلة بقوة لحل 2-SAT؟",
+    ],
+    summary:
+      "تجد خوارزمية تارجان كل المكوّنات المتصلة بقوة في رسم بياني موجه باجتياز DFS واحد بزمن O(V + E)، بتتبع فهرس اكتشاف كل رأس وlowlink له؛ وعندما يساوي lowlink الفهرس، يُخرَج من المكدس لإصدار مكوّن متصل بقوة واحد. إنها الطريقة القياسية أحادية المرور للمكوّنات المتصلة بقوة، وأساس 2-SAT وتحليل التبعيات.",
+    quiz: [
+      { question: "المكوّن المتصل بقوة هو…", options: ["شجرة", "مجموعة عظمى يصل فيها كل رأس إلى كل رأس آخر", "أقصر مسار", "حافة واحدة"], answer: 1, explanation: "ضمن مكوّن متصل بقوة، كل الرؤوس يمكن الوصول بينها بشكل متبادل." },
+      { question: "كم اجتياز DFS تستخدم خوارزمية تارجان؟", options: ["واحد", "اثنان", "ثلاثة", "V اجتيازات"], answer: 0, explanation: "تحدد كل المكوّنات المتصلة بقوة في اجتياز DFS واحد." },
+      { question: "يكون الرأس v جذر مكوّن متصل بقوة عندما…", options: ["index[v] == 0", "lowlink[v] == index[v]", "ليس له حواف", "يكون على المكدس"], answer: 1, explanation: "تساوي lowlink مع index يعني أن لا شيء في شجرته الفرعية يصل إلى رأس سابق على المكدس." },
+      { question: "لحافة إلى w مُزارة بالفعل وعلى المكدس، تُحدِّث lowlink[v] بـ…", options: ["lowlink[w]", "index[w]", "0", "index[v]"], answer: 1, explanation: "الحواف الخلفية/العابرة تستخدم فهرس اكتشاف w، لا lowlink الخاص بها." },
+      { question: "التعقيد الزمني هو…", options: ["O(V·E)", "O(V + E)", "O(V²)", "O(E log V)"], answer: 1, explanation: "تتم معالجة كل رأس وحافة مرة واحدة بالضبط." },
     ],
   },
   inputFields: [

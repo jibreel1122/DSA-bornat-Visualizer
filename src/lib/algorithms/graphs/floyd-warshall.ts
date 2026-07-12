@@ -32,6 +32,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     done = false,
+    descriptionAr?: string,
   ): void => {
     const cells = d.map((row, i) =>
       row.map((val, j) => {
@@ -52,15 +53,16 @@ function generate(input: Input): Step<TableFrame>[] {
         note: `dist[i][j] = shortest path from i to j using intermediates ≤ k`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { relaxations, updates },
     });
   };
 
-  frame(null, [], null, `Initialize the distance matrix: 0 on the diagonal, edge weights where an edge exists, ∞ otherwise.`, 1);
+  frame(null, [], null, `Initialize the distance matrix: 0 on the diagonal, edge weights where an edge exists, ∞ otherwise.`, 1, false, `هيّئ مصفوفة المسافات: 0 على القطر، وأوزان الحواف حيث توجد حافة، و∞ في غير ذلك.`);
 
   for (let k = 0; k < n; k++) {
-    frame(null, [], k, `Allow vertex ${nodes[k]} as an intermediate. Can any path i→…→j get shorter by routing through ${nodes[k]}?`, 3);
+    frame(null, [], k, `Allow vertex ${nodes[k]} as an intermediate. Can any path i→…→j get shorter by routing through ${nodes[k]}?`, 3, false, `اسمح باستخدام الرأس ${nodes[k]} كوسيط. هل يمكن لأي مسار i→…→j أن يقصر بالمرور عبر ${nodes[k]}؟`);
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (i === k || j === k || i === j) continue;
@@ -75,6 +77,8 @@ function generate(input: Input): Step<TableFrame>[] {
             k,
             `${nodes[i]}→${nodes[j]}: via ${nodes[k]} costs ${d[i][k]}+${d[k][j]}=${d[i][j]} < ${show(oldV)}. Update.`,
             4,
+            false,
+            `${nodes[i]}→${nodes[j]}: عبر ${nodes[k]} تكلف ${d[i][k]}+${d[k][j]}=${d[i][j]} < ${show(oldV)}. حدّث.`,
           );
         }
       }
@@ -84,9 +88,9 @@ function generate(input: Input): Step<TableFrame>[] {
   // negative cycle check: any negative diagonal
   const neg = d.some((row, i) => row[i] < 0);
   if (neg) {
-    frame(null, [], null, `A diagonal entry is negative — the graph contains a negative-weight cycle, so shortest paths are undefined.`, 6);
+    frame(null, [], null, `A diagonal entry is negative — the graph contains a negative-weight cycle, so shortest paths are undefined.`, 6, false, `مدخلة على القطر سالبة — يحتوي الرسم البياني على دورة سالبة الوزن، فأقصر المسارات غير مُعرَّفة.`);
   } else {
-    frame(null, [], null, `Done. Every cell now holds the shortest distance between its row and column vertices.`, 6, true);
+    frame(null, [], null, `Done. Every cell now holds the shortest distance between its row and column vertices.`, 6, true, `اكتمل. تحمل كل خلية الآن أقصر مسافة بين رأسي صفها وعمودها.`);
   }
   return steps;
 }
@@ -107,10 +111,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "floyd-warshall",
   title: "Floyd-Warshall (All-Pairs)",
+  titleAr: "خوارزمية فلويد-واريشال (كل الأزواج)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "all-pairs shortest path", "dynamic programming", "matrix"],
+  tagsAr: ["رسم بياني", "أقصر مسار بين كل الأزواج", "البرمجة الديناميكية", "مصفوفة"],
   summary: "Computes shortest paths between every pair of vertices by progressively allowing more intermediate vertices.",
+  summaryAr: "يحسب أقصر المسارات بين كل زوج من الرؤوس، بالسماح تدريجيًا بمزيد من الرؤوس الوسيطة.",
   renderer: "table",
   pseudocode: [
     "procedure floydWarshall(dist)",
@@ -283,6 +290,63 @@ The algorithm is a beautiful dynamic program over one question: "which vertices 
       { question: "In the triple loop, which variable must be outermost?", options: ["i (source)", "j (target)", "k (intermediate)", "It doesn't matter"], answer: 2, explanation: "The intermediate vertex k must be outermost for correctness." },
       { question: "The update rule improves dist[i][j] when…", options: ["dist[i][k] + dist[k][j] < dist[i][j]", "dist[i][j] < dist[i][k]", "k == j", "dist[i][j] is 0"], answer: 0, explanation: "Routing i→k→j may beat the current best i→j path." },
       { question: "A negative-weight cycle is revealed by…", options: ["A zero row", "A negative diagonal entry dist[i][i]", "An infinite cell", "A full matrix"], answer: 1, explanation: "If a vertex can reach itself with negative total cost, a negative cycle exists." },
+    ],
+  },
+  contentAr: {
+    overview: `تحل خوارزمية فلويد-واريشال مسألة أقصر المسار بين كل الأزواج: تجد أقصر مسافة بين كل زوج من الرؤوس في رسم بياني موجه موزون، دفعة واحدة، في حلقة ثلاثية متداخلة واحدة. تتعامل بأناقة مع أوزان الحواف السالبة ويمكنها اكتشاف الدورات السالبة (رأس ينتهي بمسافة سالبة إلى نفسه).
+
+الخوارزمية برنامج ديناميكي جميل حول سؤال واحد: "أي الرؤوس يُسمح لك بالمرور عبرها؟" ابدأ بالحواف المباشرة فقط. ثم، رأسًا واحدًا k في كل مرة، اسأل ما إذا كان توجيه مسار i → j عبر k أقصر من أفضل مسار وُجد حتى الآن — أي ما إذا كان dist[i][k] + dist[k][j] يتفوق على dist[i][j]. بعد أن يأخذ كل رأس دوره كوسيط مسموح به، تحمل dist[i][j] المسافة الأقصر الحقيقية. عرض المصفوفة يجعل هذا واضحًا: في الخطوة k، يكون الصف والعمود k هما "المحور"، وقد تتحسن كل خلية أخرى بدمج مدخلات صف وعمود المحور.`,
+    howItWorks: [
+      "ابنِ مصفوفة n×n: 0 على القطر، وأوزان الحواف حيث توجد حواف، و∞ في غير ذلك.",
+      "لكل رأس وسيط k (المحور)، اعتبر كل زوج (i, j).",
+      "إذا كان dist[i][k] + dist[k][j] < dist[i][j]، فالمسار عبر k أقصر — حدّث dist[i][j].",
+      "بعد معالجة كل المحاور الـ n، تحمل كل خلية أقصر مسافة من i إلى j.",
+      "إذا أصبحت أي مدخلة على القطر سالبة، فالرسم البياني يحتوي على دورة سالبة الوزن.",
+    ],
+    complexity: {
+      time: { best: "O(V³)", average: "O(V³)", worst: "O(V³)" },
+      space: "O(V²)",
+      notes: "ثلاث حلقات متداخلة على V رأس تعطي زمن O(V³) ومساحة O(V²) للمصفوفة. تنافسية للرسوم البيانية الكثيفة؛ للرسوم البيانية المتناثرة، تشغيل دايكسترا من كل مصدر (أو خوارزمية جونسون) قد يكون أسرع.",
+    },
+    applications: [
+      "أقصر المسارات بين كل الأزواج في الرسوم البيانية الكثيفة",
+      "حساب الإغلاق العابر لرسم بياني (قابلية الوصول)",
+      "جداول توجيه الشبكات ومصفوفات الكمون",
+      "إيجاد قطر الرسم البياني واكتشاف الدورات السالبة",
+    ],
+    advantages: [
+      "تحسب أقصر مسار لكل زوج في تشغيلة واحدة",
+      "تتعامل مع أوزان الحواف السالبة",
+      "حلقة ثلاثية بسيطة للغاية — سهلة التنفيذ",
+      "تكتشف الدورات السالبة عبر مدخلات القطر السالبة",
+    ],
+    disadvantages: [
+      "O(V³) مكلفة للرسوم البيانية الكبيرة",
+      "ذاكرة O(V²) للمصفوفة الكاملة",
+      "مبالغة عندما يكون مطلوبًا مصدر واحد فقط",
+      "أبطأ من تكرار دايكسترا على الرسوم البيانية المتناثرة",
+    ],
+    commonMistakes: [
+      "ترتيب الحلقات خطأً — يجب أن تكون k الحلقة الخارجية.",
+      "الجمع مع ∞ والفيضان (احترس من الوسطاء غير القابلين للوصول).",
+      "نسيان جعل القطر 0 في البداية.",
+      "افتراض أنها تعمل مع الدورات السالبة (تكتشفها، لكن لا يمكنها إعطاء مسارات محدودة عبرها).",
+    ],
+    interviewQuestions: [
+      "لماذا يجب أن تكون حلقة الرأس الوسيط (k) الخارجية؟",
+      "كيف تكتشف فلويد-واريشال دورة سالبة الوزن؟",
+      "كيف تعيد بناء المسار الأقصر الفعلي، لا المسافة فقط؟",
+      "متى يكون تشغيل دايكسترا من كل رأس أفضل من فلويد-واريشال؟",
+      "كيف يكون الإغلاق العابر حالة خاصة من هذه الخوارزمية؟",
+    ],
+    summary:
+      "تجد فلويد-واريشال أقصر مسارات كل الأزواج بزمن O(V³) ومساحة O(V²) بجعل كل رأس، بدوره، يعمل كوسيط وتخفيف كل زوج عبره. تتعامل مع الحواف السالبة وتكتشف الدورات السالبة، ومثالية للرسوم البيانية الكثيفة.",
+    quiz: [
+      { question: "أي مسألة تحلها فلويد-واريشال؟", options: ["أقصر مسار من مصدر واحد", "أقصر مسار بين كل الأزواج", "الشجرة الممتدة الصغرى", "الترتيب الطوبولوجي"], answer: 1, explanation: "تحسب أقصر المسافات بين كل زوج من الرؤوس." },
+      { question: "تعقيدها الزمني هو…", options: ["O(V²)", "O(V·E)", "O(V³)", "O(E log V)"], answer: 2, explanation: "ثلاث حلقات متداخلة على V رأس تعطي O(V³)." },
+      { question: "في الحلقة الثلاثية، أي متغير يجب أن يكون الحلقة الخارجية؟", options: ["i (المصدر)", "j (الهدف)", "k (الوسيط)", "لا يهم"], answer: 2, explanation: "يجب أن يكون الرأس الوسيط k الحلقة الخارجية كي تكون النتيجة صحيحة." },
+      { question: "تُحسِّن قاعدة التحديث dist[i][j] عندما…", options: ["dist[i][k] + dist[k][j] < dist[i][j]", "dist[i][j] < dist[i][k]", "k == j", "dist[i][j] يساوي 0"], answer: 0, explanation: "التوجيه i→k→j قد يتفوق على أفضل مسار i→j حالي." },
+      { question: "تُكشَف الدورة سالبة الوزن عبر…", options: ["صف بأصفار", "مدخلة سالبة على القطر dist[i][i]", "خلية لانهائية", "مصفوفة ممتلئة"], answer: 1, explanation: "إذا استطاع رأس الوصول إلى نفسه بتكلفة إجمالية سالبة، توجد دورة سالبة." },
     ],
   },
   inputFields: [

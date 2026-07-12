@@ -38,43 +38,47 @@ function generate(input: Input): Step<GraphFrame>[] {
     values: sorted.map((e, i) => `${e.from}${e.to}:${e.weight}${i === activeIdx ? "◄" : ""}`),
   });
 
-  const snap = (nodeStates: Record<string, CellState>, es: Record<string, CellState>, activeIdx: number, description: string, codeLine: number) => {
+  const snap = (nodeStates: Record<string, CellState>, es: Record<string, CellState>, activeIdx: number, description: string, codeLine: number, descriptionAr?: string) => {
     steps.push({
       frame: { ...base(), nodeStates, edgeStates: es, aux: [sortedAux(activeIdx), { label: "MST weight", values: [totalWeight] }] },
       description,
+      descriptionAr,
       codeLine,
       counters: { unions, edges: mstEdges.size },
     });
   };
 
-  snap({}, edgeStatesFor(), -1, `Kruskal's MST: sort edges by weight, then add each edge that doesn't form a cycle.`, 0);
-  snap({}, edgeStatesFor(), -1, `Edges sorted ascending by weight.`, 1);
+  snap({}, edgeStatesFor(), -1, `Kruskal's MST: sort edges by weight, then add each edge that doesn't form a cycle.`, 0, `شجرة كروسكال الممتدة الصغرى: رتّب الحواف حسب الوزن، ثم أضف كل حافة لا تُشكِّل دورة.`);
+  snap({}, edgeStatesFor(), -1, `Edges sorted ascending by weight.`, 1, `رُتِّبت الحواف تصاعديًا حسب الوزن.`);
 
   for (let i = 0; i < sorted.length && mstEdges.size < nodes.length - 1; i++) {
     const e = sorted[i];
     const active = { [`${e.from}->${e.to}`]: "compare" as CellState, [`${e.to}->${e.from}`]: "compare" as CellState };
-    snap({ [e.from]: "active", [e.to]: "active" }, edgeStatesFor(active), i, `Consider edge ${e.from}–${e.to} (weight ${e.weight}). Same set?`, 2);
+    snap({ [e.from]: "active", [e.to]: "active" }, edgeStatesFor(active), i, `Consider edge ${e.from}–${e.to} (weight ${e.weight}). Same set?`, 2, `انظر إلى الحافة ${e.from}–${e.to} (الوزن ${e.weight}). هل هما في المجموعة نفسها؟`);
     if (find(e.from) !== find(e.to)) {
       union(e.from, e.to);
       unions++;
       mstEdges.add(`${e.from}->${e.to}`);
       totalWeight += e.weight;
-      snap({ [e.from]: "sorted", [e.to]: "sorted" }, edgeStatesFor(), i, `Different sets — add it. Union ${e.from} and ${e.to}. MST weight ${totalWeight}.`, 3);
+      snap({ [e.from]: "sorted", [e.to]: "sorted" }, edgeStatesFor(), i, `Different sets — add it. Union ${e.from} and ${e.to}. MST weight ${totalWeight}.`, 3, `مجموعتان مختلفتان — أضفها. وحّد ${e.from} و${e.to}. وزن الشجرة الممتدة الصغرى ${totalWeight}.`);
     } else {
-      snap({ [e.from]: "discarded", [e.to]: "discarded" }, edgeStatesFor({ [`${e.from}->${e.to}`]: "discarded", [`${e.to}->${e.from}`]: "discarded" }), i, `Same set — adding it would form a cycle. Skip.`, 4);
+      snap({ [e.from]: "discarded", [e.to]: "discarded" }, edgeStatesFor({ [`${e.from}->${e.to}`]: "discarded", [`${e.to}->${e.from}`]: "discarded" }), i, `Same set — adding it would form a cycle. Skip.`, 4, `نفس المجموعة — إضافتها ستُشكِّل دورة. تخطَّها.`);
     }
   }
-  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStatesFor(), -1, `MST complete with ${mstEdges.size} edges, total weight ${totalWeight}.`, 5);
+  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStatesFor(), -1, `MST complete with ${mstEdges.size} edges, total weight ${totalWeight}.`, 5, `اكتملت الشجرة الممتدة الصغرى بـ ${mstEdges.size} حافة، الوزن الإجمالي ${totalWeight}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "kruskal",
   title: "Kruskal's MST",
+  titleAr: "شجرة كروسكال الممتدة الصغرى (Kruskal)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["minimum spanning tree", "greedy", "union-find", "weighted"],
+  tagsAr: ["شجرة ممتدة صغرى", "جشِع", "اتحاد-بحث", "موزون"],
   summary: "Sorts all edges by weight and adds each one that doesn't create a cycle, using union-find to detect cycles.",
+  summaryAr: "يرتّب كل الحواف حسب الوزن ويضيف كل حافة لا تُنشئ دورة، مستخدمًا هيكل اتحاد-بحث لاكتشاف الدورات.",
   renderer: "graph",
   pseudocode: [
     "procedure Kruskal(G)",
@@ -270,6 +274,62 @@ The key to doing this efficiently is the union-find (disjoint-set) data structur
       { question: "Kruskal's time complexity is dominated by…", options: ["Union-find", "Sorting the edges, O(E log E)", "BFS", "Matrix multiplication"], answer: 1, explanation: "The near-constant union-find is dwarfed by the O(E log E) sort." },
       { question: "An edge is skipped when its endpoints…", options: ["Have different weights", "Are in the same connected component", "Are leaves", "Are the start node"], answer: 1, explanation: "Same component means adding the edge would create a cycle." },
       { question: "Kruskal's is especially good for…", options: ["Dense adjacency matrices", "Sparse graphs given as edge lists", "Directed graphs", "Unweighted graphs"], answer: 1, explanation: "Sorting an edge list and using union-find fits sparse inputs naturally." },
+    ],
+  },
+  contentAr: {
+    overview: `تجد خوارزمية كروسكال شجرة ممتدة صغرى بأخذ نظرة عامة تتمحور حول الحواف. تُرتّب كل حافة حسب الوزن ثم تمر عليها من الأرخص إلى الأغلى، مضيفةً حافة إلى الشجرة كلما كان طرفاها في مكوّنين متصلين مختلفين. وإذا كان الطرفان في المكوّن نفسه بالفعل، فإضافة الحافة ستُنشئ دورة، فتُتخطى.
+
+مفتاح القيام بذلك بكفاءة هو هيكل بيانات اتحاد-بحث (المجموعات المنفصلة)، الذي يجيب على سؤال "هل هذان الرأسان متصلان بالفعل؟" ويدمج المكوّنات في زمن مطفأ شبه ثابت. الترتيب يهيمن على التكلفة، معطيًا O(E log E) إجمالًا. خوارزمية كروسكال طبيعية بوجه خاص عندما يُعطى الرسم البياني كقائمة حواف ويكون متناثرًا.`,
+    howItWorks: [
+      "رتّب كل الحواف بترتيب غير تنازلي حسب الوزن.",
+      "هيّئ كل رأس كمجموعة أحادية خاصة به (اتحاد-بحث).",
+      "امسح الحواف من الأرخص أولًا؛ لكل حافة، افحص إن كان طرفاها في المجموعة نفسها.",
+      "إن كانا في مجموعتين مختلفتين، أضف الحافة إلى الشجرة الممتدة الصغرى ووحّد المجموعتين.",
+      "إن كانا في المجموعة نفسها، تخطَّها (ستُشكِّل دورة). توقف بعد V−1 حافة.",
+    ],
+    complexity: {
+      time: { best: "O(E log E)", average: "O(E log E)", worst: "O(E log E)" },
+      space: "O(V + E)",
+      notes: "ترتيب الحواف يكلّف O(E log E) = O(E log V)، وهو ما يهيمن على عمليات اتحاد-بحث شبه الثابتة. اتحاد-بحث مع ضغط المسار والاتحاد حسب الرتبة يعطي عمليات مجموعة مطفأة قريبة من O(1).",
+    },
+    applications: [
+      "تصميم شبكات أقل تكلفة من قائمة حواف",
+      "التجميع (بالربط الفردي) بإزالة أثقل حواف الشجرة الممتدة الصغرى",
+      "تجزئة الصور وتوليد المتاهات",
+      "خوارزميات التقريب المبنية على الأشجار الممتدة الصغرى",
+    ],
+    advantages: [
+      "استراتيجية جشِعة عامة وبسيطة",
+      "ممتازة للرسوم البيانية المتناثرة المُعطاة كقوائم حواف",
+      "اتحاد-بحث يجعل فحوصات الدورة شبه O(1)",
+      "تتعامل طبيعيًا مع الرسوم البيانية غير المتصلة ابتداءً (تبني غابة)",
+    ],
+    disadvantages: [
+      "ترتيب كل الحواف قد يكون مكلفًا في الرسوم البيانية الكثيفة (قد تفوز O(V²) لبرايم)",
+      "تتطلب هيكل اتحاد-بحث",
+      "أقل طبيعية عندما يُعطى الرسم البياني كمصفوفة تجاور",
+      "تحتاج كل الحواف متاحة مسبقًا",
+    ],
+    commonMistakes: [
+      "نسيان ضغط المسار / الاتحاد حسب الرتبة، مما يضر بالأداء.",
+      "إضافة حافة طرفاها متصلان بالفعل (مما يُنشئ دورة).",
+      "عدم التوقف بعد اختيار V−1 حافة.",
+      "الخلط بين الشجرة الممتدة الصغرى وأشجار أقصر المسار.",
+    ],
+    interviewQuestions: [
+      "كيف يكتشف اتحاد-بحث أن حافة ستُشكِّل دورة؟",
+      "لماذا تهيمن خطوة ترتيب الحواف على تكلفة خوارزمية كروسكال؟",
+      "قارن بين كروسكال وبرايم للرسوم البيانية المتناثرة مقابل الكثيفة.",
+      "كيف يُسرِّع ضغط المسار والاتحاد حسب الرتبة هيكل اتحاد-بحث؟",
+    ],
+    summary:
+      "ترتّب خوارزمية كروسكال الحواف حسب الوزن وتضيف جشعًا كل حافة يقع طرفاها في مكوّنين مختلفين (يُفحص عبر اتحاد-بحث)، متخطيةً الحواف المُشكِّلة للدورات. تعمل بزمن O(E log E) ومثالية للرسوم البيانية المتناثرة المُعطاة كقوائم حواف.",
+    quiz: [
+      { question: "بأي ترتيب تُعالج خوارزمية كروسكال الحواف؟", options: ["عشوائي", "الأرخص وزنًا أولًا", "حسب تسمية الرأس", "الأغلى أولًا"], answer: 1, explanation: "تُرتِّب الحواف تصاعديًا وتضيفها جشعًا." },
+      { question: "أي هيكل بيانات يكتشف الدورات في خوارزمية كروسكال؟", options: ["مكدس", "اتحاد-بحث (مجموعة منفصلة)", "طابور أولوية", "خريطة تجزئة"], answer: 1, explanation: "يخبر اتحاد-بحث ما إذا كان رأسان متصلين بالفعل." },
+      { question: "يهيمن على تعقيد خوارزمية كروسكال الزمني…", options: ["اتحاد-بحث", "ترتيب الحواف، O(E log E)", "BFS", "ضرب المصفوفات"], answer: 1, explanation: "تتضاءل عمليات اتحاد-بحث شبه الثابتة أمام ترتيب O(E log E)." },
+      { question: "تُتخطى الحافة عندما يكون طرفاها…", options: ["بأوزان مختلفة", "في المكوّن المتصل نفسه", "أوراقًا", "عقدة البداية"], answer: 1, explanation: "المكوّن نفسه يعني أن إضافة الحافة ستُنشئ دورة." },
+      { question: "خوارزمية كروسكال جيدة بوجه خاص من أجل…", options: ["مصفوفات تجاور كثيفة", "رسوم بيانية متناثرة مُعطاة كقوائم حواف", "رسوم بيانية موجهة", "رسوم بيانية غير موزونة"], answer: 1, explanation: "ترتيب قائمة حواف واستخدام اتحاد-بحث يناسب المدخلات المتناثرة طبيعيًا." },
     ],
   },
   inputFields: [

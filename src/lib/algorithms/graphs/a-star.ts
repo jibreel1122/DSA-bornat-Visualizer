@@ -28,7 +28,7 @@ function generate(input: Input): Step<GridFrame>[] {
   const open = new Set<number>();
   const closed = new Set<number>();
 
-  const frame = (cur: [number, number] | null, path: Set<number>, description: string, codeLine: number): void => {
+  const frame = (cur: [number, number] | null, path: Set<number>, description: string, codeLine: number, descriptionAr?: string): void => {
     if (steps.length >= MAX_STEPS - 2) {
       truncated = true;
       return;
@@ -66,6 +66,7 @@ function generate(input: Input): Step<GridFrame>[] {
     steps.push({
       frame: { rows: n, cols: m, cells, note: `A* — cell shows f = g + h (Manhattan). Open = frontier, closed = settled.` },
       description,
+      descriptionAr,
       codeLine,
       counters: { expansions, open: open.size },
     });
@@ -75,7 +76,7 @@ function generate(input: Input): Step<GridFrame>[] {
   gScore.set(start, 0);
   fScore.set(start, h(0, 0));
   open.add(start);
-  frame([0, 0], new Set(), `A* search from S (top-left) to G (bottom-right). f(n) = g(n) [steps so far] + h(n) [Manhattan estimate to goal].`, 0);
+  frame([0, 0], new Set(), `A* search from S (top-left) to G (bottom-right). f(n) = g(n) [steps so far] + h(n) [Manhattan estimate to goal].`, 0, `بحث A* من S (أعلى اليسار) إلى G (أسفل اليمين). f(n) = g(n) [الخطوات حتى الآن] + h(n) [تقدير مانهاتن إلى الهدف].`);
 
   while (open.size > 0) {
     // pick node in open with lowest f (tie: lowest h)
@@ -99,14 +100,14 @@ function generate(input: Input): Step<GridFrame>[] {
         path.add(k);
         k = cameFrom.get(k);
       }
-      frame([cr, cc], path, `Reached the goal! Path length ${path.size - 1}. A* found the optimal route (highlighted).`, 6);
+      frame([cr, cc], path, `Reached the goal! Path length ${path.size - 1}. A* found the optimal route (highlighted).`, 6, `وصلنا إلى الهدف! طول المسار ${path.size - 1}. وجدت A* المسار الأمثل (مُبرَز).`);
       return steps;
     }
 
     open.delete(cur);
     closed.add(cur);
     expansions++;
-    frame([cr, cc], new Set(), `Expand the lowest-f open cell (${cr}, ${cc}), f=${fScore.get(cur)}. Move it to the closed set.`, 3);
+    frame([cr, cc], new Set(), `Expand the lowest-f open cell (${cr}, ${cc}), f=${fScore.get(cur)}. Move it to the closed set.`, 3, `وسّع الخلية المفتوحة ذات أقل f، (${cr}, ${cc})، f=${fScore.get(cur)}. انقلها إلى المجموعة المغلقة.`);
 
     for (const [dr, dc] of DIRS) {
       const nr = cr + dr;
@@ -122,11 +123,11 @@ function generate(input: Input): Step<GridFrame>[] {
         if (!open.has(nk)) open.add(nk);
       }
     }
-    frame([cr, cc], new Set(), `Relax neighbors: update g/f and add improved cells to the open set.`, 4);
+    frame([cr, cc], new Set(), `Relax neighbors: update g/f and add improved cells to the open set.`, 4, `خفّف الجيران: حدّث g/f وأضف الخلايا المُحسَّنة إلى المجموعة المفتوحة.`);
     if (truncated) break;
   }
 
-  if (!truncated) frame(null, new Set(), `Open set exhausted — no path from S to G exists in this grid.`, 6);
+  if (!truncated) frame(null, new Set(), `Open set exhausted — no path from S to G exists in this grid.`, 6, `استُنفدت المجموعة المفتوحة — لا يوجد مسار من S إلى G في هذه الشبكة.`);
   return steps;
 }
 
@@ -146,10 +147,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GridFrame, Input> = {
   slug: "a-star",
   title: "A* Pathfinding",
+  titleAr: "إيجاد المسار بخوارزمية A*",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "shortest path", "heuristic", "informed search"],
+  tagsAr: ["رسم بياني", "أقصر مسار", "دالة استدلالية", "بحث مُوجَّه"],
   summary: "Finds the shortest path on a grid by expanding the cell that minimizes f = g + h, guided by an admissible heuristic.",
+  summaryAr: "يجد أقصر مسار على شبكة بتوسيع الخلية التي تُصغِّر f = g + h، موجَّهًا بدالة استدلالية مقبولة.",
   renderer: "grid",
   pseudocode: [
     "procedure aStar(start, goal)",
@@ -401,6 +405,63 @@ At each step A* expands the open-set node with the smallest f-value — the one 
       { question: "If h(n) = 0 for all nodes, A* behaves like…", options: ["Greedy best-first", "Dijkstra's algorithm", "DFS", "BFS on weighted graphs"], answer: 1, explanation: "With no heuristic guidance, f = g, which is Dijkstra." },
       { question: "A common admissible heuristic on a 4-directional grid is…", options: ["Euclidean squared", "Manhattan distance", "Random distance", "Zero always"], answer: 1, explanation: "Manhattan distance never overestimates grid moves without diagonals." },
       { question: "A* main practical limitation is…", options: ["It is not optimal", "High memory from storing the frontier", "It cannot use heuristics", "It only works on trees"], answer: 1, explanation: "All open nodes must be kept, which can exhaust memory on large maps." },
+    ],
+  },
+  contentAr: {
+    overview: `A* ("إيه ستار") هي خوارزمية إيجاد المسار الأكثر استخدامًا في الألعاب والروبوتات ورسم الخرائط. تجد أقصر مسار من نقطة بداية إلى هدف بدمج نقطتي قوة خوارزمية دايكسترا (التي تضمن المثالية) والبحث الأفضل أولًا الجشِع (السريع لأنه يتجه مباشرة نحو الهدف). الحيلة هي دالة تقييم واحدة: f(n) = g(n) + h(n)، حيث g(n) هي التكلفة الفعلية من البداية إلى العقدة n، وh(n) تقدير استدلالي للتكلفة المتبقية من n إلى الهدف.
+
+في كل خطوة توسّع A* عقدة المجموعة المفتوحة ذات أصغر قيمة f — الأكثر وعدًا بشكل عام. إذا كانت الدالة الاستدلالية مقبولة (لا تبالغ أبدًا في تقدير المسافة المتبقية الحقيقية)، فمن المضمون أن تُعيد A* أقصر مسار مثالي؛ وإذا كانت متّسقة أيضًا، فلا تُوسَّع أي عقدة مرتين. على الشبكة، مسافة مانهاتن دالة استدلالية مقبولة كلاسيكية. الدالة الاستدلالية الجيدة تجعل A* تستكشف خلايا أقل بكثير من دايكسترا بتركيز البحث نحو الهدف، بينما دالة استدلالية تساوي صفرًا تُرجع A* إلى خوارزمية دايكسترا.`,
+    howItWorks: [
+      "ضع البداية في المجموعة المفتوحة بـ g = 0 وf = h(البداية).",
+      "اختر مرارًا عقدة المجموعة المفتوحة ذات أصغر f = g + h.",
+      "إن كانت الهدف، أعد بناء المسار عبر روابط الأب المخزنة.",
+      "وإلا انقلها إلى المجموعة المغلقة وخفّف كل جار: g المؤقتة = g(الحالية) + تكلفة الحافة.",
+      "إذا حسّن ذلك g لجار، حدّث g وf وأدخله (أو أعد إدخاله) في المجموعة المفتوحة.",
+    ],
+    complexity: {
+      time: { best: "O(E) with a perfect heuristic", average: "depends on heuristic", worst: "O(E log V)" },
+      space: "O(V)",
+      notes: "بطابور أولوية، كل توسيع O(log V). يعتمد عدد التوسيعات كثيرًا على الدالة الاستدلالية: الدالة المثالية h تستكشف المسار فقط؛ h = 0 يجعل A* مساوية لدايكسترا. الذاكرة هي القيد العملي الرئيسي (تُخزَّن كل عقد الجبهة).",
+    },
+    applications: [
+      "التنقل/إيجاد المسار للألعاب والروبوتات",
+      "تخطيط مسارات GPS على شبكات الطرق",
+      "حل الألغاز (لغز 15، البلاطات المنزلقة) بدوال استدلالية جيدة",
+      "تخطيط الحركة وتوجيه الشبكات",
+    ],
+    advantages: [
+      "مسار مثالي عندما تكون الدالة الاستدلالية مقبولة",
+      "أسرع بكثير من دايكسترا بدالة استدلالية جيدة",
+      "مرنة — الدالة الاستدلالية تضبط المقايضة بين السرعة والجودة",
+      "مدعومة على نطاق واسع ومفهومة جيدًا",
+    ],
+    disadvantages: [
+      "تخزّن كل عقد الجبهة ← استهلاك ذاكرة مرتفع",
+      "جودتها بجودة دالتها الاستدلالية (h سيئة قد تكون بطيئة أو غير مثالية)",
+      "الدالة الاستدلالية غير المقبولة تكسر ضمان المثالية",
+      "ليست مثالية للخرائط الكبيرة جدًا أو الديناميكية بدون نسخ مثل D* أو IDA*",
+    ],
+    commonMistakes: [
+      "استخدام دالة استدلالية غير مقبولة (مبالِغة في التقدير)، مما يفقد المثالية.",
+      "نسيان تحديث أولوية عقدة عند إيجاد g أفضل.",
+      "إعادة توسيع عقد مغلقة عندما لا تكون الدالة الاستدلالية متّسقة.",
+      "مقارنة h فقط (بحث أفضل أولًا جشِع) أو g فقط (دايكسترا) بدلًا من f = g + h.",
+    ],
+    interviewQuestions: [
+      "ما الذي يجعل الدالة الاستدلالية مقبولة، ولماذا يضمن ذلك المثالية؟",
+      "كيف تختزل A* إلى خوارزمية دايكسترا، ومتى؟",
+      "ما الفرق بين الدالة الاستدلالية المقبولة والمتّسقة؟",
+      "لماذا قد تنفد ذاكرة A*، وما النسخ التي تعالج ذلك؟",
+      "أي دوال استدلالية مناسبة لإيجاد المسار على الشبكة مقابل شبكة الطرق؟",
+    ],
+    summary:
+      "تجد A* أقصر مسار مثالي بتوسيع العقدة ذات أصغر f = g + h دومًا، حيث g التكلفة حتى الآن وh تقدير مقبول إلى الهدف. الدالة الاستدلالية الجيدة تجعلها أسرع بكثير من دايكسترا مع الحفاظ على المثالية، ولهذا تهيمن على إيجاد المسار في الألعاب والخرائط.",
+    quiz: [
+      { question: "تختار A* العقدة التالية للتوسيع بتصغير…", options: ["g فقط", "h فقط", "f = g + h", "عدد الجيران"], answer: 2, explanation: "توازن بين التكلفة الفعلية حتى الآن (g) والتكلفة المتبقية المقدَّرة (h)." },
+      { question: "الدالة الاستدلالية مقبولة إذا كانت…", options: ["تبالغ دومًا في التقدير", "لا تبالغ أبدًا في تقدير التكلفة المتبقية الحقيقية", "تساوي صفرًا", "عشوائية"], answer: 1, explanation: "عدم المبالغة في التقدير أبدًا يضمن أن تُعيد A* مسارًا مثاليًا." },
+      { question: "إذا كانت h(n) = 0 لكل العقد، تتصرف A* مثل…", options: ["البحث الأفضل أولًا الجشِع", "خوارزمية دايكسترا", "DFS", "BFS على الرسوم البيانية الموزونة"], answer: 1, explanation: "بدون توجيه استدلالي، f = g، وهذه دايكسترا." },
+      { question: "دالة استدلالية مقبولة شائعة على شبكة رباعية الاتجاهات هي…", options: ["المربع الإقليدي", "مسافة مانهاتن", "مسافة عشوائية", "صفر دومًا"], answer: 1, explanation: "مسافة مانهاتن لا تبالغ أبدًا في تقدير حركات الشبكة بدون قطريات." },
+      { question: "القيد العملي الرئيسي لـ A* هو…", options: ["أنها غير مثالية", "ذاكرة مرتفعة من تخزين الجبهة", "لا يمكنها استخدام دوال استدلالية", "تعمل فقط على الأشجار"], answer: 1, explanation: "يجب الاحتفاظ بكل العقد المفتوحة، مما قد يستنفد الذاكرة في الخرائط الكبيرة." },
     ],
   },
   inputFields: [

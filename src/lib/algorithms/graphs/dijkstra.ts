@@ -52,7 +52,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     weighted: true,
     directed: false,
   });
-  const snap = (nodeStates: Record<string, CellState>, edgeStates: Record<string, CellState>, description: string, codeLine: number) => {
+  const snap = (nodeStates: Record<string, CellState>, edgeStates: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string) => {
     const pq = nodes.filter((n) => !done.has(n) && dist[n] < INF).sort((a, b) => dist[a] - dist[b]);
     steps.push({
       frame: {
@@ -63,6 +63,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         aux: [{ label: "Frontier", values: pq.map((n) => `${n}:${fmt(dist[n])}`) }],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { relaxations, settled: done.size },
     });
@@ -77,7 +78,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     return es;
   };
 
-  snap({ [start]: "active" }, {}, `Dijkstra from ${start}. All distances start at ∞ except ${start} = 0.`, 0);
+  snap({ [start]: "active" }, {}, `Dijkstra from ${start}. All distances start at ∞ except ${start} = 0.`, 0, `دايكسترا من ${start}. تبدأ كل المسافات بـ ∞ ما عدا ${start} = 0.`);
 
   while (done.size < nodes.length) {
     let u: string | null = null;
@@ -85,7 +86,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     if (u === null) break; // remaining unreachable
 
     done.add(u);
-    snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare" }, doneEdges(), `Settle ${u} with final distance ${fmt(dist[u])} (smallest in frontier).`, 2);
+    snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare" }, doneEdges(), `Settle ${u} with final distance ${fmt(dist[u])} (smallest in frontier).`, 2, `استقرّ عند ${u} بمسافة نهائية ${fmt(dist[u])} (الأصغر في الجبهة).`);
 
     for (const { to: v, w } of adj.get(u)!) {
       if (done.has(v)) continue;
@@ -95,25 +96,28 @@ function generate(input: Input): Step<GraphFrame>[] {
       if (nd < dist[v]) {
         dist[v] = nd;
         treeEdge[v] = u;
-        snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "active" }, es, `Relax ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} improves ${v}.`, 4);
+        snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "active" }, es, `Relax ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} improves ${v}.`, 4, `خفّف الحافة ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} يحسّن ${v}.`);
       } else {
-        snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "discarded" }, es, `Edge ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} ≥ ${fmt(dist[v])}, no improvement.`, 5);
+        snap({ ...Object.fromEntries([...done].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "discarded" }, es, `Edge ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} ≥ ${fmt(dist[v])}, no improvement.`, 5, `الحافة ${u}→${v}: ${fmt(dist[u])} + ${w} = ${nd} ≥ ${fmt(dist[v])}، لا تحسين.`);
       }
     }
   }
 
   const finalStates = Object.fromEntries(nodes.map((n) => [n, done.has(n) ? ("sorted" as CellState) : ("discarded" as CellState)]));
-  snap(finalStates, doneEdges(), `Done. Shortest distances from ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`, 6);
+  snap(finalStates, doneEdges(), `Done. Shortest distances from ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`, 6, `اكتمل. أقصر المسافات من ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "dijkstra",
   title: "Dijkstra's Shortest Path",
+  titleAr: "خوارزمية دايكسترا لأقصر مسار (Dijkstra)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["shortest path", "greedy", "priority queue", "weighted"],
+  tagsAr: ["أقصر مسار", "جشِع", "طابور أولوية", "موزون"],
   summary: "Finds shortest paths from a source in a non-negative weighted graph by always settling the closest frontier node.",
+  summaryAr: "يجد أقصر المسارات من مصدر في رسم بياني موزون بأوزان غير سالبة، بالاستقرار دومًا عند أقرب عقدة في الجبهة.",
   renderer: "graph",
   pseudocode: [
     "procedure Dijkstra(G, start)",
@@ -347,6 +351,63 @@ Each time a node is settled, the algorithm relaxes its outgoing edges: if going 
       { question: "With a binary heap, Dijkstra runs in…", options: ["O(V²)", "O((V + E) log V)", "O(VE)", "O(2ⁿ)"], answer: 1, explanation: "Each edge may trigger a heap push/pop costing O(log V)." },
       { question: "For graphs with negative edge weights, use…", options: ["BFS", "Bellman-Ford", "DFS", "Prim's"], answer: 1, explanation: "Bellman-Ford handles negative edges and detects negative cycles." },
       { question: "'Relaxing' an edge (u,v,w) means…", options: ["Deleting it", "Improving dist[v] if dist[u]+w is smaller", "Reversing it", "Doubling its weight"], answer: 1, explanation: "Relaxation lowers a neighbor's tentative distance when a shorter route is found." },
+    ],
+  },
+  contentAr: {
+    overview: `تحسب خوارزمية دايكسترا أقصر المسارات من مصدر واحد إلى كل عقدة أخرى في رسم بياني بأوزان حواف غير سالبة. تحتفظ بمسافة مؤقتة لكل عقدة وتُقرّر بشكل متكرر "استقرار" العقدة غير المستقرة ذات أصغر مسافة مؤقتة — تلتزم بها جشعًا لأنه، مع أوزان غير سالبة، لا يمكن لأي مسار لاحق أن يتفوق عليها.
+
+في كل مرة تستقر فيها عقدة، تُخفِّف الخوارزمية حوافها الصادرة: إذا كان المرور عبر العقدة المستقرة يصل إلى جار بتكلفة أقل، تُخفَّض مسافة ذلك الجار المؤقتة. باستخدام كومة ثنائية كطابور أولوية، تعمل العملية كاملة بزمن O((V + E) log V).`,
+    howItWorks: [
+      "اجعل مسافة المصدر 0 وكل البقية ∞؛ لا شيء مستقر بعد.",
+      "اختر العقدة غير المستقرة u ذات أصغر مسافة مؤقتة وأقرّها.",
+      "أصبحت مسافتها المؤقتة نهائية الآن — الأوزان غير السالبة تضمن ألا تتحسن.",
+      "خفّف كل حافة (u, v, w): إذا كان dist[u] + w < dist[v]، اخفض dist[v].",
+      "كرّر حتى تستقر كل عقدة قابلة للوصول.",
+    ],
+    complexity: {
+      time: { best: "O((V + E) log V)", average: "O((V + E) log V)", worst: "O((V + E) log V)" },
+      space: "O(V)",
+      notes: "بكومة ثنائية: O((V + E) log V). بمسح مصفوفة بسيط: O(V²)، وقد يكون أفضل للرسوم البيانية الكثيفة. تتطلب أوزانًا غير سالبة.",
+    },
+    applications: [
+      "توجيه GPS والشبكات (أقصر/أرخص المسارات)",
+      "إيجاد المسار الأقل تكلفة في الألعاب والخرائط",
+      "بروتوكولات الشبكات مثل OSPF (توجيه حالة الوصلة)",
+      "أي مسألة أقصر مسار من مصدر واحد بتكاليف غير سالبة",
+    ],
+    advantages: [
+      "أقصر مسارات مثالية مع أوزان غير سالبة",
+      "فعّالة بزمن O((V + E) log V) باستخدام كومة",
+      "تحسب المسافات إلى كل العقد في تشغيلة واحدة",
+      "منطق 'استقر عند الأقرب' الجشِع سهل الفهم",
+    ],
+    disadvantages: [
+      "تفشل مع أوزان حواف سالبة (استخدم بيلمان-فورد)",
+      "تُعيد حساب كل شيء إذا تغيّرت الحواف",
+      "عبء الكومة؛ نسخة O(V²) البسيطة قد تكون أبسط للرسوم البيانية الكثيفة",
+      "مصدر واحد فقط (كل الأزواج يحتاج نهجًا مختلفًا)",
+    ],
+    commonMistakes: [
+      "تشغيلها على رسوم بيانية بأوزان سالبة — يصبح الاستقرار الجشِع غير صالح.",
+      "عدم تخطي مدخلات الكومة القديمة (فحص d > dist[u]).",
+      "تحديث عقدة بعد استقرارها.",
+      "استخدامها لأطول المسارات، حيث لا يصح الاختيار الجشِع.",
+    ],
+    interviewQuestions: [
+      "لماذا تتطلب دايكسترا أوزان حواف غير سالبة؟",
+      "كيف تعمل نسخة طابور الأولوية بالحذف المتأخر (lazy deletion)؟",
+      "قارن دايكسترا بـ A* — ماذا يضيف المُسنِد الاستدلالي (heuristic)؟",
+      "ما التعقيد باستخدام كومة فيبوناتشي ولماذا؟",
+      "كيف تستعيد المسار الأقصر الفعلي أيضًا، لا طوله فقط؟",
+    ],
+    summary:
+      "تُقرّ خوارزمية دايكسترا جشعًا العقدة غير المستقرة الأقرب وتُخفِّف حوافها، منتجةً أقصر مسارات من مصدر واحد بزمن O((V + E) log V) لأوزان غير سالبة. إنها الأداة الأساسية للتوجيه وإيجاد المسار الأقل تكلفة.",
+    quiz: [
+      { question: "تتطلب خوارزمية دايكسترا أن تكون أوزان الحواف…", options: ["أعدادًا صحيحة", "غير سالبة", "متمايزة", "متناظرة"], answer: 1, explanation: "الأوزان السالبة تكسر ضمان 'الأقرب نهائي' الجشِع." },
+      { question: "في كل خطوة، أي عقدة تستقر عندها دايكسترا؟", options: ["عقدة غير مستقرة عشوائية", "العقدة غير المستقرة ذات أصغر مسافة مؤقتة", "العقدة الأعلى درجة", "العقدة المُضافة الأحدث"], answer: 1, explanation: "يمكن تثبيت أقرب عقدة في الجبهة لأنه لا يوجد مسار لاحق أقصر." },
+      { question: "باستخدام كومة ثنائية، تعمل دايكسترا بزمن…", options: ["O(V²)", "O((V + E) log V)", "O(VE)", "O(2ⁿ)"], answer: 1, explanation: "قد تستدعي كل حافة إدخال/إخراج كومة بتكلفة O(log V)." },
+      { question: "للرسوم البيانية بأوزان حواف سالبة، استخدم…", options: ["BFS", "بيلمان-فورد", "DFS", "بريم"], answer: 1, explanation: "يتعامل بيلمان-فورد مع الحواف السالبة ويكتشف الدورات السالبة." },
+      { question: "'تخفيف' حافة (u,v,w) يعني…", options: ["حذفها", "تحسين dist[v] إذا كان dist[u]+w أصغر", "عكسها", "مضاعفة وزنها"], answer: 1, explanation: "يخفض التخفيف المسافة المؤقتة لجار عندما يُعثَر على مسار أقصر." },
     ],
   },
   inputFields: [

@@ -53,6 +53,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     description: string,
     codeLine: number,
     bottleneck?: number,
+    descriptionAr?: string,
   ): void => {
     // display edges with weight = current flow, annotate cap in note-ish via nodeAnnotations skip
     const drawEdges = edges.map((e) => ({ from: e.from, to: e.to, weight: edgeLabel(e.from, e.to) }));
@@ -73,6 +74,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         note: `Edmonds-Karp — edge label = current flow (of its capacity). Find BFS augmenting paths in the residual graph.`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { maxFlow, augmentations },
     });
@@ -96,7 +98,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     return null;
   };
 
-  snap({}, {}, `Maximum flow from source ${source} to sink ${sink}. Repeatedly find a shortest augmenting path (BFS) and push flow along it.`, 0);
+  snap({}, {}, `Maximum flow from source ${source} to sink ${sink}. Repeatedly find a shortest augmenting path (BFS) and push flow along it.`, 0, undefined, `التدفق الأقصى من المصدر ${source} إلى المصرف ${sink}. جِد مرارًا أقصر مسار توسيع (BFS) وادفع تدفقًا عبره.`);
 
   for (;;) {
     const parent = bfs();
@@ -119,7 +121,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     for (const nd of pathNodes) nodeStates[nd] = "active";
     const edgeStates: Record<string, CellState> = {};
     for (const e of pathEdges) edgeStates[e] = "swap";
-    snap(nodeStates, edgeStates, `BFS found augmenting path ${pathNodes.join(" → ")} with bottleneck (min residual) = ${bottleneck}.`, 3, bottleneck);
+    snap(nodeStates, edgeStates, `BFS found augmenting path ${pathNodes.join(" → ")} with bottleneck (min residual) = ${bottleneck}.`, 3, bottleneck, `وجد BFS مسار توسيع ${pathNodes.join(" → ")} بعنق زجاجة (أقل سعة متبقية) = ${bottleneck}.`);
 
     // augment
     v = idx[sink];
@@ -133,10 +135,10 @@ function generate(input: Input): Step<GraphFrame>[] {
     augmentations++;
     const doneStates: Record<string, CellState> = {};
     for (const e of pathEdges) doneStates[e] = "sorted";
-    snap({}, doneStates, `Push ${bottleneck} units along the path → total flow now ${maxFlow}. Update residual capacities.`, 4, bottleneck);
+    snap({}, doneStates, `Push ${bottleneck} units along the path → total flow now ${maxFlow}. Update residual capacities.`, 4, bottleneck, `ادفع ${bottleneck} وحدة عبر المسار ← التدفق الإجمالي الآن ${maxFlow}. حدّث السعات المتبقية.`);
   }
 
-  snap({}, {}, `No augmenting path remains. Maximum flow from ${source} to ${sink} = ${maxFlow} (equals the min-cut capacity).`, 6);
+  snap({}, {}, `No augmenting path remains. Maximum flow from ${source} to ${sink} = ${maxFlow} (equals the min-cut capacity).`, 6, undefined, `لم يتبقَّ مسار توسيع. التدفق الأقصى من ${source} إلى ${sink} = ${maxFlow} (يساوي سعة القطع الأدنى).`);
   return steps;
 }
 
@@ -157,10 +159,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "max-flow",
   title: "Maximum Flow (Edmonds-Karp)",
+  titleAr: "التدفق الأقصى (خوارزمية إدموندز-كارب)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "max-flow", "residual graph", "BFS augmenting paths"],
+  tagsAr: ["رسم بياني", "التدفق الأقصى", "رسم بياني متبقٍّ", "مسارات توسيع BFS"],
   summary: "Computes the maximum flow from source to sink by repeatedly pushing flow along shortest augmenting paths found with BFS.",
+  summaryAr: "يحسب التدفق الأقصى من المصدر إلى المصرف بدفع تدفق مرارًا عبر أقصر مسارات توسيع يجدها BFS.",
   renderer: "graph",
   pseudocode: [
     "procedure edmondsKarp(source, sink)",
@@ -449,6 +454,63 @@ The Ford-Fulkerson method computes max flow by repeatedly finding an augmenting 
       { question: "Reverse (residual) edges exist to…", options: ["Add capacity", "Allow previously sent flow to be cancelled/rerouted", "Speed up BFS", "Store the path"], answer: 1, explanation: "They let the algorithm undo flow and find a better arrangement." },
       { question: "The maximum flow equals…", options: ["The number of edges", "The minimum cut capacity", "The sum of all capacities", "The shortest path"], answer: 1, explanation: "This is the max-flow min-cut theorem." },
       { question: "Edmonds-Karp runs in…", options: ["O(V + E)", "O(V·E²)", "O(2^V)", "O(E log V)"], answer: 1, explanation: "BFS augmenting paths give an O(V·E²) bound independent of capacities." },
+    ],
+  },
+  contentAr: {
+    overview: `تطرح مسألة التدفق الأقصى السؤال التالي: بالنظر إلى شبكة من الأنابيب الموجهة، لكل منها سعة، كم يمكن أن يتدفق من رأس مصدر إلى رأس مصرف لكل وحدة زمن دون تجاوز سعة أي أنبوب؟ تُنمذج هذه المسألة كل شيء من حركة المرور والخدمات اللوجستية إلى المطابقة الثنائية وتجزئة الصور. تنص مبرهنة التدفق الأقصى-القطع الأدنى الشهيرة على أن التدفق الأقصى يساوي سعة أصغر "قطع" يفصل المصدر عن المصرف.
+
+تحسب طريقة فورد-فولكرسون التدفق الأقصى بإيجاد مسار توسيع مرارًا — طريق من المصدر إلى المصرف بسعة فائضة في الرسم البياني المتبقي — ودفع أكبر قدر من التدفق تسمح به أضيق حافة فيه (عنق الزجاجة). يتتبع الرسم البياني المتبقي السعة المتبقية، بما في ذلك الحواف العكسية التي تسمح "بإلغاء" التدفق وإعادة توجيهه. خوارزمية إدموندز-كارب هي النسخة الملموسة التي تختار دومًا أقصر مسار توسيع باستخدام البحث بالعرض أولًا. هذا الاختيار يحدّ عدد التوسيعات بـ O(V·E)، معطيًا زمن تشغيل إجمالي O(V·E²) — كثير حدود ومستقل عن قيم السعة، بخلاف فورد-فولكرسون الساذجة التي قد تكون بطيئة مع سعات كبيرة.`,
+    howItWorks: [
+      "ابنِ رسمًا بيانيًا متبقيًا حيث السعة المتبقية لكل حافة هي سعتها ناقص التدفق الحالي.",
+      "شغّل BFS من المصدر إلى المصرف عبر الحواف ذات السعة المتبقية الموجبة لإيجاد أقصر مسار توسيع.",
+      "احسب عنق الزجاجة: أقل سعة متبقية على طول ذلك المسار.",
+      "أضف عنق الزجاجة إلى التدفق على كل حافة أمامية واطرحه على الحافة العكسية (المتبقية).",
+      "كرّر حتى لا يجد BFS مسار توسيع؛ التدفق المتراكم هو الأقصى.",
+    ],
+    complexity: {
+      time: { best: "O(V·E²)", average: "O(V·E²)", worst: "O(V·E²)" },
+      space: "O(V²) or O(V+E)",
+      notes: "تستخدم إدموندز-كارب BFS، فتحدّ التوسيعات بـ O(V·E) والزمن الإجمالي بـ O(V·E²)، مستقلًا عن مقادير السعة. خوارزمية دينيتش تُحسِّن هذا إلى O(V²·E). التدفق الأقصى يساوي سعة القطع الأدنى.",
+    },
+    applications: [
+      "المطابقة الثنائية (وظائف↔عمال، طلاب↔مدارس)",
+      "موثوقية الشبكة وتوجيه حركة المرور والخدمات اللوجستية",
+      "تجزئة الصور عبر قطوع الرسم البياني",
+      "اختيار المشاريع، والجدولة، وإقصاء البيسبول",
+    ],
+    advantages: [
+      "زمن كثير حدود مضمون، مستقل عن قيم السعة",
+      "الحواف العكسية (المتبقية) تسمح بإعادة توجيه التدفق أمثليًا",
+      "تُنتج مباشرة القطع الأدنى",
+      "إطار عمل مسار التوسيع واضح مفاهيميًا",
+    ],
+    disadvantages: [
+      "O(V·E²) أبطأ من دينيتش أو دفع-إعادة تسمية على الرسوم البيانية الكثيفة",
+      "الرسم البياني المتبقي بمصفوفة تجاور يستخدم ذاكرة O(V²)",
+      "فورد-فولكرسون الأساسية (بدون BFS) قد تكون بطيئة أو لا تنتهي مع سعات غير نسبية",
+      "إعادة حساب BFS في كل توسيع تضيف عبئًا",
+    ],
+    commonMistakes: [
+      "نسيان إضافة/طرح التدفق على الحافة العكسية المتبقية.",
+      "استخدام DFS بمسارات اعتباطية (فورد-فولكرسون الأساسية)، مما يفقد الحد كثير الحدود.",
+      "عدم جمع سعات الحواف المتوازية بين الزوج نفسه.",
+      "الخلط بين السعة المتبقية (السعة − التدفق) والسعة الأصلية.",
+    ],
+    interviewQuestions: [
+      "اذكر مبرهنة التدفق الأقصى-القطع الأدنى ولماذا تصح.",
+      "لماذا يعطي اختيار أقصر مسار توسيع (BFS) حدًا كثير الحدود؟",
+      "ما دور الحواف العكسية/المتبقية؟",
+      "كيف تختزل المطابقة الثنائية القصوى إلى التدفق الأقصى؟",
+      "كيف تقارن إدموندز-كارب ودينيتش ودفع-إعادة التسمية؟",
+    ],
+    summary:
+      "تحسب إدموندز-كارب التدفق الأقصى بدفع تدفق مرارًا عبر أقصر مسار توسيع بـ BFS في الرسم البياني المتبقي حتى لا يتبقى شيء، بزمن O(V·E²). وفق مبرهنة التدفق الأقصى-القطع الأدنى، تساوي النتيجة القطع الأدنى، وتدعم هذه الطريقة المطابقة والتجزئة والتوجيه.",
+    quiz: [
+      { question: "تجد إدموندز-كارب مسارات التوسيع باستخدام…", options: ["DFS", "BFS (أقصر المسارات)", "دايكسترا", "مسيرات عشوائية"], answer: 1, explanation: "يختار BFS أقصر مسار توسيع، مما يحدّ عدد التكرارات." },
+      { question: "عنق زجاجة مسار التوسيع هو…", options: ["أطول حافة", "أقل سعة متبقية على طوله", "سعة المصدر", "متوسط السعة"], answer: 1, explanation: "لا يمكنك الدفع إلا بقدر ما تسمح به أضيق حافة." },
+      { question: "الحواف العكسية (المتبقية) موجودة من أجل…", options: ["إضافة سعة", "السماح بإلغاء/إعادة توجيه تدفق سابق", "تسريع BFS", "تخزين المسار"], answer: 1, explanation: "تسمح للخوارزمية بالتراجع عن التدفق وإيجاد ترتيب أفضل." },
+      { question: "التدفق الأقصى يساوي…", options: ["عدد الحواف", "سعة القطع الأدنى", "مجموع كل السعات", "أقصر مسار"], answer: 1, explanation: "هذه مبرهنة التدفق الأقصى-القطع الأدنى." },
+      { question: "تعمل إدموندز-كارب بزمن…", options: ["O(V + E)", "O(V·E²)", "O(2^V)", "O(E log V)"], answer: 1, explanation: "مسارات توسيع BFS تعطي حدًا O(V·E²) مستقلًا عن السعات." },
     ],
   },
   inputFields: [

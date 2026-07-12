@@ -53,6 +53,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     description: string,
     codeLine: number,
     pass: string,
+    descriptionAr?: string,
   ): void => {
     steps.push({
       frame: {
@@ -64,12 +65,13 @@ function generate(input: Input): Step<GraphFrame>[] {
         note: `Bellman-Ford from ${start} — relax every edge V−1 times`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { relaxations, updates },
     });
   };
 
-  snap({ [start]: "active" }, {}, `Initialize: dist[${start}] = 0, all others ∞. We will relax every edge ${nodes.length - 1} times.`, 1, "init");
+  snap({ [start]: "active" }, {}, `Initialize: dist[${start}] = 0, all others ∞. We will relax every edge ${nodes.length - 1} times.`, 1, "init", `تهيئة: dist[${start}] = 0، وكل البقية ∞. سنُخفِّف كل حافة ${nodes.length - 1} مرة.`);
 
   const V = nodes.length;
   for (let i = 1; i < V; i++) {
@@ -89,11 +91,12 @@ function generate(input: Input): Step<GraphFrame>[] {
           `Pass ${i}: relax ${e.from}→${e.to} (w=${e.weight}). dist[${e.to}] improved to ${dist[e.to]}.`,
           4,
           `pass ${i} / ${V - 1}`,
+          `الجولة ${i}: خفّف ${e.from}→${e.to} (w=${e.weight}). تحسّنت dist[${e.to}] إلى ${dist[e.to]}.`,
         );
       }
     }
     if (!changedThisPass) {
-      snap({}, {}, `Pass ${i}: no distance changed — distances have converged early, we can stop.`, 5, `pass ${i} / ${V - 1}`);
+      snap({}, {}, `Pass ${i}: no distance changed — distances have converged early, we can stop.`, 5, `pass ${i} / ${V - 1}`, `الجولة ${i}: لم تتغيّر أي مسافة — تقاربت المسافات مبكرًا، يمكننا التوقف.`);
       break;
     }
   }
@@ -110,14 +113,14 @@ function generate(input: Input): Step<GraphFrame>[] {
   }
 
   if (negative) {
-    snap({}, { [negEdge]: "swap" }, `Extra pass still relaxes ${negEdge.replace("->", "→")}: a negative-weight cycle exists — no shortest paths.`, 7, "check");
+    snap({}, { [negEdge]: "swap" }, `Extra pass still relaxes ${negEdge.replace("->", "→")}: a negative-weight cycle exists — no shortest paths.`, 7, "check", `الجولة الإضافية ما زالت تُخفِّف ${negEdge.replace("->", "→")}: توجد دورة سالبة الوزن — لا وجود لأقصر المسارات.`);
   } else {
     const finalStates: Record<string, CellState> = {};
     const finalEdges: Record<string, CellState> = {};
     nodes.forEach((n) => (finalStates[n] = dist[n] === INF ? "discarded" : "found"));
     for (const n of nodes) if (pred[n]) finalEdges[`${pred[n]}->${n}`] = "sorted";
     finalStates[start] = "special";
-    snap(finalStates, finalEdges, `Done. Shortest distances from ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`, 8, "done");
+    snap(finalStates, finalEdges, `Done. Shortest distances from ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`, 8, "done", `اكتمل. أقصر المسافات من ${start}: ${nodes.map((n) => `${n}=${fmt(dist[n])}`).join(", ")}.`);
   }
   return steps;
 }
@@ -139,10 +142,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "bellman-ford",
   title: "Bellman-Ford Shortest Path",
+  titleAr: "خوارزمية بيلمان-فورد لأقصر مسار (Bellman-Ford)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "shortest path", "negative weights", "dynamic programming"],
+  tagsAr: ["رسم بياني", "أقصر مسار", "أوزان سالبة", "البرمجة الديناميكية"],
   summary: "Finds shortest paths from a source even with negative edges by relaxing all edges V−1 times, and detects negative cycles.",
+  summaryAr: "يجد أقصر المسارات من مصدر حتى مع وجود حواف سالبة بتخفيف كل الحواف V−1 مرة، ويكتشف الدورات السالبة.",
   renderer: "graph",
   pseudocode: [
     "procedure bellmanFord(V, edges, source)",
@@ -347,6 +353,62 @@ The idea is repeated edge relaxation. A relaxation asks: "is going through edge 
       { question: "The time complexity is…", options: ["O(E log V)", "O(V·E)", "O(V²)", "O(V + E)"], answer: 1, explanation: "V−1 passes over E edges give O(V·E)." },
       { question: "A negative cycle is detected when…", options: ["Any distance is negative", "An extra pass still relaxes an edge", "The graph is disconnected", "Two nodes share a distance"], answer: 1, explanation: "If improvement continues after V−1 passes, a negative cycle exists." },
       { question: "Relaxing edge (u,v,w) updates dist[v] when…", options: ["dist[u] + w < dist[v]", "dist[v] + w < dist[u]", "w < 0", "always"], answer: 0, explanation: "You keep the cheaper route to v through u." },
+    ],
+  },
+  contentAr: {
+    overview: `تحسب خوارزمية بيلمان-فورد أقصر المسارات من مصدر واحد إلى كل رأس آخر في رسم بياني موجه موزون — وخلافًا لخوارزمية دايكسترا، تعمل بشكل صحيح حتى عندما تكون بعض الحواف بأوزان سالبة. قدرتها الخارقة الأخرى هي اكتشاف الدورات سالبة الوزن: إذا كان بإمكانك جعل المسارات أرخص إلى الأبد، فلا يوجد أقصر مسار مُعرَّف جيدًا، وستخبرك بيلمان-فورد بذلك.
+
+الفكرة هي تخفيف الحواف المتكرر. يسأل التخفيف: "هل المرور عبر الحافة (u, v) أرخص من أفضل مسار إلى v وُجد حتى الآن؟" إذا كان dist[u] + الوزن < dist[v]، نخفض dist[v]. تُخفِّف بيلمان-فورد ببساطة كل حافة في الرسم البياني، وتكرر هذا المسح الكامل V−1 مرة (حيث V عدد الرؤوس). بما أن أي أقصر مسار له V−1 حافة كحد أقصى، فإن V−1 جولة كافية كي تستقر المسافات. جولة إضافية V كاملة ما زالت تُحسِّن مسافة ما تُثبت وجود دورة سالبة.`,
+    howItWorks: [
+      "اجعل dist[المصدر] = 0 وكل مسافة أخرى لانهاية.",
+      "خفّف كل الحواف: لكل حافة (u, v, w)، إذا كان dist[u] + w < dist[v]، حدّث dist[v].",
+      "كرّر مسح الحواف الكامل V−1 مرة (أقصر مسار يستخدم V−1 حافة كحد أقصى).",
+      "إذا لم تُحدِث جولة أي تغيير، تكون المسافات قد تقاربت ويمكنك التوقف مبكرًا.",
+      "شغّل جولة إضافية واحدة؛ إذا ظلّت أي حافة تُخفَّف، فهناك دورة سالبة الوزن يمكن الوصول إليها.",
+    ],
+    complexity: {
+      time: { best: "O(V·E)", average: "O(V·E)", worst: "O(V·E)" },
+      space: "O(V)",
+      notes: "V−1 جولة على كل الحواف E تعطي O(V·E). أبطأ من O(E log V) لدايكسترا، لكنها تتعامل مع الأوزان السالبة وتكتشف الدورات السالبة. التوقف المبكر عندما لا تُحدِث جولة تغييرًا يساعد عمليًا.",
+    },
+    applications: [
+      "أقصر المسارات في الرسوم البيانية بأوزان حواف سالبة",
+      "اكتشاف المراجحة في العملات (دورة سالبة في معدلات لوغاريتمية)",
+      "بروتوكولات توجيه متجه المسافة (RIP)",
+      "كخوارزمية فرعية في خوارزمية جونسون لأقصر مسار بين كل الأزواج",
+    ],
+    advantages: [
+      "تتعامل مع أوزان الحواف السالبة بشكل صحيح",
+      "تكتشف الدورات سالبة الوزن",
+      "بسيطة ومبنية على قائمة حواف — لا حاجة لطابور أولوية",
+      "تعمل على الرسوم البيانية الموجهة وسهلة التوزيع",
+    ],
+    disadvantages: [
+      "O(V·E) أبطأ من دايكسترا للأوزان غير السالبة",
+      "لا يمكنها إنتاج إجابات محدودة عندما يمكن الوصول إلى دورة سالبة",
+      "تخفيفات زائدة كثيرة بدون تحسينات (مثل SPFA)",
+    ],
+    commonMistakes: [
+      "تخطي تهيئة المصدر (dist[المصدر] = 0).",
+      "التخفيف من رأس مسافته ما زالت لانهاية (فيضان الأعداد الصحيحة).",
+      "تشغيل V−2 جولة فقط، مما يفوّت أطول أقصر المسارات.",
+      "نسيان الجولة الإضافية اللازمة لاكتشاف الدورات السالبة.",
+    ],
+    interviewQuestions: [
+      "لماذا بالضبط V−1 جولة، ومتى يمكنك التوقف مبكرًا؟",
+      "كيف تكتشف بيلمان-فورد دورة سالبة الوزن؟",
+      "لماذا لا تستطيع خوارزمية دايكسترا التعامل مع الحواف السالبة؟",
+      "كيف تُستخدم بيلمان-فورد داخل خوارزمية جونسون؟",
+      "كيف تستعيد المسار الأقصر الفعلي، لا المسافات فقط؟",
+    ],
+    summary:
+      "تجد بيلمان-فورد أقصر مسارات من مصدر واحد بزمن O(V·E) بتخفيف كل حافة V−1 مرة؛ وتتحمّل الحواف السالبة وتكتشف، عبر جولة إضافية واحدة، الدورات السالبة. أبطأ من دايكسترا لكنها أعمّ بشكل صارم.",
+    quiz: [
+      { question: "الميزة الأساسية لبيلمان-فورد على دايكسترا هي…", options: ["أنها أسرع", "أنها تتعامل مع أوزان الحواف السالبة", "أنها تستخدم ذاكرة أقل", "أنها لا تحتاج مصدرًا"], answer: 1, explanation: "تعالج الأوزان السالبة بشكل صحيح، وهو ما لا تستطيعه دايكسترا." },
+      { question: "كم جولة تخفيف حواف كاملة مطلوبة؟", options: ["V", "V − 1", "E", "log V"], answer: 1, explanation: "لأقصر مسار V−1 حافة كحد أقصى، فتكفي V−1 جولة." },
+      { question: "التعقيد الزمني هو…", options: ["O(E log V)", "O(V·E)", "O(V²)", "O(V + E)"], answer: 1, explanation: "V−1 جولة على E حافة تعطي O(V·E)." },
+      { question: "تُكتشف الدورة السالبة عندما…", options: ["تكون أي مسافة سالبة", "جولة إضافية ما زالت تُخفِّف حافة", "يكون الرسم البياني غير متصل", "تتشارك عقدتان مسافة واحدة"], answer: 1, explanation: "إذا استمر التحسّن بعد V−1 جولة، توجد دورة سالبة." },
+      { question: "تخفيف الحافة (u,v,w) يحدّث dist[v] عندما…", options: ["dist[u] + w < dist[v]", "dist[v] + w < dist[u]", "w < 0", "دائمًا"], answer: 0, explanation: "تحتفظ بالمسار الأرخص إلى v عبر u." },
     ],
   },
   inputFields: [

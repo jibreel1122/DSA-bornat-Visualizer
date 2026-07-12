@@ -56,6 +56,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     order: string[],
     description: string,
     codeLine: number,
+    descriptionAr?: string,
   ) => {
     steps.push({
       frame: {
@@ -68,6 +69,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         ],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { visited: visitedCount, enqueued: enqueues },
     });
@@ -79,20 +81,20 @@ function generate(input: Input): Step<GraphFrame>[] {
   const order: string[] = [];
   const seen = new Set<string>();
 
-  snap(nodeStates, edgeStates, queue, order, `Breadth-first search from node ${start}.`, 0);
+  snap(nodeStates, edgeStates, queue, order, `Breadth-first search from node ${start}.`, 0, `بحث بالعرض أولًا انطلاقًا من العقدة ${start}.`);
 
   seen.add(start);
   queue.push(start);
   enqueues++;
   nodeStates[start] = "active";
-  snap(nodeStates, edgeStates, queue, order, `Mark ${start} as discovered and enqueue it.`, 1);
+  snap(nodeStates, edgeStates, queue, order, `Mark ${start} as discovered and enqueue it.`, 1, `علّم ${start} كمكتشَفة وأدخلها في الطابور.`);
 
   while (queue.length > 0) {
     const u = queue.shift()!;
     order.push(u);
     visitedCount++;
     nodeStates[u] = "compare";
-    snap(nodeStates, edgeStates, queue, order, `Dequeue ${u} and visit it.`, 3);
+    snap(nodeStates, edgeStates, queue, order, `Dequeue ${u} and visit it.`, 3, `أخرِج ${u} من الطابور وزره.`);
 
     for (const v of adj.get(u) ?? []) {
       if (!seen.has(v)) {
@@ -108,11 +110,12 @@ function generate(input: Input): Step<GraphFrame>[] {
           order,
           `${v} is undiscovered — mark it, record tree edge ${u}–${v}, enqueue it.`,
           5,
+          `${v} غير مكتشَفة — علّمها، سجّل حافة الشجرة ${u}–${v}، وأدخلها في الطابور.`,
         );
       }
     }
     nodeStates[u] = "visited";
-    snap(nodeStates, edgeStates, queue, order, `All neighbors of ${u} processed.`, 6);
+    snap(nodeStates, edgeStates, queue, order, `All neighbors of ${u} processed.`, 6, `تمت معالجة كل جيران ${u}.`);
   }
 
   const unreached = nodes.filter((n) => !seen.has(n));
@@ -125,6 +128,9 @@ function generate(input: Input): Step<GraphFrame>[] {
       ? `BFS complete. Order: ${order.join(" → ")}. Unreachable: ${unreached.join(", ")}.`
       : `BFS complete. Visit order: ${order.join(" → ")}.`,
     7,
+    unreached.length > 0
+      ? `اكتمل BFS. الترتيب: ${order.join(" → ")}. غير قابلة للوصول: ${unreached.join(", ")}.`
+      : `اكتمل BFS. ترتيب الزيارة: ${order.join(" → ")}.`,
   );
   return steps;
 }
@@ -132,10 +138,13 @@ function generate(input: Input): Step<GraphFrame>[] {
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "bfs",
   title: "Breadth-First Search (BFS)",
+  titleAr: "البحث بالعرض أولًا (BFS)",
   category: "graphs",
   difficulty: "Beginner",
   tags: ["traversal", "queue", "shortest path (unweighted)", "level order"],
+  tagsAr: ["اجتياز", "طابور", "أقصر مسار (غير موزون)", "ترتيب حسب المستوى"],
   summary: "Explores a graph level by level from a source using a queue — the basis of unweighted shortest paths.",
+  summaryAr: "يستكشف رسمًا بيانيًا مستوى تلو الآخر انطلاقًا من عقدة مصدر باستخدام طابور — وهو أساس أقصر المسارات غير الموزونة.",
   renderer: "graph",
 
   pseudocode: [
@@ -444,6 +453,95 @@ Because it visits nodes in increasing distance order, BFS computes shortest path
         options: ["DFS", "Kruskal", "Dijkstra", "Topological sort"],
         answer: 2,
         explanation: "Dijkstra replaces the FIFO queue with a priority queue keyed by tentative distance.",
+      },
+    ],
+  },
+
+  contentAr: {
+    overview: `يستكشف البحث بالعرض أولًا رسمًا بيانيًا انطلاقًا من مصدر في "حلقات" متحدة المركز: أولًا المصدر نفسه، ثم كل ما يبعد حافة واحدة، ثم حافتين، وهكذا. يفرض طابور FIFO هذا الترتيب — فالعقد المكتشَفة أولًا تُزار أولًا.
+
+ولأنه يزور العقد بترتيب مسافة متزايد، يحسب البحث بالعرض أولًا أقصر المسارات في الرسوم البيانية غير الموزونة مجانًا: فأول مرة تُكتشف فيها عقدة، يكون المسار المتبع إليها هو الأقل عدد حافات ممكن. مجموعة حواف الاكتشاف تشكّل شجرة BFS.`,
+    howItWorks: [
+      "علّم المصدر بأنه مكتشَف وضعه في طابور FIFO.",
+      "أخرِج العقدة الأمامية u من الطابور مرارًا — هذه هي العقدة التالية للزيارة.",
+      "امسح كل جار v للعقدة u: أي جار غير مكتشَف يُعلَّم، وتُسجَّل حافة اكتشافه، وينضم إلى نهاية الطابور.",
+      "بما أن الطابور من نوع أول-داخل أول-خارج، تُزار كل العقد على المسافة d قبل أي عقدة على المسافة d+1.",
+      "توقف عندما يصبح الطابور فارغًا؛ العقد التي لم تُكتشَف أبدًا غير قابلة للوصول من المصدر.",
+    ],
+    complexity: {
+      time: { best: "O(V + E)", average: "O(V + E)", worst: "O(V + E)" },
+      space: "O(V)",
+      notes: "تدخل كل عقدة الطابور مرة واحدة على الأكثر، وتُمسح كل حافة مرتين على الأكثر (مرة لكل طرف) في رسم بياني غير موجه.",
+    },
+    applications: [
+      "أقصر المسارات في الرسوم البيانية غير الموزونة (أقل عدد قفزات)",
+      "الاجتياز حسب المستوى للأشجار",
+      "المكوّنات المتصلة واختبار كون الرسم البياني ثنائي التجزئة",
+      "زواحف الويب واستعلامات «صديق الصديق» في الشبكات الاجتماعية",
+      "ملء الفيضان في تحرير الصور؛ حل المتاهات بتكلفة خطوة موحدة",
+      "لبنة بناء لخوارزمية إدموندز-كارب للتدفق الأقصى ومطابقة هوبكروفت-كارب",
+    ],
+    advantages: [
+      "يضمن مسارات بأقل عدد حواف في الرسوم البيانية غير الموزونة",
+      "زمن خطي O(V + E) — الأمثل لاجتياز كامل",
+      "لا يعلق أبدًا في فروع عميقة (بخلاف DFS في الرسوم البيانية الضخمة/غير المحدودة)",
+      "ينتج طبقات مسافة بشكل طبيعي مفيدة في خوارزميات مشتقة كثيرة",
+    ],
+    disadvantages: [
+      "قد يحتفظ الطابور بمستوى كامل — ذاكرة O(V)، أكبر بكثير مما يحتاجه DFS في الرسوم البيانية ضحلة التفرع",
+      "لا يتعامل مع أقصر المسارات الموزونة (استخدم دايكسترا بدلًا من ذلك)",
+      "أقل ملاءمة للمسائل التي تتطلب استكشافًا شاملًا للمسارات (التراجع يفضّل DFS)",
+    ],
+    commonMistakes: [
+      "تعليم العقد كمكتشَفة عند إخراجها من الطابور بدلًا من عند إدخالها — فقد تُدخَل العقدة نفسها إلى الطابور مرات عديدة.",
+      "استخدام مكدس (أو العودية) بدافع العادة، مما يحوّل BFS إلى DFS دون قصد.",
+      "نسيان معالجة الرسوم البيانية غير المتصلة عندما تكون التغطية الكاملة مطلوبة (كرّر BFS على كل العقد غير المُزارة).",
+      "افتراض أن BFS يعطي أقصر المسارات في الرسوم البيانية الموزونة — فهو يحسب عدد الحواف فقط، لا الأوزان.",
+    ],
+    interviewQuestions: [
+      "لماذا يجد BFS أقصر المسارات في الرسوم البيانية غير الموزونة؟ اسكتش الإثبات بالاستقراء على المسافة.",
+      "كيف تعيد بناء المسار الأقصر الفعلي، لا طوله فقط؟",
+      "قارن بين بصمتي الذاكرة لـ BFS و DFS — متى يُفضَّل كل منهما؟",
+      "كيف تكتشف ما إذا كان رسم بياني غير موجه ثنائي التجزئة باستخدام BFS؟",
+      "ما التعديلات على BFS التي تنتج 0-1 BFS للرسوم البيانية بأوزان حواف 0 و1؟",
+    ],
+    summary:
+      "يزور BFS العقد مستوى تلو الآخر باستخدام طابور FIFO، ويعمل بزمن O(V + E) ومساحة O(V). ترتيب الاكتشاف يساوي ترتيب المسافة، مما يجعله خوارزمية أقصر المسار غير الموزون الأساسية ولبنة بناء للتدفقات والمطابقات وفحوصات الاتصال.",
+    quiz: [
+      {
+        question: "أي هيكل بيانات يمنح BFS ترتيب زيارته مستوى تلو الآخر؟",
+        options: ["مكدس (LIFO)", "طابور (FIFO)", "طابور أولوية", "مجموعة تجزئة"],
+        answer: 1,
+        explanation: "ترتيب FIFO يعني أن العقد المكتشفة أبكر (الأقرب) تُزار قبل العقد المكتشفة لاحقًا (الأبعد).",
+      },
+      {
+        question: "متى يجب تعليم العقدة كمكتشَفة كي يبقى BFS صحيحًا وفعالًا؟",
+        options: ["عند إخراجها من الطابور", "عند إدخالها في الطابور", "بعد مسح كل جيرانها", "لا يهم"],
+        answer: 1,
+        explanation: "التعليم عند الإدخال يمنع إضافة العقدة نفسها إلى الطابور عدة مرات عبر جيران مختلفين.",
+      },
+      {
+        question: "ما هو التعقيد الزمني لـ BFS بقائمة تجاور؟",
+        options: ["O(V²)", "O(E log V)", "O(V + E)", "O(V·E)"],
+        answer: 2,
+        explanation: "تدخل كل عقدة الطابور مرة واحدة وتُمسح كل قائمة تجاور مرة واحدة.",
+      },
+      {
+        question: "يصل BFS من العقدة S إلى العقدة T بعد إخراجها من الطابور على العمق 4. ماذا يمثّل الرقم 4؟",
+        options: [
+          "عدد العقد المزارة قبل T",
+          "أقل عدد من الحواف على أي مسار S→T",
+          "المسافة الموزونة من S إلى T",
+          "درجة T",
+        ],
+        answer: 1,
+        explanation: "يكتشف BFS العقد بترتيب مسافة الحواف المتزايد، فالعمق يساوي أقل عدد حواف مطلوب.",
+      },
+      {
+        question: "أي خوارزمية تعمّم BFS إلى الرسوم البيانية الموزونة غير السالبة؟",
+        options: ["DFS", "كروسكال", "دايكسترا", "الترتيب الطوبولوجي"],
+        answer: 2,
+        explanation: "يستبدل دايكسترا طابور FIFO بطابور أولوية مرتب حسب المسافة المؤقتة.",
       },
     ],
   },

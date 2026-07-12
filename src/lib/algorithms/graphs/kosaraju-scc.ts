@@ -30,6 +30,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     description: string,
     codeLine: number,
     extraAux?: { label: string; values: (string | number)[] },
+    descriptionAr?: string,
   ): void => {
     const drawEdges = reversed ? edges.map((e) => ({ from: e.to, to: e.from })) : edges.map((e) => ({ ...e }));
     const aux: { label: string; values: (string | number)[] }[] = [
@@ -46,6 +47,7 @@ function generate(input: Input): Step<GraphFrame>[] {
         note: reversed ? `Pass 2 on the TRANSPOSED graph (all edges reversed)` : `Pass 1 on the original graph — record finish order`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { visits, sccs: sccCount },
     });
@@ -54,19 +56,19 @@ function generate(input: Input): Step<GraphFrame>[] {
   // Pass 1: DFS, push on finish.
   const visited1 = new Set<string>();
   const order: string[] = [];
-  snap(false, {}, order, `Kosaraju's algorithm: Pass 1 — DFS the original graph and push each vertex onto a stack when it finishes.`, 0);
+  snap(false, {}, order, `Kosaraju's algorithm: Pass 1 — DFS the original graph and push each vertex onto a stack when it finishes.`, 0, undefined, `خوارزمية كوساراجو: المرحلة 1 — نفّذ DFS على الرسم البياني الأصلي وادفع كل رأس إلى مكدس عند انتهائه.`);
   const dfs1 = (v: string) => {
     visited1.add(v);
     visits++;
-    snap(false, { [v]: "active", ...Object.fromEntries([...visited1].map((n) => [n, "visited" as CellState])) }, order, `Visit ${v} (Pass 1).`, 2);
+    snap(false, { [v]: "active", ...Object.fromEntries([...visited1].map((n) => [n, "visited" as CellState])) }, order, `Visit ${v} (Pass 1).`, 2, undefined, `زر ${v} (المرحلة 1).`);
     for (const w of adj.get(v)!) if (!visited1.has(w)) dfs1(w);
     order.push(v);
-    snap(false, { [v]: "found", ...Object.fromEntries([...visited1].map((n) => [n, "visited" as CellState])) }, order, `Finished ${v} → push onto the stack.`, 3);
+    snap(false, { [v]: "found", ...Object.fromEntries([...visited1].map((n) => [n, "visited" as CellState])) }, order, `Finished ${v} → push onto the stack.`, 3, undefined, `انتهت ${v} → ادفعها إلى المكدس.`);
   };
   for (const v of nodes) if (!visited1.has(v)) dfs1(v);
 
   // Transpose.
-  snap(true, {}, order, `Pass 2: reverse every edge (transpose the graph). Now process vertices in reverse finish order (top of stack first).`, 4);
+  snap(true, {}, order, `Pass 2: reverse every edge (transpose the graph). Now process vertices in reverse finish order (top of stack first).`, 4, undefined, `المرحلة 2: اعكس كل حافة (انقل الرسم البياني). عالج الرؤوس الآن بترتيب الانتهاء العكسي (قمة المكدس أولًا).`);
 
   // Pass 2: DFS on transpose in reverse finish order.
   const visited2 = new Set<string>();
@@ -76,7 +78,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     sccColors[v] = color;
     members.push(v);
     visits++;
-    snap(true, { ...sccColors, [v]: "active" }, order, `Pass 2: ${v} joins SCC #${sccCount + 1}.`, 6);
+    snap(true, { ...sccColors, [v]: "active" }, order, `Pass 2: ${v} joins SCC #${sccCount + 1}.`, 6, undefined, `المرحلة 2: تنضم ${v} إلى المكوّن المتصل بقوة رقم ${sccCount + 1}.`);
     for (const w of radj.get(v)!) if (!visited2.has(w)) dfs2(w, members, color);
   };
   for (let i = order.length - 1; i >= 0; i--) {
@@ -86,11 +88,11 @@ function generate(input: Input): Step<GraphFrame>[] {
       const color = PALETTE[sccCount % PALETTE.length];
       dfs2(v, members, color);
       sccCount++;
-      snap(true, { ...sccColors }, order, `SCC #${sccCount} complete: {${members.join(", ")}}.`, 7, { label: "SCCs found", values: [sccCount] });
+      snap(true, { ...sccColors }, order, `SCC #${sccCount} complete: {${members.join(", ")}}.`, 7, { label: "SCCs found", values: [sccCount] }, `اكتمل المكوّن المتصل بقوة رقم ${sccCount}: {${members.join(", ")}}.`);
     }
   }
 
-  snap(true, { ...sccColors }, order, `Done. ${sccCount} strongly connected component(s) — each Pass-2 DFS tree is one SCC.`, 8, { label: "SCCs found", values: [sccCount] });
+  snap(true, { ...sccColors }, order, `Done. ${sccCount} strongly connected component(s) — each Pass-2 DFS tree is one SCC.`, 8, { label: "SCCs found", values: [sccCount] }, `اكتمل. ${sccCount} مكوّن متصل بقوة — كل شجرة DFS من Pass-2 مكوّن واحد.`);
   return steps;
 }
 
@@ -110,10 +112,13 @@ function templateInput(level: number): Input {
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "kosaraju-scc",
   title: "Kosaraju's Strongly Connected Components",
+  titleAr: "مكوّنات كوساراجو المتصلة بقوة (Kosaraju)",
   category: "graphs",
   difficulty: "Advanced",
   tags: ["graph", "SCC", "DFS", "transpose"],
+  tagsAr: ["رسم بياني", "مكوّن متصل بقوة", "بحث بالعمق أولًا", "النقل"],
   summary: "Finds strongly connected components with two DFS passes: order by finish time, then DFS the transposed graph.",
+  summaryAr: "يجد المكوّنات المتصلة بقوة باجتيازي DFS: ترتيب حسب وقت الانتهاء، ثم DFS على الرسم البياني المنقول.",
   renderer: "graph",
   pseudocode: [
     "procedure kosaraju(G)",
@@ -287,6 +292,63 @@ The first DFS explores the original graph and records vertices in order of compl
       { question: "The second pass processes vertices in…", options: ["Discovery order", "Reverse finish order (stack top first)", "Alphabetical order", "Random order"], answer: 1, explanation: "Popping the finish-order stack gives reverse finish order." },
       { question: "Each DFS tree in the second pass is…", options: ["A shortest path", "One strongly connected component", "A spanning tree", "A single edge"], answer: 1, explanation: "Reversed edges confine each traversal to a single SCC." },
       { question: "Kosaraju's time complexity is…", options: ["O(V²)", "O(V + E)", "O(V·E)", "O(E log V)"], answer: 1, explanation: "Two linear DFS passes plus the transpose are all O(V + E)." },
+    ],
+  },
+  contentAr: {
+    overview: `تجد خوارزمية كوساراجو المكوّنات المتصلة بقوة (SCCs) في رسم بياني موجه — مجموعات عظمى يستطيع فيها كل رأس الوصول إلى كل رأس آخر — باستخدام اجتيازي بحث بالعمق أولًا مباشرين. غالبًا ما تكون أسهل خوارزمية للمكوّنات المتصلة بقوة فهمًا وإثباتًا، مقايضةً مرور تارجان الذكي الواحد بمرورين بسيطين.
+
+يستكشف الاجتياز الأول الرسم البياني الأصلي ويسجّل الرؤوس بترتيب الاكتمال، دافعًا كل رأس إلى مكدس عند انتهائه. يعمل الاجتياز الثاني على الرسم البياني المنقول (كل حافة معكوسة) ويعالج الرؤوس بترتيب الانتهاء العكسي — بإخراجها من المكدس. الفكرة الأساسية هي أن عكس الحواف يحافظ على المكوّنات المتصلة بقوة لكنه يقلب اتجاه الروابط بينها، لذا فالبدء من آخر رأس انتهى واتّباع الحواف المعكوسة لا يمكن أن يصل إلا إلى رؤوس في المكوّن نفسه. كل شجرة تنمو في الاجتياز الثاني هي بالضبط مكوّن متصل بقوة واحد. كلا المرورين خطي، فالخوارزمية بأكملها O(V + E).`,
+    howItWorks: [
+      "المرحلة 1: شغّل DFS على الرسم البياني الأصلي؛ عندما ينتهي رأس (استُكشف كل أحفاده)، ادفعه إلى مكدس.",
+      "ابنِ الرسم البياني المنقول بعكس اتجاه كل حافة.",
+      "المرحلة 2: أخرج الرؤوس من المكدس (ترتيب الانتهاء العكسي)؛ تخطَّ الرؤوس المُسنَدة بالفعل.",
+      "من كل رأس أُخرِج ولم يُسنَد بعد، نفّذ DFS على الرسم البياني المنقول، مُسمّيًا كل رأس قابل للوصول كمكوّن متصل بقوة واحد.",
+      "كل شجرة DFS كهذه مكوّن متصل بقوة كامل.",
+    ],
+    complexity: {
+      time: { best: "O(V + E)", average: "O(V + E)", worst: "O(V + E)" },
+      space: "O(V + E)",
+      notes: "اجتيازا DFS خطيان بالإضافة إلى بناء الرسم المنقول يعطيان زمن O(V + E)؛ وتخزين الرسم المنقول يكلّف مساحة O(V + E). مساوية تقاربيًا لخوارزمية تارجان، لكن بثابت أكبر (مروران ورسم بياني معكوس).",
+    },
+    applications: [
+      "تفكيك رسم بياني موجه إلى رسم بياني موجه غير دوري مكثَّف",
+      "قابلية تحقق 2-SAT عبر رسم بياني الاستلزام",
+      "اكتشاف تبعيات الوحدات/الحزم الدورية",
+      "تحليل المجتمعات وقابلية الوصول في الشبكات الموجهة",
+    ],
+    advantages: [
+      "بسيطة مفاهيميًا وسهلة الإثبات",
+      "زمن خطي O(V + E)",
+      "تُنتج المكوّنات المتصلة بقوة بترتيب طوبولوجي للتكثيف",
+      "تستخدم DFS القياسي فقط — لا محاسبة lowlink",
+    ],
+    disadvantages: [
+      "تتطلب بناء وتخزين الرسم البياني المنقول",
+      "مروران → عامل ثابت أكبر من تارجان",
+      "DFS العودي يخاطر بفيضان المكدس في الرسوم البيانية العميقة",
+      "تستخدم ذاكرة أكثر من نهج المرور الواحد",
+    ],
+    commonMistakes: [
+      "معالجة الرؤوس بترتيب خاطئ في المرور الثاني (يجب أن يكون ترتيب الانتهاء العكسي).",
+      "نسيان نقل الرسم البياني قبل DFS الثاني.",
+      "إعادة استخدام مصفوفة الزيارة بين المرورين دون إعادة تعيينها.",
+      "الدفع عند الاكتشاف بدلًا من عند الانتهاء في المرور الأول.",
+    ],
+    interviewQuestions: [
+      "لماذا يعزل عكس الحواف واستخدام ترتيب الانتهاء كل مكوّن متصل بقوة بشكل صحيح؟",
+      "كيف تقارن كوساراجو بتارجان من حيث المرورات والذاكرة والوضوح؟",
+      "لماذا يجب أن يتبع المرور الثاني ترتيب الانتهاء العكسي؟",
+      "ما رسم التكثيف البياني وبأي ترتيب تظهر المكوّنات المتصلة بقوة؟",
+      "كيف تستخدم المكوّنات المتصلة بقوة لحل 2-SAT؟",
+    ],
+    summary:
+      "تجد خوارزمية كوساراجو كل المكوّنات المتصلة بقوة باجتيازي DFS: الأول يسجّل ترتيب الانتهاء، ثم على الرسم البياني المنقول يُنمّي DFS ثانٍ بترتيب انتهاء عكسي مكوّنًا متصلًا بقوة واحدًا لكل شجرة. تعمل بزمن O(V + E) وهي أكثر طرق المكوّنات المتصلة بقوة بداهة، بتكلفة نقل الرسم البياني ومرورين.",
+    quiz: [
+      { question: "كم اجتياز DFS تستخدم خوارزمية كوساراجو؟", options: ["واحد", "اثنان", "ثلاثة", "V"], answer: 1, explanation: "واحد للترتيب حسب وقت الانتهاء، وواحد على الرسم البياني المنقول." },
+      { question: "بين المرورين يجب عليك…", options: ["ترتيب الرؤوس", "النقل (عكس كل الحواف)", "حذف الحواف", "إضافة مصدر"], answer: 1, explanation: "يعمل DFS الثاني على الرسم البياني بحواف معكوسة." },
+      { question: "يعالج المرور الثاني الرؤوس بـ…", options: ["ترتيب الاكتشاف", "ترتيب الانتهاء العكسي (قمة المكدس أولًا)", "الترتيب الأبجدي", "ترتيب عشوائي"], answer: 1, explanation: "إخراج مكدس ترتيب الانتهاء يعطي ترتيب الانتهاء العكسي." },
+      { question: "كل شجرة DFS في المرور الثاني هي…", options: ["أقصر مسار", "مكوّن متصل بقوة واحد", "شجرة ممتدة", "حافة واحدة"], answer: 1, explanation: "الحواف المعكوسة تحصر كل اجتياز في مكوّن متصل بقوة واحد." },
+      { question: "التعقيد الزمني لكوساراجو هو…", options: ["O(V²)", "O(V + E)", "O(V·E)", "O(E log V)"], answer: 1, explanation: "اجتيازا DFS خطيان بالإضافة إلى النقل كلها O(V + E)." },
     ],
   },
   inputFields: [

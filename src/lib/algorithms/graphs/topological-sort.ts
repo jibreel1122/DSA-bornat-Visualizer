@@ -45,54 +45,58 @@ function generate(input: Input): Step<GraphFrame>[] {
     directed: true,
   });
   const annotations = () => Object.fromEntries(nodes.map((n) => [n, `in:${dynIndeg[n]}`]));
-  const snap = (nodeStates: Record<string, CellState>, queue: string[], description: string, codeLine: number) => {
+  const snap = (nodeStates: Record<string, CellState>, queue: string[], description: string, codeLine: number, descriptionAr?: string) => {
     steps.push({
       frame: { ...base(), nodeStates, nodeAnnotations: annotations(), aux: [{ label: "Queue (in=0)", values: [...queue] }, { label: "Order", values: [...order] }] },
       description,
+      descriptionAr,
       codeLine,
       counters: { processed, remaining: nodes.length - processed },
     });
   };
 
-  snap({}, [], `Kahn's topological sort: repeatedly output a node with in-degree 0 and remove its edges.`, 0);
+  snap({}, [], `Kahn's topological sort: repeatedly output a node with in-degree 0 and remove its edges.`, 0, `ترتيب كاهن الطوبولوجي: أخرِج مرارًا عقدة درجة دخولها 0 وأزل حوافها.`);
 
   const queue = nodes.filter((n) => indeg[n] === 0).sort();
-  snap(Object.fromEntries(queue.map((n) => [n, "active" as CellState])), queue, `Nodes with in-degree 0 start the queue: ${queue.join(", ") || "(none)"}.`, 1);
+  snap(Object.fromEntries(queue.map((n) => [n, "active" as CellState])), queue, `Nodes with in-degree 0 start the queue: ${queue.join(", ") || "(none)"}.`, 1, `العقد ذات درجة الدخول 0 تبدأ الطابور: ${queue.join(", ") || "(لا شيء)"}.`);
 
   while (queue.length) {
     const u = queue.shift()!;
     order.push(u);
     removed.add(u);
     processed++;
-    snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [u]: "compare" }, queue, `Output ${u}; remove its outgoing edges.`, 2);
+    snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [u]: "compare" }, queue, `Output ${u}; remove its outgoing edges.`, 2, `أخرِج ${u}؛ أزل حوافها الصادرة.`);
     for (const v of adj.get(u)!) {
       if (removed.has(v)) continue;
       dynIndeg[v]--;
-      snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "active" }, queue, `Decrement in-degree of ${v} → ${dynIndeg[v]}.`, 3);
+      snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [u]: "compare", [v]: "active" }, queue, `Decrement in-degree of ${v} → ${dynIndeg[v]}.`, 3, `أنقص درجة دخول ${v} → ${dynIndeg[v]}.`);
       if (dynIndeg[v] === 0) {
         queue.push(v);
         queue.sort();
-        snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [v]: "active" }, queue, `${v} now has in-degree 0 — enqueue it.`, 4);
+        snap({ ...Object.fromEntries([...removed].map((n) => [n, "visited" as CellState])), [v]: "active" }, queue, `${v} now has in-degree 0 — enqueue it.`, 4, `أصبحت درجة دخول ${v} الآن 0 — أدخلها في الطابور.`);
       }
     }
   }
 
   if (processed < nodes.length) {
     const cyclic = nodes.filter((n) => !removed.has(n));
-    snap(Object.fromEntries(cyclic.map((n) => [n, "swap" as CellState])), [], `Only ${processed}/${nodes.length} nodes ordered — the graph has a cycle among {${cyclic.join(", ")}}. No topological order exists.`, 6);
+    snap(Object.fromEntries(cyclic.map((n) => [n, "swap" as CellState])), [], `Only ${processed}/${nodes.length} nodes ordered — the graph has a cycle among {${cyclic.join(", ")}}. No topological order exists.`, 6, `رُتِّبت ${processed}/${nodes.length} عقدة فقط — يحتوي الرسم البياني على دورة بين {${cyclic.join(", ")}}. لا يوجد ترتيب طوبولوجي.`);
     return steps;
   }
-  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), [], `Topological order: ${order.join(" → ")}.`, 5);
+  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), [], `Topological order: ${order.join(" → ")}.`, 5, `الترتيب الطوبولوجي: ${order.join(" → ")}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<GraphFrame, Input> = {
   slug: "topological-sort",
   title: "Topological Sort (Kahn's)",
+  titleAr: "الترتيب الطوبولوجي (خوارزمية كاهن)",
   category: "graphs",
   difficulty: "Intermediate",
   tags: ["DAG", "ordering", "in-degree", "dependencies"],
+  tagsAr: ["رسم بياني موجه غير دوري", "ترتيب", "درجة الدخول", "تبعيات"],
   summary: "Orders the vertices of a DAG so every edge points forward, by repeatedly removing in-degree-zero nodes.",
+  summaryAr: "يرتّب رؤوس رسم بياني موجه غير دوري بحيث تشير كل حافة إلى الأمام، بإزالة العقد ذات درجة الدخول صفر مرارًا.",
   renderer: "graph",
   pseudocode: [
     "procedure topoSort(G)   // G is a DAG",
@@ -312,6 +316,62 @@ Kahn's algorithm computes it using in-degrees — the number of incoming edges e
       { question: "How does Kahn's detect a cycle?", options: ["The queue overflows", "Fewer than V nodes get output", "A node repeats", "It never terminates"], answer: 1, explanation: "A cycle leaves some nodes with permanently positive in-degree, so they're never output." },
       { question: "Topological sort runs in…", options: ["O(V²)", "O(V + E)", "O(E log V)", "O(2ⁿ)"], answer: 1, explanation: "Each vertex and edge is processed once." },
       { question: "A DAG can have…", options: ["Exactly one topological order", "Possibly many topological orders", "No topological order", "Only two orders"], answer: 1, explanation: "Independent nodes can be ordered in multiple valid ways." },
+    ],
+  },
+  contentAr: {
+    overview: `الترتيب الطوبولوجي لرسم بياني موجه غير دوري (DAG) هو ترتيب خطي لرؤوسه بحيث تظهر u قبل v لكل حافة موجهة u → v. إنه يجيب على أسئلة مثل "بأي ترتيب أنفّذ المهام كي تسبق كل متطلبات مسبقة؟" لأي رسم بياني موجه غير دوري ترتيب طوبولوجي واحد على الأقل، وله أكثر من ترتيب كلما كانت بعض المهام مستقلة.
+
+تحسبه خوارزمية كاهن باستخدام درجات الدخول — عدد الحواف الداخلة لكل عقدة. العقد ذات درجة الدخول صفر ليس لها متطلبات مسبقة غير مستوفاة، لذا يمكن إخراجها فورًا. إزالة عقدة مُخرَجة تُنقص درجات دخول خلفائها، مما قد يحرّرهم لاحقًا. إذا توقفت العملية قبل ترتيب كل العقد، فلا بد أن يحتوي الرسم البياني على دورة ولا يوجد ترتيب طوبولوجي.`,
+    howItWorks: [
+      "احسب درجة الدخول (عدد الحواف الداخلة) لكل رأس.",
+      "أدخل في الطابور كل الرؤوس ذات درجة الدخول صفر — ليس لها متطلبات مسبقة.",
+      "أخرِج رأسًا من الطابور، وألحقه بترتيب الإخراج.",
+      "لكل حافة صادرة منه، أنقص درجة دخول الهدف؛ أدخل الهدف في الطابور إن وصلت إلى صفر.",
+      "إذا أُخرِج كل رأس، فالترتيب صحيح؛ وإن بقي بعضها، فالرسم البياني يحتوي على دورة.",
+    ],
+    complexity: {
+      time: { best: "O(V + E)", average: "O(V + E)", worst: "O(V + E)" },
+      space: "O(V)",
+      notes: "يُدخَل كل رأس في الطابور مرة واحدة وتُخفَّف كل حافة مرة واحدة. يستخدم الطابور ومصفوفة درجات الدخول مساحة O(V). يكتشف الدورات أيضًا كأثر جانبي.",
+    },
+    applications: [
+      "جدولة المهام/البناء مع التبعيات (make، مديرو الحزم)",
+      "ترتيب المتطلبات المسبقة للمقررات الدراسية",
+      "ترتيب إعادة حساب خلايا جداول البيانات",
+      "جدولة التعليمات وحل التبعيات",
+    ],
+    advantages: [
+      "زمن خطي O(V + E)",
+      "يكتشف الدورات مجانًا (إذا لم تُخرَج كل العقد)",
+      "تكراري وبسيط باستخدام طابور",
+      "يكشف طبيعيًا عن المهام المستقلة (ترتيبات صحيحة متعددة)",
+    ],
+    disadvantages: [
+      "معرَّف فقط للرسوم البيانية الموجهة غير الدورية — الدورات لا ترتيب طوبولوجي لها",
+      "الترتيب ليس فريدًا (قد يحتاج قواعد فض تعادل)",
+      "يتطلب حساب درجات الدخول والحفاظ عليها",
+      "مختلف عن الترتيب الطوبولوجي القائم على DFS في ترتيب الإخراج",
+    ],
+    commonMistakes: [
+      "تشغيله على رسم بياني به دورة وتوقع ترتيب كامل.",
+      "نسيان التحقق من أن كل الرؤوس أُخرِجت (اكتشاف الدورة).",
+      "حساب درجات الدخول بشكل خاطئ (عدّ الصادرة بدل الداخلة).",
+      "افتراض أن الترتيب الطوبولوجي فريد.",
+    ],
+    interviewQuestions: [
+      "كيف تكتشف خوارزمية كاهن دورة؟",
+      "قارن بين خوارزمية كاهن (القائمة على BFS) والترتيب الطوبولوجي القائم على DFS.",
+      "لماذا يمكن أن يكون لرسم بياني موجه غير دوري عدة ترتيبات طوبولوجية صحيحة؟",
+      "كيف تجد أي جدول مهام صحيح واحد من التبعيات؟",
+    ],
+    summary:
+      "يرتّب الترتيب الطوبولوجي (خوارزمية كاهن) رؤوس رسم بياني موجه غير دوري بحيث تشير كل حافة إلى الأمام، بإخراج العقد ذات درجة الدخول صفر مرارًا وإنقاص درجات دخول خلفائها. يعمل بزمن O(V + E) ويكتشف الدورات عندما يتعذر ترتيب كل العقد.",
+    quiz: [
+      { question: "الترتيب الطوبولوجي مُعرَّف فقط من أجل…", options: ["الرسوم البيانية غير الموجهة", "الرسوم البيانية الموجهة غير الدورية (DAGs)", "الرسوم البيانية الكاملة", "الرسوم البيانية الموزونة"], answer: 1, explanation: "الدورات تجعل ترتيب 'المتطلبات المسبقة أولًا' المتّسق مستحيلًا." },
+      { question: "تبدأ خوارزمية كاهن بإدخال العقد ذات…", options: ["الدرجة القصوى", "درجة الدخول صفر", "درجة الخروج صفر", "أصغر تسمية"], answer: 1, explanation: "العقد ذات درجة الدخول صفر ليس لها متطلبات مسبقة غير مستوفاة." },
+      { question: "كيف تكتشف خوارزمية كاهن دورة؟", options: ["يفيض الطابور", "تُخرَج عقد أقل من V", "تتكرر عقدة", "لا تنتهي أبدًا"], answer: 1, explanation: "الدورة تترك بعض العقد بدرجة دخول موجبة دائمًا، فلا تُخرَج أبدًا." },
+      { question: "يعمل الترتيب الطوبولوجي بزمن…", options: ["O(V²)", "O(V + E)", "O(E log V)", "O(2ⁿ)"], answer: 1, explanation: "تتم معالجة كل رأس وكل حافة مرة واحدة." },
+      { question: "يمكن أن يكون لرسم بياني موجه غير دوري…", options: ["ترتيب طوبولوجي واحد بالضبط", "عدة ترتيبات طوبولوجية محتملة", "لا ترتيب طوبولوجي", "ترتيبان فقط"], answer: 1, explanation: "يمكن ترتيب العقد المستقلة بطرق صحيحة متعددة." },
     ],
   },
   inputFields: [
