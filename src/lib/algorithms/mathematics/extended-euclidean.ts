@@ -20,6 +20,7 @@ function generate(input: Input): Step<TableFrame>[] {
     description: string,
     codeLine: number,
     hl?: { row: number; cols: number[]; state: CellState },
+    descriptionAr?: string,
   ) => {
     const cells = rows.map((r, ri) =>
       [r.a, r.b, r.q, r.r, r.x, r.y].map((v, ci) => ({
@@ -35,6 +36,7 @@ function generate(input: Input): Step<TableFrame>[] {
         note: "Down: Euclid's divisions. Up: back-substitute x, y so that a·x + b·y = gcd.",
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { iterations },
     });
@@ -44,7 +46,7 @@ function generate(input: Input): Step<TableFrame>[] {
   let a = input.a;
   let b = input.b;
   rows.push({ a, b, q: null, r: null, x: null, y: null });
-  snap(`Extended Euclid on (${a}, ${b}): find gcd AND coefficients x, y with ${input.a}·x + ${input.b}·y = gcd.`, 0);
+  snap(`Extended Euclid on (${a}, ${b}): find gcd AND coefficients x, y with ${input.a}·x + ${input.b}·y = gcd.`, 0, undefined, `إقليدس الموسّعة على (${a}, ${b}): جِد القاسم المشترك الأكبر ومعاملَي x، y بحيث ${input.a}·x + ${input.b}·y = gcd.`);
 
   while (b !== 0) {
     iterations++;
@@ -53,11 +55,11 @@ function generate(input: Input): Step<TableFrame>[] {
     const i = rows.length - 1;
     rows[i].q = q;
     rows[i].r = r;
-    snap(`Divide: ${a} = ${q}·${b} + ${r}.`, 1, { row: i, cols: [2, 3], state: "active" });
+    snap(`Divide: ${a} = ${q}·${b} + ${r}.`, 1, { row: i, cols: [2, 3], state: "active" }, `اقسِم: ${a} = ${q}·${b} + ${r}.`);
     a = b;
     b = r;
     rows.push({ a, b, q: null, r: null, x: null, y: null });
-    snap(`Next pair: (${a}, ${b}).`, 2, { row: rows.length - 1, cols: [0, 1], state: "compare" });
+    snap(`Next pair: (${a}, ${b}).`, 2, { row: rows.length - 1, cols: [0, 1], state: "compare" }, `الزوج التالي: (${a}, ${b}).`);
   }
 
   const g = a;
@@ -68,7 +70,7 @@ function generate(input: Input): Step<TableFrame>[] {
     row: last,
     cols: [4, 5],
     state: "found",
-  });
+  }, `b = 0 ⇒ gcd = ${g}. المعاملات الأساسية: ${g}·1 + 0·0 = ${g}، إذًا x = 1، y = 0.`);
 
   // Phase 2: back-substitution
   for (let i = last - 1; i >= 0; i--) {
@@ -80,6 +82,7 @@ function generate(input: Input): Step<TableFrame>[] {
       `Back-substitute into step ${i}: x = y′ = ${nx}, y = x′ − q·y′ = ${rows[i + 1].x} − ${rows[i].q}·${rows[i + 1].y} = ${ny}. Check: ${rows[i].a}·${nx} + ${rows[i].b}·${ny} = ${rows[i].a * nx + rows[i].b * ny}.`,
       4,
       { row: i, cols: [4, 5], state: "swap" },
+      `تعويض عكسي في الخطوة ${i}: x = y′ = ${nx}، y = x′ − q·y′ = ${rows[i + 1].x} − ${rows[i].q}·${rows[i + 1].y} = ${ny}. تحقّق: ${rows[i].a}·${nx} + ${rows[i].b}·${ny} = ${rows[i].a * nx + rows[i].b * ny}.`,
     );
   }
 
@@ -89,17 +92,20 @@ function generate(input: Input): Step<TableFrame>[] {
     row: 0,
     cols: [4, 5],
     state: "found",
-  });
+  }, `تم: gcd(${input.a}, ${input.b}) = ${g} و ${input.a}·(${x}) + ${input.b}·(${y}) = ${input.a * x + input.b * y}. ✓ عُثر على معاملات بيزو.`);
   return steps;
 }
 
 const mod: AlgorithmModule<TableFrame, Input> = {
   slug: "extended-euclidean",
   title: "Extended Euclidean Algorithm",
+  titleAr: "خوارزمية إقليدس الموسّعة",
   category: "mathematics",
   difficulty: "Advanced",
   tags: ["number theory", "Bézout identity", "modular inverse", "gcd"],
+  tagsAr: ["نظرية الأعداد", "متطابقة بيزو", "المعكوس القياسي", "القاسم المشترك الأكبر"],
   summary: "Computes gcd(a, b) plus the Bézout coefficients x, y with a·x + b·y = gcd — the key to modular inverses.",
+  summaryAr: "تحسب gcd(a, b) إضافة إلى معاملَي بيزو x، y بحيث a·x + b·y = gcd — مفتاح المعكوس القياسي.",
   renderer: "table",
   pseudocode: [
     "procedure extgcd(a, b) → (g, x, y)",
@@ -248,6 +254,61 @@ The algorithm runs Euclid's divisions forward as usual (a = q·b + r, then recur
       { question: "The back-substitution recurrence is…", options: ["(x, y) = (x′, y′)", "(x, y) = (y′, x′ − q·y′)", "(x, y) = (x′ − q, y′)", "(x, y) = (q·x′, q·y′)"], answer: 1, explanation: "Substituting r = a − q·b into the lower level's identity produces exactly this transformation." },
       { question: "The modular inverse of a mod m exists iff…", options: ["a is prime", "m is even", "gcd(a, m) = 1", "a < m"], answer: 2, explanation: "Then a·x + m·y = 1 gives a·x ≡ 1 (mod m); if gcd > 1, no x can work." },
       { question: "Extended Euclid's running time versus plain Euclid is…", options: ["Quadratically slower", "The same O(log min(a,b)), plus O(1) extra per level", "Exponential", "O(n) vs O(log n)"], answer: 1, explanation: "It performs the identical division chain and merely carries two extra numbers back up." },
+    ],
+  },
+  contentAr: {
+    overview: `تُعزّز خوارزمية إقليدس الموسّعة حساب القاسم المشترك الأكبر الكلاسيكي: فإلى جانب gcd(a, b)، تُنتج عددين صحيحين x و y يحقّقان متطابقة بيزو a·x + b·y = gcd(a, b). وهذان المعاملان ليسا مجرد طرافة — فحين يكون gcd(a, m) = 1، تكون x التي تجدها بالضبط هي المعكوس القياسي لـ a بترديد m، وهي العملية في صميم توليد مفاتيح RSA والقسمة القياسية ونظرية الباقي الصينية.
+
+تُجري الخوارزمية قسمات إقليدس إلى الأمام كالمعتاد (a = q·b + r ثم استدعاء عودي على (b, r))، وعندما تنتهي عند b = 0 بقاسم مشترك أكبر gcd = a، تضع القيم الابتدائية x = 1، y = 0 (إذ a·1 + 0·0 = a بداهةً). ثم تصعد عكسيًا: في كل مستوى تتحوّل المعاملات وفق (x, y) ← (y′, x′ − q·y′)، حيث جاء (x′, y′) من المستوى الأدنى وكان q خارج القسمة في ذلك المستوى. وكل تعويض عكسي يحافظ على المتطابقة، فتحقّقها المعاملات الواصلة إلى القمة للمدخلات الأصلية.`,
+    howItWorks: [
+      "المرور الأمامي: اقسِم مرارًا، a = q·b + r، مستبدلًا (a, b) بـ (b, r) حتى تصبح b = 0 — مع تسجيل كل خارج قسمة q.",
+      "في القاع، gcd = a والمتطابقة a·1 + 0·0 = gcd تعطي المعاملات الأساسية x = 1، y = 0.",
+      "عوّض عكسيًا مستوى تلو الآخر: x الجديدة = y′، و y الجديدة = x′ − q·y′، مستعملًا خارج القسمة q المخزّن لذلك المستوى.",
+      "كل خطوة تحافظ على a·x + b·y = gcd لـ (a, b) في ذلك المستوى — قابلة للتحقق عند كل صف.",
+      "المعاملان x، y في المستوى الأعلى هما معاملا بيزو؛ وإذا كان gcd(a, m) = 1، فإن x بترديد m هي المعكوس القياسي لـ a.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log(min(a,b)))", worst: "O(log(min(a,b)))" },
+      space: "O(log(min(a,b)))",
+      notes: "عدد القسمات نفسه كإقليدس العادية — أزواج فيبوناتشي هي أسوأ حالة. يضيف التعويض العكسي عملًا بمقدار O(1) لكل مستوى؛ والنسخة التكرارية تحمل (x, y) إلى الأمام بفضاء O(1).",
+    },
+    applications: [
+      "المعكوس القياسي: حُل a·x ≡ 1 (mod m) حين gcd(a, m) = 1 (حساب مفتاح RSA الخاص)",
+      "حل معادلات ديوفانتين الخطية a·x + b·y = c (قابلة للحل إذا وفقط إذا قسم gcd العدد c)",
+      "إنشاءات نظرية الباقي الصينية",
+      "إعادة البناء النسبي وحسابات الكسور المستمرة",
+    ],
+    advantages: [
+      "الكلفة نفسها O(log min(a,b)) كالقاسم المشترك الأكبر العادي لكنها تعطي الشهادة x، y",
+      "تعمل مع أي أعداد صحيحة — لا تشترط الأولية (بخلاف المعكوس المبني على فيرما)",
+      "كل صف وسيط قابل للتحقق: a·x + b·y = gcd يتحقق عند كل مستوى",
+    ],
+    disadvantages: [
+      "قد تكون المعاملات سالبة وتحتاج تطبيعًا (x بترديد m) للمعكوس",
+      "علاقة عودية دقيقة المراس — يسهل تبديل x و y أثناء التعويض العكسي",
+      "قد تتجاوز المعاملات الوسيطة مقدار المدخلات (محدودة بـ max(a,b)، لكن احذر الفيضان ثابت العرض قرب الحدود)",
+    ],
+    commonMistakes: [
+      "إعادة (x, y) دون تبديل: العلاقة هي x = y′ و y = x′ − q·y′، لا العكس.",
+      "استخدام الباقي r بدل خارج القسمة q في التعويض العكسي.",
+      "نسيان تطبيع x السالبة بـ ((x % m) + m) % m عند حساب المعكوس القياسي.",
+      "ادّعاء وجود معكوس حين gcd(a, m) ≠ 1 — بيزو يعطي a·x ≡ gcd فقط، لا 1.",
+    ],
+    interviewQuestions: [
+      "اذكر متطابقة بيزو واشرح لماذا تُثبتها إقليدس الموسّعة إنشائيًا.",
+      "اشتق علاقة التعويض العكسي (x, y) = (y′, x′ − q·y′).",
+      "كيف تحسب معكوسًا قياسيًا بهذه الخوارزمية، ومتى يوجد؟",
+      "قارن معكوسات إقليدس الموسّعة بمعكوسات مبرهنة فيرما الصغرى (a^(m−2) mod m).",
+      "كيف تحل a·x + b·y = c لأي c باستعمال معاملَي بيزو؟",
+    ],
+    summary:
+      "تُجري إقليدس الموسّعة قسمات القاسم المشترك الأكبر إلى الأمام، ثم تُعوّض عكسيًا (x, y) ← (y′, x′ − q·y′) بدءًا من الحالة الأساسية (1, 0) لتُنتج معاملات بيزو بحيث a·x + b·y = gcd(a, b) بمقدار O(log min(a, b)). واستعمالها الأبرز حساب المعكوس القياسي كلما كان gcd(a, m) = 1 — الحساب الجوهري خلف RSA ونظرية الباقي الصينية.",
+    quiz: [
+      { question: "تحسب إقليدس الموسّعة gcd(a, b) و…", options: ["العوامل الأولية لـ a", "عددين صحيحين x، y بحيث a·x + b·y = gcd(a, b)", "‏a·b", "المضاعف المشترك الأصغر فقط"], answer: 1, explanation: "هذان x، y هما معاملا بيزو — إثبات إنشائي لمتطابقة بيزو." },
+      { question: "المعاملان الأساسيان حين b = 0 هما…", options: ["x = 0، y = 1", "x = 1، y = 0", "x = y = 1", "x = a، y = b"], answer: 1, explanation: "‏gcd = a هناك، و a·1 + 0·0 = a يحقّق المتطابقة بداهةً." },
+      { question: "علاقة التعويض العكسي هي…", options: ["(x, y) = (x′, y′)", "(x, y) = (y′, x′ − q·y′)", "(x, y) = (x′ − q, y′)", "(x, y) = (q·x′, q·y′)"], answer: 1, explanation: "تعويض r = a − q·b في متطابقة المستوى الأدنى يُنتج هذا التحويل بالضبط." },
+      { question: "يوجد المعكوس القياسي لـ a بترديد m إذا وفقط إذا…", options: ["كان a أوليًا", "كان m زوجيًا", "‏gcd(a, m) = 1", "‏a < m"], answer: 2, explanation: "عندها a·x + m·y = 1 يعطي a·x ≡ 1 (mod m)؛ وإذا كان gcd > 1 فلا x يفي." },
+      { question: "زمن تشغيل إقليدس الموسّعة مقابل إقليدس العادية هو…", options: ["أبطأ تربيعيًا", "نفسه O(log min(a,b))، مع O(1) إضافي لكل مستوى", "أسّي", "O(n) مقابل O(log n)"], answer: 1, explanation: "تُجري سلسلة القسمة نفسها وتكتفي بحمل عددين إضافيين إلى الأعلى." },
     ],
   },
   inputFields: [

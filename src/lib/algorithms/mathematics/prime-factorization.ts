@@ -37,6 +37,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     pointer?: number,
+    descriptionAr?: string,
   ) => {
     steps.push({
       frame: {
@@ -50,13 +51,14 @@ function generate(input: Input): Step<ArrayFrame>[] {
         note: `Bars are the PRIME candidate divisors up to ⌊√${original}⌋ (composite candidates are skipped — they can never be the smallest remaining factor). A divisor found repeatedly is a prime factor with multiplicity.`,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { divisions, factors: factors.length },
     });
   };
 
   const doneStates: Record<number, CellState> = {};
-  snap({}, original, `Factor ${original} by trial division: try divisors d = 2, 3, … up to √n. Every factor found is automatically prime.`, 0);
+  snap({}, original, `Factor ${original} by trial division: try divisors d = 2, 3, … up to √n. Every factor found is automatically prime.`, 0, undefined, `حلّل ${original} بالقسمة التجريبية: جرّب القواسم d = 2، 3، … حتى √n. كل عامل يُعثر عليه أوليٌّ تلقائيًا.`);
 
   let n = original;
   for (let i = 0; i < candidates.length && candidates[i] * candidates[i] <= n; i++) {
@@ -64,7 +66,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     divisions++;
     if (n % d !== 0) {
       doneStates[i] = "discarded";
-      snap({ ...doneStates, [i]: "compare" }, n, `${n} mod ${d} ≠ 0 — ${d} is not a factor. Move on.`, 2, i);
+      snap({ ...doneStates, [i]: "compare" }, n, `${n} mod ${d} ≠ 0 — ${d} is not a factor. Move on.`, 2, i, `${n} mod ${d} ≠ 0 — ${d} ليس عاملًا. تابِع.`);
       doneStates[i] = "discarded";
       continue;
     }
@@ -73,29 +75,32 @@ function generate(input: Input): Step<ArrayFrame>[] {
       n = n / d;
       factors.push(d);
       doneStates[i] = "found";
-      snap({ ...doneStates, [i]: "found" }, n, `${d} divides: record factor ${d}, remaining n = ${n}.`, 3, i);
+      snap({ ...doneStates, [i]: "found" }, n, `${d} divides: record factor ${d}, remaining n = ${n}.`, 3, i, `${d} يقسم: سجّل العامل ${d}، والمتبقي n = ${n}.`);
     }
   }
 
   if (n > 1) {
     factors.push(n);
-    snap({ ...doneStates }, 1, `Remaining n = ${n} > 1 has no divisor ≤ √n, so it is itself prime — record it.`, 5);
+    snap({ ...doneStates }, 1, `Remaining n = ${n} > 1 has no divisor ≤ √n, so it is itself prime — record it.`, 5, undefined, `المتبقي n = ${n} > 1 ليس له قاسم ≤ √n، فهو نفسه أوليّ — سجّله.`);
   }
 
   const grouped = new Map<number, number>();
   for (const f of factors) grouped.set(f, (grouped.get(f) ?? 0) + 1);
   const pretty = [...grouped.entries()].map(([p, k]) => (k === 1 ? `${p}` : `${p}^${k}`)).join(" × ");
-  snap({ ...doneStates }, 1, `Done: ${original} = ${pretty} (${divisions} trial divisions).`, 6);
+  snap({ ...doneStates }, 1, `Done: ${original} = ${pretty} (${divisions} trial divisions).`, 6, undefined, `تم: ${original} = ${pretty} (${divisions} قسمة تجريبية).`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "prime-factorization",
   title: "Prime Factorization (Trial Division)",
+  titleAr: "التحليل إلى عوامل أولية (القسمة التجريبية)",
   category: "mathematics",
   difficulty: "Beginner",
   tags: ["number theory", "primes", "trial division", "O(√n)"],
+  tagsAr: ["نظرية الأعداد", "الأعداد الأولية", "القسمة التجريبية", "O(√n)"],
   summary: "Decomposes n into its prime factors by dividing out each candidate 2…√n; whatever remains above 1 is itself prime.",
+  summaryAr: "يحلّل n إلى عوامله الأولية بقسمة كل قاسم مرشّح 2…√n؛ وما يتبقّى فوق 1 يكون أوليًا بذاته.",
   renderer: "array",
   pseudocode: [
     "procedure factorize(n)",
@@ -274,6 +279,61 @@ The key efficiency insight is the √n bound: if n has any factor larger than �
       { question: "Factoring 360 yields…", options: ["2³ × 3² × 5", "2² × 3³ × 5", "2 × 3 × 5", "6 × 60"], answer: 0, explanation: "360 = 8 × 45 = 2³ × 3² × 5; the while-loop records each prime with its multiplicity." },
       { question: "The worst case for trial division is when n is…", options: ["A power of 2", "Even", "Prime (or a product of two large primes)", "A perfect square"], answer: 2, explanation: "Then no candidate divides, and the loop must scan all the way to √n before concluding." },
       { question: "After the loop, a remaining n > 1 means…", options: ["A bug occurred", "n is a prime factor bigger than √(original n)", "n should be discarded", "The loop must restart"], answer: 1, explanation: "Example: 2 × 101 — after dividing out 2, the leftover 101 is prime and must be recorded." },
+    ],
+  },
+  contentAr: {
+    overview: `كل عدد صحيح أكبر من 1 يتحلّل تحليلًا وحيدًا إلى أعداد أولية — المبرهنة الأساسية في الحساب. تجد القسمة التجريبية هذا التحليل مباشرةً: جرّب كل قاسم مرشّح d بدءًا من 2، وكلما قسم d العدد n اقسِمه مرارًا قبل الانتقال. ولأن العوامل الأصغر تُزال أولًا، فأي d يقسم n المتبقي لا بد أن يكون أوليًا — فالأعداد المؤلَّفة كانت عواملها الأولية قد أُزيلت سلفًا.
+
+والفكرة الأساسية في الكفاءة هي حدّ √n: إذا كان لـ n أي عامل أكبر من √n فلا يمكن أن يكون له إلا واحد (عاملان > √n سيضربان إلى ما يفوق n). فالحلقة تحتاج أن تعمل فقط ما دام d² ≤ n، وما تبقّى فوق 1 بعدها هو العامل الأولي الأخير — الذي قد يكون كبيرًا. هذا يجعل القسمة التجريبية O(√n)، عملية تمامًا حتى نحو 10¹² رغم أن التحليل الصناعي (رو لبولارد، الغربال التربيعي) لازم بعد ذلك.`,
+    howItWorks: [
+      "ابدأ بـ d = 2، أصغر عدد أولي، والعدد n المراد تحليله.",
+      "إذا قسم d العدد n فاقسِمه مرارًا (مع تسجيل d كل مرة) حتى لا يعود يقسمه — وهذا يلتقط التعدّدية.",
+      "زِد d وكرّر ما دام d² ≤ n؛ والمرشّحات التي لا تقسم أبدًا تُتخطّى ببساطة.",
+      "كل d يقسم n المتبقي مضمون الأولية، لأن كل الأعداد الأولية الأصغر قد قُسمت سلفًا.",
+      "عند انتهاء الحلقة، إن كان n > 1 فهو عامل أولي وحيد متبقٍّ أكبر من √(n الأصلي) — سجّله.",
+    ],
+    complexity: {
+      time: { best: "O(log n)", average: "O(√n)", worst: "O(√n)" },
+      space: "O(log n)",
+      notes: "أفضل حالة: n قوة للعدد 2 (قسمات على 2 فقط، عددها log₂ n). أسوأ حالة: n أوليّ أو حاصل ضرب عددين أوليين متقاربين — تعمل الحلقة حتى √n كاملة. ويُخزَّن على الأكثر log₂ n عاملًا.",
+    },
+    applications: [
+      "تبسيط الكسور والجذور؛ وحساب عدد القواسم ومجاميعها",
+      "حساب دالة أويلر φ(n) لـ RSA ونظرية الأعداد",
+      "إيجاد بنية المضاعف/القاسم المشترك لأعداد كثيرة في البرمجة التنافسية",
+      "الحدس التعموي: أمان RSA يقوم على صعوبة تحليل n بأكثر من 600 رقم",
+    ],
+    advantages: [
+      "بسيطة جدًا في التنفيذ الصحيح",
+      "‏O(√n) — عملية تمامًا لـ n حتى نحو 10¹²",
+      "تُنتج العوامل مرتّبة مع تعدّدياتها، بلا معالجة لاحقة",
+    ],
+    disadvantages: [
+      "عاجزة أمام أعداد بحجم التعمية (مئات الأرقام)",
+      "تُبدّد الوقت باختبار المرشّحات المؤلَّفة (التحليل بالعجلة/الأعداد الأولية المحسوبة مسبقًا يساعدان)",
+      "أسوأ حالة تقع بالضبط حين يكون n أوليًا — يؤكّد مسح √n كامل أن لا شيء يقسمه",
+    ],
+    commonMistakes: [
+      "تكرار d حتى n بدل √n — يحوّل O(√n) إلى O(n).",
+      "استخدام if بدل while للقسمة — يفوّت التعدّديات (12 ← 2، 3 بدل 2، 2، 3).",
+      "نسيان المتبقّي: إن كان n > 1 بعد الحلقة فهو عامل أولي (مثلًا 14 ← 2، ثم يتبقّى 7).",
+      "فحص d ≤ √n بجذر ذي فاصلة عائمة بدل d·d ≤ n (علل دقّة على n الكبير).",
+    ],
+    interviewQuestions: [
+      "لماذا يكون كل قاسم تجده القسمة التجريبية أوليًا تلقائيًا؟",
+      "أثبت أن عاملًا أوليًا واحدًا على الأكثر من n يمكن أن يتجاوز √n.",
+      "كيف تُسرّع القسمة التجريبية بعامل ثابت (الأعداد الفردية فقط، عجلة 6k±1)؟",
+      "مع استعلامات كثيرة، كيف يتفوّق غربال أصغر عامل أولي على القسمة التجريبية المتكررة؟",
+      "لماذا تبقى RSA آمنة إذا كانت هذه الخوارزمية موجودة؟",
+    ],
+    summary:
+      "تحلّل القسمة التجريبية n بقسمة كل مرشّح 2…√n بكامل تعدّديته؛ وأي متبقٍّ فوق 1 عامل أولي كبير أخير. تعمل بمقدار O(√n) — وترتيب القسمة على الأصغر أولًا يضمن أولية كل قاسم مسجّل، وحدّ √n يعمل لأن عاملًا واحدًا على الأكثر يمكن أن يتجاوزه.",
+    quiz: [
+      { question: "لماذا يمكن لحلقة القسمة التجريبية أن تتوقف عند √n؟", options: ["العوامل فوق √n غير موجودة", "عامل واحد على الأكثر يمكن أن يتجاوز √n، ويبقى كمتبقٍّ", "‏√n اصطلاح", "الأعداد الأولية كلها دون √n"], answer: 1, explanation: "عاملان > √n سيضربان إلى أكثر من n، فيبقى بعد الحلقة عدد أولي واحد على الأكثر." },
+      { question: "لماذا يُضمن أن يكون كل قاسم يُعثر عليه أوليًا؟", options: ["نختبر الأعداد الأولية فقط", "كل الأعداد الأولية الأصغر قُسمت سلفًا، فلا يقسم قاسم مؤلَّف d المتبقّي", "غير مضمون", "‏n دائمًا أوليّ"], answer: 1, explanation: "قاسم مؤلَّف d = a·b (‏a، b < d) لا يعود يقسم n — فقد أُزيل a و b سابقًا." },
+      { question: "تحليل 360 يعطي…", options: ["2³ × 3² × 5", "2² × 3³ × 5", "2 × 3 × 5", "6 × 60"], answer: 0, explanation: "‏360 = 8 × 45 = 2³ × 3² × 5؛ وحلقة while تُسجّل كل عدد أولي بتعدّديته." },
+      { question: "أسوأ حالة للقسمة التجريبية حين يكون n…", options: ["قوة للعدد 2", "زوجيًا", "أوليًا (أو حاصل ضرب عددين أوليين كبيرين)", "مربعًا كاملًا"], answer: 2, explanation: "عندها لا يقسم أي مرشّح، وعلى الحلقة أن تمسح حتى √n كاملة قبل أن تخلص." },
+      { question: "بعد الحلقة، متبقٍّ n > 1 يعني…", options: ["حدثت علّة", "‏n عامل أولي أكبر من √(n الأصلي)", "يجب إهمال n", "يجب إعادة تشغيل الحلقة"], answer: 1, explanation: "مثال: 2 × 101 — بعد قسمة 2 يكون المتبقّي 101 أوليًا ويجب تسجيله." },
     ],
   },
   inputFields: [

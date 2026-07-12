@@ -8,46 +8,49 @@ function generate(input: Input): Step<CallStackFrame>[] {
   let calls = 0;
   let uid = 0;
 
-  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"]) => {
+  const snap = (description: string, codeLine: number, topState?: CallStackItem["state"], descriptionAr?: string) => {
     const shown = stack.map((s, i) => ({ ...s, state: i === stack.length - 1 ? topState ?? s.state : s.state }));
-    steps.push({ frame: { stack: shown }, description, codeLine, counters: { calls, depth: stack.length } });
+    steps.push({ frame: { stack: shown }, description, descriptionAr, codeLine, counters: { calls, depth: stack.length } });
   };
 
-  snap(`Euclidean algorithm: gcd(a, b) = gcd(b, a mod b) until b = 0.`, 0);
+  snap(`Euclidean algorithm: gcd(a, b) = gcd(b, a mod b) until b = 0.`, 0, undefined, `خوارزمية إقليدس: gcd(a, b) = gcd(b, a mod b) حتى تصبح b = 0.`);
 
   const gcd = (a: number, b: number): number => {
     calls++;
     const item: CallStackItem = { id: `g${uid++}`, label: `gcd(${a}, ${b})`, state: "active" };
     stack.push(item);
-    snap(`Call gcd(${a}, ${b}).`, 1, "active");
+    snap(`Call gcd(${a}, ${b}).`, 1, "active", `استدعِ gcd(${a}, ${b}).`);
     if (b === 0) {
       item.detail = `= ${a}`;
-      snap(`Base case: b = 0, so gcd = ${a}.`, 2, "found");
+      snap(`Base case: b = 0, so gcd = ${a}.`, 2, "found", `الحالة الأساسية: b = 0، إذًا القاسم المشترك الأكبر = ${a}.`);
       stack.pop();
       return a;
     }
     const r = a % b;
     item.detail = `${a} mod ${b} = ${r}`;
-    snap(`${a} mod ${b} = ${r}. Recurse on gcd(${b}, ${r}).`, 3);
+    snap(`${a} mod ${b} = ${r}. Recurse on gcd(${b}, ${r}).`, 3, undefined, `${a} mod ${b} = ${r}. استدعِ عوديًا gcd(${b}, ${r}).`);
     const result = gcd(b, r);
     item.detail = `= ${result}`;
-    snap(`gcd(${a}, ${b}) returns ${result}.`, 4, "sorted");
+    snap(`gcd(${a}, ${b}) returns ${result}.`, 4, "sorted", `gcd(${a}, ${b}) يُعيد ${result}.`);
     stack.pop();
     return result;
   };
 
   const result = gcd(input.a, input.b);
-  snap(`gcd(${input.a}, ${input.b}) = ${result}.`, 5);
+  snap(`gcd(${input.a}, ${input.b}) = ${result}.`, 5, undefined, `gcd(${input.a}, ${input.b}) = ${result}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<CallStackFrame, Input> = {
   slug: "euclidean-gcd",
   title: "Euclidean Algorithm (GCD)",
+  titleAr: "خوارزمية إقليدس (القاسم المشترك الأكبر)",
   category: "mathematics",
   difficulty: "Beginner",
   tags: ["number theory", "recursion", "gcd", "modulo"],
+  tagsAr: ["نظرية الأعداد", "العودية", "القاسم المشترك الأكبر", "باقي القسمة"],
   summary: "Finds the greatest common divisor by repeatedly replacing (a, b) with (b, a mod b) until b is 0.",
+  summaryAr: "يجد القاسم المشترك الأكبر باستبدال (a, b) بـ (b, a mod b) تكرارًا حتى تصبح b صفرًا.",
   renderer: "callstack",
   pseudocode: [
     "procedure gcd(a, b)",
@@ -149,6 +152,62 @@ Its correctness rests on a simple fact: any common divisor of a and b also divid
       { question: "The number of steps is on the order of…", options: ["O(1)", "O(log min(a,b))", "O(min(a,b))", "O(a·b)"], answer: 1, explanation: "Each step reduces the numbers geometrically." },
       { question: "Which inputs give the worst case?", options: ["Powers of two", "Consecutive Fibonacci numbers", "Equal numbers", "Primes"], answer: 1, explanation: "Consecutive Fibonacci numbers make the modulo shrink slowest." },
       { question: "lcm(a, b) equals…", options: ["a + b − gcd(a,b)", "a·b / gcd(a,b)", "gcd(a,b)²", "a·b·gcd(a,b)"], answer: 1, explanation: "The product divided by the GCD gives the least common multiple." },
+    ],
+  },
+  contentAr: {
+    overview: `خوارزمية إقليدس من أقدم الخوارزميات التي لا تزال مستخدمة، وتعود إلى كتاب «العناصر» لإقليدس نحو عام 300 قبل الميلاد. تحسب القاسم المشترك الأكبر لعددين صحيحين — أكبر عدد يقسمهما معًا — بكفاءة مذهلة.
+
+تقوم صحتها على حقيقة بسيطة: أي قاسم مشترك لـ a و b يقسم أيضًا a mod b. إذًا gcd(a, b) = gcd(b, a mod b). وتطبيق ذلك تكرارًا يُقلّص العددين بسرعة حتى يصبح الثاني صفرًا، وعندها يكون الأول هو الجواب.`,
+    howItWorks: [
+      "لحساب gcd(a, b)، تحقق مما إذا كانت b تساوي صفرًا.",
+      "إذا كانت b = 0، فالقاسم المشترك الأكبر هو a — وهذه الحالة الأساسية.",
+      "خلاف ذلك احسب الباقي r = a mod b.",
+      "استدعِ عوديًا gcd(b, r): المسألة تتقلّص لأن r < b.",
+      "تنتهي العودية بسرعة؛ والقيمة الباقية هي القاسم المشترك الأكبر.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log(min(a,b)))", worst: "O(log(min(a,b)))" },
+      space: "O(log(min(a,b)))",
+      notes: "عدد الخطوات من الرتبة O(log(min(a,b)))؛ وأسوأ حالة هي عددا فيبوناتشي متتاليان. أما النسخة التكرارية فتستخدم فضاءً بمقدار O(1).",
+    },
+    applications: [
+      "اختزال الكسور إلى أبسط صورة",
+      "النسخة الموسّعة تحسب المعكوس الضربي القياسي (RSA، التعمية)",
+      "حساب المضاعف المشترك الأصغر: lcm(a,b) = a·b / gcd(a,b)",
+      "حل معادلات ديوفانتين الخطية",
+    ],
+    advantages: [
+      "سريعة للغاية — عدد الخطوات لوغاريتمي",
+      "تنفيذ صغير وأنيق",
+      "لا تحتاج إلى تحليل إلى عوامل (أسرع بكثير من التحليل)",
+      "تمتد إلى المعكوس القياسي عبر خوارزمية إقليدس الموسّعة",
+    ],
+    disadvantages: [
+      "الصيغة العودية تستخدم مكدسًا بمقدار O(log n) (النسخة التكرارية تتجنب ذلك)",
+      "معرّفة للأعداد الصحيحة فقط",
+      "النسخة الأساسية لا تُنتج معاملات بيزو (استخدم الصيغة الموسّعة)",
+    ],
+    commonMistakes: [
+      "تبديل الوسيطين خطأً — العودية هي gcd(b, a mod b).",
+      "إهمال أن gcd(a, 0) = a (وأن gcd(0, 0) يساوي 0 اصطلاحًا).",
+      "استخدام الطرح المتكرر بدلًا من باقي القسمة (أبطأ بكثير).",
+      "سوء معالجة المدخلات السالبة (خذ القيمة المطلقة أولًا).",
+    ],
+    interviewQuestions: [
+      "لماذا تصحّ المساواة gcd(a, b) = gcd(b, a mod b)؟",
+      "أي زوج مدخلات يُعظّم عدد الخطوات؟",
+      "كيف تجد خوارزمية إقليدس الموسّعة المعكوس القياسي؟",
+      "اشتق المضاعف المشترك الأصغر من القاسم المشترك الأكبر.",
+      "حوّل حساب القاسم المشترك الأكبر العودي إلى حلقة تكرارية بفضاء O(1).",
+    ],
+    summary:
+      "تحسب خوارزمية إقليدس gcd(a, b) باستبدال (a, b) بـ (b, a mod b) تكرارًا حتى تصبح b صفرًا، بعدد خطوات O(log min(a,b)). قديمة وأنيقة وأساس للمعكوس القياسي واختزال الكسور.",
+    quiz: [
+      { question: "الحالة الأساسية لخوارزمية إقليدس هي…", options: ["a == b", "b == 0", "a == 0 و b == 0", "a mod b == 1"], answer: 1, explanation: "عندما تصل b إلى 0 يكون a هو القاسم المشترك الأكبر." },
+      { question: "‏gcd(a, b) تساوي…", options: ["gcd(a − b, b)", "gcd(b, a mod b)", "gcd(a·b, 1)", "a + b"], answer: 1, explanation: "أي قاسم مشترك لـ a و b يقسم a mod b، وهذا يبرّر العلاقة العودية." },
+      { question: "عدد الخطوات من رتبة…", options: ["O(1)", "O(log min(a,b))", "O(min(a,b))", "O(a·b)"], answer: 1, explanation: "كل خطوة تُقلّص العددين هندسيًا." },
+      { question: "أي المدخلات تعطي أسوأ حالة؟", options: ["قوى العدد اثنين", "عددا فيبوناتشي متتاليان", "عددان متساويان", "الأعداد الأولية"], answer: 1, explanation: "عددا فيبوناتشي المتتاليان يجعلان باقي القسمة يتقلّص أبطأ ما يمكن." },
+      { question: "‏lcm(a, b) تساوي…", options: ["a + b − gcd(a,b)", "a·b / gcd(a,b)", "gcd(a,b)²", "a·b·gcd(a,b)"], answer: 1, explanation: "حاصل الضرب مقسومًا على القاسم المشترك الأكبر يعطي المضاعف المشترك الأصغر." },
     ],
   },
   inputFields: [

@@ -39,21 +39,21 @@ function generate(input: Input): Step<GridFrame>[] {
     return arr;
   };
 
-  const pushSnap = (states: Record<number, CellState>, description: string, codeLine: number) => {
+  const pushSnap = (states: Record<number, CellState>, description: string, codeLine: number, descriptionAr?: string) => {
     const frame = buildGrid(states);
     frame.aux = [{ label: "Primes", values: primesFound() }];
     frame.note = `sieving up to ${n}`;
-    steps.push({ frame, description, codeLine, counters: { operations, candidates: primesFound().length } });
+    steps.push({ frame, description, descriptionAr, codeLine, counters: { operations, candidates: primesFound().length } });
   };
 
-  pushSnap({}, `Sieve of Eratosthenes: list 2..${n}, then cross out multiples of each prime.`, 0);
+  pushSnap({}, `Sieve of Eratosthenes: list 2..${n}, then cross out multiples of each prime.`, 0, `غربال إراتوستينس: اسرد 2..${n}، ثم اشطب مضاعفات كل عدد أولي.`);
 
   for (let p = 2; p * p <= n; p++) {
     if (!isPrime[p]) continue;
     const baseStates: Record<number, CellState> = {};
     for (let v = 2; v <= n; v++) if (!isPrime[v]) baseStates[v] = "discarded";
     baseStates[p] = "pivot";
-    pushSnap(baseStates, `${p} is prime. Cross out its multiples starting at ${p}².`, 1);
+    pushSnap(baseStates, `${p} is prime. Cross out its multiples starting at ${p}².`, 1, `${p} عدد أولي. اشطب مضاعفاته بدءًا من ${p}².`);
 
     for (let m = p * p; m <= n; m += p) {
       operations++;
@@ -63,24 +63,27 @@ function generate(input: Input): Step<GridFrame>[] {
         for (let v = 2; v <= n; v++) if (!isPrime[v]) states[v] = "discarded";
         states[p] = "pivot";
         states[m] = "swap";
-        pushSnap(states, `Cross out ${m} = ${p} × ${m / p}.`, 2);
+        pushSnap(states, `Cross out ${m} = ${p} × ${m / p}.`, 2, `اشطب ${m} = ${p} × ${m / p}.`);
       }
     }
   }
 
   const finalStates: Record<number, CellState> = {};
   for (let v = 2; v <= n; v++) finalStates[v] = isPrime[v] ? "sorted" : "discarded";
-  pushSnap(finalStates, `Done! ${primesFound().length} primes ≤ ${n}: ${primesFound().join(", ")}.`, 4);
+  pushSnap(finalStates, `Done! ${primesFound().length} primes ≤ ${n}: ${primesFound().join(", ")}.`, 4, `تم! ${primesFound().length} عددًا أوليًا ≤ ${n}: ${primesFound().join(", ")}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<GridFrame, Input> = {
   slug: "sieve-of-eratosthenes",
   title: "Sieve of Eratosthenes",
+  titleAr: "غربال إراتوستينس",
   category: "mathematics",
   difficulty: "Beginner",
   tags: ["number theory", "primes", "sieve", "O(n log log n)"],
+  tagsAr: ["نظرية الأعداد", "الأعداد الأولية", "غربال", "O(n log log n)"],
   summary: "Finds all primes up to n by repeatedly crossing out the multiples of each prime.",
+  summaryAr: "يجد كل الأعداد الأولية حتى n بشطب مضاعفات كل عدد أولي تكرارًا.",
   renderer: "grid",
   pseudocode: [
     "procedure sieve(n)",
@@ -276,6 +279,62 @@ A key optimization is to start crossing out from p² rather than 2p: any smaller
       { question: "The outer loop only needs to run while…", options: ["p ≤ n", "p² ≤ n", "p ≤ n/2", "p ≤ log n"], answer: 1, explanation: "Any composite ≤ n has a factor ≤ √n, so larger p find nothing new." },
       { question: "The sieve's time complexity is…", options: ["O(n)", "O(n log n)", "O(n log log n)", "O(n²)"], answer: 2, explanation: "Summing n/p over primes p gives O(n log log n)." },
       { question: "A drawback of the basic sieve is…", options: ["It misses some primes", "O(n) memory for large n", "It can't find 2", "It requires sorting"], answer: 1, explanation: "The boolean array of size n limits how large a range fits in memory." },
+    ],
+  },
+  contentAr: {
+    overview: `يجد غربال إراتوستينس كل الأعداد الأولية حتى الحدّ n. وبدل اختبار أولية كل عدد على حِدة، يعمل بالإقصاء: ابدأ بكل عدد مُعلَّمًا كأوليّ محتمل، ثم خذ العدد الأولي التالي مرارًا واشطب كل مضاعفاته. وما يبقى فهو أوليّ.
+
+من التحسينات الأساسية بدء الشطب من p² بدل 2p: فأي مضاعف أصغر لـ p (مثل 2p، 3p) يكون قد أُقصي سلفًا بعامل أولي أصغر. هذا، مع إيقاف الحلقة الخارجية عند √n، يجعل الغربال فعّالًا بمقدار O(n log log n).`,
+    howItWorks: [
+      "افترض أن كل عدد من 2 إلى n أوليّ.",
+      "خذ أصغر عدد لا يزال مُعلَّمًا أوليًا (بدءًا من 2) — سمِّه p.",
+      "اشطب كل مضاعف لـ p بدءًا من p² حتى n؛ فهي مؤلَّفة.",
+      "انتقل إلى العدد التالي غير المشطوب وكرّر، ما دام p² ≤ n.",
+      "كل الأعداد التي تبقى غير مشطوبة هي أولية.",
+    ],
+    complexity: {
+      time: { best: "O(n log log n)", average: "O(n log log n)", worst: "O(n log log n)" },
+      space: "O(n)",
+      notes: "الزمن شبه الخطي يأتي من جمع n/p على الأعداد الأولية p ≤ n، وهو O(n log log n). والفضاء O(n) للمصفوفة المنطقية؛ وحزم البتات أو الغرابيل المقسَّمة تخفض الذاكرة.",
+    },
+    applications: [
+      "حساب كل الأعداد الأولية حتى حدّ مسبقًا (البرمجة التنافسية)",
+      "مسائل نظرية الأعداد التي تحتاج أعدادًا أولية كثيرة",
+      "جداول التحليل وغرابيل أصغر عامل أولي",
+      "توليد الأعداد الأولية التعموية (كمرشِّح أولي)",
+    ],
+    advantages: [
+      "سريع جدًا — شبه خطي O(n log log n)",
+      "بسيط، بلا قسمات أو اختبارات أولية لكل عدد",
+      "يُنتج كل الأعداد الأولية حتى n في مرور واحد",
+      "يسهل تمديده إلى جداول أصغر عامل أولي",
+    ],
+    disadvantages: [
+      "ذاكرة O(n) تحدّ المدى على جهاز واحد",
+      "يجد كل الأعداد الأولية حتى n — مُبدِّد إن احتجت واحدًا فقط",
+      "غير مثالي لاختبار عدد واحد كبير جدًا (استخدم ميلر-رابين)",
+    ],
+    commonMistakes: [
+      "بدء الشطب الداخلي عند 2p بدل p² (صحيح لكن أبطأ).",
+      "تعليم 0 و1 كأوليَّين.",
+      "تشغيل الحلقة الخارجية حتى n بدل √n.",
+      "استخدام ذاكرة O(n) بسذاجة لـ n كبير جدًا بدل غربال مقسَّم.",
+    ],
+    interviewQuestions: [
+      "لماذا يمكن بدء الشطب عند p² بدل 2p؟",
+      "اشتق زمن التشغيل O(n log log n).",
+      "كيف يخفض الغربال المقسَّم استخدام الذاكرة؟",
+      "كيف تبني جدول أصغر عامل أولي بغربال؟",
+      "متى تستخدم ميلر-رابين بدل الغربال؟",
+    ],
+    summary:
+      "يُعلّم غربال إراتوستينس كل الأعداد حتى n، ثم يشطب مضاعفات كل عدد أولي بدءًا من p² فصاعدًا، تاركًا الأعداد الأولية. يعمل بزمن O(n log log n) وفضاء O(n) — الطريقة المفضّلة لتوليد أعداد أولية كثيرة.",
+    quiz: [
+      { question: "يجد الغربال الأعداد الأولية بـ…", options: ["القسمة التجريبية لكل عدد", "شطب مضاعفات كل عدد أولي", "الاختبار العشوائي", "تحليل كل عدد"], answer: 1, explanation: "يُقصي الأعداد المؤلَّفة كمضاعفات، تاركًا الأعداد الأولية غير مشطوبة." },
+      { question: "يمكن أن يبدأ شطب مضاعفات p عند…", options: ["2p", "p²", "p + 1", "n/2"], answer: 1, explanation: "المضاعفات الأصغر لـ p شُطبت سلفًا بعوامل أولية أصغر." },
+      { question: "لا تحتاج الحلقة الخارجية أن تعمل إلا ما دام…", options: ["p ≤ n", "p² ≤ n", "p ≤ n/2", "p ≤ log n"], answer: 1, explanation: "أي عدد مؤلَّف ≤ n له عامل ≤ √n، فالأعداد الأكبر p لا تجد جديدًا." },
+      { question: "التعقيد الزمني للغربال هو…", options: ["O(n)", "O(n log n)", "O(n log log n)", "O(n²)"], answer: 2, explanation: "جمع n/p على الأعداد الأولية p يعطي O(n log log n)." },
+      { question: "من عيوب الغربال الأساسي…", options: ["يفوّت بعض الأعداد الأولية", "ذاكرة O(n) لـ n الكبير", "لا يجد 2", "يتطلب ترتيبًا"], answer: 1, explanation: "المصفوفة المنطقية بحجم n تحدّ حجم المدى الذي يتّسع في الذاكرة." },
     ],
   },
   inputFields: [{ key: "n", label: "Upper limit n", placeholder: "50", help: "10–3,000." }],
