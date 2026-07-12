@@ -18,7 +18,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   let ops = 0;
   let root: Node | null = null;
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (nd: Node | null) => {
       if (!nd) return;
@@ -42,6 +42,7 @@ function generate(input: Input): Step<TreeFrame>[] {
         note,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { ops },
     });
@@ -62,27 +63,58 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   root = build(0, n - 1);
   ops++;
-  toFrame({ [root.id]: "found" }, `Segment tree built over [${a.join(", ")}]. Each node stores the sum of its index range; the root covers the whole array.`, 1, `built (O(n))`);
+  toFrame(
+    { [root.id]: "found" },
+    `Segment tree built over [${a.join(", ")}]. Each node stores the sum of its index range; the root covers the whole array.`,
+    1,
+    `built (O(n))`,
+    `بُنيت شجرة المجالات فوق [${a.join(", ")}]. كل عقدة تخزّن مجموع مجال فهارسها؛ الجذر يغطي المصفوفة كلها.`,
+  );
 
   // --- range sum query ---
   const L = input.queryL;
   const R = input.queryR;
   const query = (node: Node | null, l: number, r: number): number => {
     if (!node || r < node.lo || node.hi < l) {
-      if (node) toFrame({ [node.id]: "discarded" }, `Node [${node.lo}..${node.hi}] is outside query [${l}..${r}] → contributes 0.`, 3, `query`);
+      if (node)
+        toFrame(
+          { [node.id]: "discarded" },
+          `Node [${node.lo}..${node.hi}] is outside query [${l}..${r}] → contributes 0.`,
+          3,
+          `query`,
+          `العقدة [${node.lo}..${node.hi}] خارج الاستعلام [${l}..${r}] ← تساهم بـ0.`,
+        );
       return 0;
     }
     if (l <= node.lo && node.hi <= r) {
-      toFrame({ [node.id]: "found" }, `Node [${node.lo}..${node.hi}] is fully inside [${l}..${r}] → take its sum ${node.sum}.`, 4, `query`);
+      toFrame(
+        { [node.id]: "found" },
+        `Node [${node.lo}..${node.hi}] is fully inside [${l}..${r}] → take its sum ${node.sum}.`,
+        4,
+        `query`,
+        `العقدة [${node.lo}..${node.hi}] بالكامل داخل [${l}..${r}] ← خذ مجموعها ${node.sum}.`,
+      );
       return node.sum;
     }
-    toFrame({ [node.id]: "active" }, `Node [${node.lo}..${node.hi}] partially overlaps [${l}..${r}] → recurse into both children.`, 5, `query`);
+    toFrame(
+      { [node.id]: "active" },
+      `Node [${node.lo}..${node.hi}] partially overlaps [${l}..${r}] → recurse into both children.`,
+      5,
+      `query`,
+      `العقدة [${node.lo}..${node.hi}] تتداخل جزئيًا مع [${l}..${r}] ← عاود الدخول إلى كلا الابنين.`,
+    );
     ops++;
     return query(node.left, l, r) + query(node.right, l, r);
   };
-  toFrame({}, `Range-sum query on [${L}..${R}]: descend, using whole-node sums where a node lies entirely inside the range.`, 2, `query [${L}..${R}]`);
+  toFrame(
+    {},
+    `Range-sum query on [${L}..${R}]: descend, using whole-node sums where a node lies entirely inside the range.`,
+    2,
+    `query [${L}..${R}]`,
+    `استعلام مجموع المجال على [${L}..${R}]: انزل، مستخدمًا مجاميع العقدة كاملة حيث تقع العقدة بالكامل داخل المجال.`,
+  );
   const result = query(root, L, R);
-  toFrame({}, `Sum of indices ${L}..${R} = ${result}. Only O(log n) nodes were visited.`, 6, `query result`);
+  toFrame({}, `Sum of indices ${L}..${R} = ${result}. Only O(log n) nodes were visited.`, 6, `query result`, `مجموع الفهارس ${L}..${R} = ${result}. زُر فقط O(log n) من العقد.`);
 
   // --- point update ---
   const idx = input.updateIdx;
@@ -92,16 +124,28 @@ function generate(input: Input): Step<TreeFrame>[] {
   const update = (node: Node): void => {
     if (node.lo === node.hi) {
       node.sum = val;
-      toFrame({ [node.id]: "swap" }, `Leaf [${node.lo}] updated to ${val}.`, 6, `update`);
+      toFrame({ [node.id]: "swap" }, `Leaf [${node.lo}] updated to ${val}.`, 6, `update`, `حُدِّثت الورقة [${node.lo}] إلى ${val}.`);
       return;
     }
     const mid = (node.lo + node.hi) >> 1;
     if (idx <= mid) update(node.left!);
     else update(node.right!);
     node.sum = node.left!.sum + node.right!.sum;
-    toFrame({ [node.id]: "active" }, `Recompute node [${node.lo}..${node.hi}] sum = ${node.sum} after the change.`, 6, `update`);
+    toFrame(
+      { [node.id]: "active" },
+      `Recompute node [${node.lo}..${node.hi}] sum = ${node.sum} after the change.`,
+      6,
+      `update`,
+      `أعِد حساب مجموع العقدة [${node.lo}..${node.hi}] = ${node.sum} بعد التغيير.`,
+    );
   };
-  toFrame({}, `Point update: set index ${idx} to ${val} (was ${val - delta}). Update the leaf, then fix sums on the path to the root.`, 6, `update idx ${idx}`);
+  toFrame(
+    {},
+    `Point update: set index ${idx} to ${val} (was ${val - delta}). Update the leaf, then fix sums on the path to the root.`,
+    6,
+    `update idx ${idx}`,
+    `تحديث نقطي: اجعل الفهرس ${idx} يساوي ${val} (كان ${val - delta}). حدّث الورقة، ثم أصلح المجاميع على المسار إلى الجذر.`,
+  );
   ops++;
   update(root);
 
@@ -113,7 +157,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(nd.right);
   };
   markAll(root);
-  toFrame(done, `Done. Both range queries and point updates run in O(log n) on the segment tree.`, 7, `final`);
+  toFrame(done, `Done. Both range queries and point updates run in O(log n) on the segment tree.`, 7, `final`, `تم. كل من استعلامات المجال والتحديثات النقطية تعمل بزمن O(log n) على شجرة المجالات.`);
   return steps;
 }
 
@@ -130,10 +174,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "segment-tree",
   title: "Segment Tree (Range Queries)",
+  titleAr: "شجرة المجالات (استعلامات المجال)",
   category: "trees",
   difficulty: "Advanced",
   tags: ["tree", "range query", "point update", "divide and conquer"],
+  tagsAr: ["شجرة", "استعلام مجال", "تحديث نقطي", "فرّق تسد"],
   summary: "Answers range-sum queries and point updates in O(log n) by storing partial sums over a binary tree of index ranges.",
+  summaryAr: "تُجيب عن استعلامات مجموع المجال والتحديثات النقطية بزمن O(log n) عبر تخزين مجاميع جزئية فوق شجرة ثنائية من مجالات الفهارس.",
   renderer: "tree",
   pseudocode: [
     "structure SegmentTree(array)",
@@ -385,6 +432,63 @@ The magic is that any query range can be decomposed into O(log n) precomputed no
       { question: "During a query, a node fully inside the range is…", options: ["Recursed into", "Used directly via its stored aggregate", "Ignored", "Updated"], answer: 1, explanation: "Its precomputed aggregate is taken wholesale — no recursion needed." },
       { question: "After a point update you must…", options: ["Rebuild the whole tree", "Recompute aggregates on the path to the root", "Do nothing", "Sort the array"], answer: 1, explanation: "Only the ancestors of the changed leaf need updating." },
       { question: "Range updates in O(log n) require…", options: ["A hash map", "Lazy propagation", "Sorting", "A second array"], answer: 1, explanation: "Lazy propagation defers child updates until needed." },
+    ],
+  },
+  contentAr: {
+    overview: `شجرة المجالات هي شجرة ثنائية مبنية فوق مصفوفة تُجيب عن استعلامات المجال — مثل المجموع أو الحد الأدنى أو الحد الأعلى فوق أي شريحة متجاورة — وتدعم التحديثات، وكلاهما بزمن O(log n). كل ورقة تقابل عنصرًا واحدًا من المصفوفة، وكل عقدة داخلية تخزّن تجميعًا (هنا، المجموع) للمجال الذي يغطيه ابناها، لذا الجذر يغطي المصفوفة كلها.
+
+السحر هو أن أي مجال استعلام يمكن تفكيكه إلى O(log n) من مجالات العقد المحسوبة مسبقًا. لجمع a[l..r]، تعاود الدخول من الجذر: إذا كان مجال عقدة بالكامل داخل [l, r] فتأخذ مجموعها المخزَّن كاملًا؛ وإذا كان بالكامل خارجه فتتجاهله؛ ولا تنزل إلى كلا الابنين إلا عند التداخل الجزئي. التحديث النقطي يغيّر ورقة واحدة ثم يعود إلى الجذر معيدًا حساب المجاميع المتأثرة. تعمم شجرة المجالات إلى أي عملية تجميعية، ومع الانتشار الكسول، تدعم حتى تحديثات المجال بزمن O(log n).`,
+    howItWorks: [
+      "ابنِ عوديًا: الورقة تحمل عنصرًا واحدًا؛ والعقدة الداخلية تحمل القيمة المجمّعة لابنيها (الجذر يمتد على المصفوفة كلها).",
+      "لاستعلام مجال، ابدأ من الجذر وقارن مجال كل عقدة بمجال الاستعلام.",
+      "إذا كانت عقدة بالكامل داخل مجال الاستعلام، استخدم تجميعها المخزَّن مباشرة.",
+      "إذا كانت بالكامل خارجه، ساهم بالعنصر المحايد (0 للمجاميع)؛ وإذا تداخلت جزئيًا، عاود الدخول إلى كلا الابنين.",
+      "للتحديث النقطي، اضبط الورقة ثم أعد حساب تجميع كل سلف حتى الجذر.",
+    ],
+    complexity: {
+      time: { best: "O(log n) query/update", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "البناء O(n)؛ كل استعلام وتحديث نقطي يزور O(log n) من العقد. الشجرة تستخدم نحو 2n–4n عقدة. تحديثات المجال تحتاج الانتشار الكسول للبقاء عند O(log n).",
+    },
+    applications: [
+      "استعلامات مجموع/حد أدنى/حد أعلى/القاسم المشترك الأكبر للمجال مع تحديثات",
+      "البرمجة التنافسية ومسائل المجالات",
+      "الهندسة الحاسوبية (عد التقاطعات، خط الكنس)",
+      "تجميعات التكرار والبادئة فوق مصفوفات متغيرة",
+    ],
+    advantages: [
+      "استعلامات وتحديثات بزمن O(log n) (على عكس مجاميع البادئة الثابتة)",
+      "تعمل مع أي عملية تجميعية",
+      "تدعم تحديثات المجال عبر الانتشار الكسول",
+      "ارتفاع O(log n) متوازن ويمكن التنبؤ به",
+    ],
+    disadvantages: [
+      "تستخدم 2–4× حجم المصفوفة في الذاكرة",
+      "أعقد من شجرة فينويك/BIT للمجاميع البسيطة",
+      "التطبيق العودي له عبء ثابت إضافي",
+      "الانتشار الكسول يضيف تعقيدًا برمجيًا كبيرًا",
+    ],
+    commonMistakes: [
+      "تخصيص عقد شجرة أقل من اللازم (استخدم 4n لتكون آمنًا).",
+      "إعادة العنصر المحايد الخاطئ للعملية (0 للمجموع، +∞ للحد الأدنى).",
+      "الخلط بين شرطي الاحتواء الكامل والتداخل الجزئي.",
+      "نسيان إعادة حساب تجميعات الأسلاف بعد التحديث.",
+    ],
+    interviewQuestions: [
+      "لماذا يمكن تغطية أي مجال بـ O(log n) من عقد شجرة المجالات؟",
+      "كيف يتيح الانتشار الكسول تحديثات مجال بزمن O(log n)؟",
+      "متى تختار شجرة فينويك على شجرة المجالات؟",
+      "كيف تُكيّف شجرة مجالات للمجموع كي تجيب استعلامات الحد الأدنى أو الأعلى؟",
+      "كم من الذاكرة تحتاج شجرة المجالات ولماذا 4n؟",
+    ],
+    summary:
+      "شجرة المجالات تخزّن تجميعات المجال فوق شجرة ثنائية من فترات الفهارس، مُجيبة عن استعلامات المجال والتحديثات النقطية بزمن O(log n) بدمج O(log n) من العقد المغطاة بالكامل. تعمم إلى أي عملية تجميعية، ومع الانتشار الكسول، إلى تحديثات المجال.",
+    quiz: [
+      { question: "كل عقدة داخلية في شجرة المجالات تخزّن…", options: ["عنصر مصفوفة واحد", "التجميع فوق مجال أبنائها", "مؤشرًا إلى المصفوفة", "نتيجة الاستعلام"], answer: 1, explanation: "العقد الداخلية تحمل القيمة المجمّعة (مثل المجموع) لمجالها الفرعي." },
+      { question: "استعلام المجال يزور كم من العقد؟", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "أي مجال يتفكك إلى O(log n) من العقد المغطاة بالكامل." },
+      { question: "أثناء الاستعلام، العقدة الواقعة بالكامل داخل المجال…", options: ["يُعاود الدخول إليها", "تُستخدم مباشرة عبر تجميعها المخزَّن", "تُتجاهل", "تُحدَّث"], answer: 1, explanation: "يُؤخذ تجميعها المحسوب مسبقًا كاملًا — لا حاجة للعودية." },
+      { question: "بعد التحديث النقطي يجب عليك…", options: ["إعادة بناء الشجرة كاملة", "إعادة حساب التجميعات على المسار إلى الجذر", "لا شيء", "ترتيب المصفوفة"], answer: 1, explanation: "فقط أسلاف الورقة المتغيرة تحتاج تحديثًا." },
+      { question: "تحديثات المجال بزمن O(log n) تتطلب…", options: ["خريطة تجزئة", "الانتشار الكسول", "الترتيب", "مصفوفة ثانية"], answer: 1, explanation: "الانتشار الكسول يؤجل تحديثات الأبناء حتى الحاجة إليها." },
     ],
   },
   inputFields: [

@@ -21,7 +21,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   const bf = (n: Node | null) => (n ? h(n.left) - h(n.right) : 0);
   const updateHeight = (n: Node) => (n.height = 1 + Math.max(h(n.left), h(n.right)));
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: Node | null) => {
       if (!n) return;
@@ -40,6 +40,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: root?.id ?? null, states: { ...states }, note },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, rotations },
     });
@@ -75,13 +76,19 @@ function generate(input: Input): Step<TreeFrame>[] {
     rotations++;
   };
 
-  toFrame({}, `An AVL tree is a self-balancing BST: after every insert it rotates so each node's balance factor (height of left − right) stays in {−1, 0, +1}.`, 0, `empty AVL tree`);
+  toFrame(
+    {},
+    `An AVL tree is a self-balancing BST: after every insert it rotates so each node's balance factor (height of left − right) stays in {−1, 0, +1}.`,
+    0,
+    `empty AVL tree`,
+    `شجرة AVL هي شجرة بحث ثنائية ذاتية التوازن: بعد كل إدراج تُجري دورانات كي يبقى عامل توازن كل عقدة (ارتفاع اليسار − اليمين) ضمن {−1، 0، +1}.`,
+  );
 
   const insert = (value: number) => {
     // 1) Standard BST insertion (connected, with parent pointers).
     if (!root) {
       root = { id: `n${idc++}`, value, left: null, right: null, parent: null, height: 1 };
-      toFrame({ [root.id]: "found" }, `insert(${value}): tree empty → new root.`, 2, `insert ${value}`);
+      toFrame({ [root.id]: "found" }, `insert(${value}): tree empty → new root.`, 2, `insert ${value}`, `insert(${value}): الشجرة فارغة ← جذر جديد.`);
       return;
     }
     let cur: Node = root;
@@ -89,9 +96,15 @@ function generate(input: Input): Step<TreeFrame>[] {
     while (cur) {
       comparisons++;
       parent = cur;
-      toFrame({ [cur.id]: "compare" }, `insert(${value}): ${value} ${value < cur.value ? "<" : ">"} ${cur.value}, go ${value < cur.value ? "left" : "right"}.`, 3, `insert ${value}`);
+      toFrame(
+        { [cur.id]: "compare" },
+        `insert(${value}): ${value} ${value < cur.value ? "<" : ">"} ${cur.value}, go ${value < cur.value ? "left" : "right"}.`,
+        3,
+        `insert ${value}`,
+        `insert(${value}): ${value} ${value < cur.value ? "<" : ">"} ${cur.value}، اتجه ${value < cur.value ? "يسارًا" : "يمينًا"}.`,
+      );
       if (value === cur.value) {
-        toFrame({ [cur.id]: "discarded" }, `${value} already present — AVL keeps unique keys, skip.`, 3, `insert ${value}`);
+        toFrame({ [cur.id]: "discarded" }, `${value} already present — AVL keeps unique keys, skip.`, 3, `insert ${value}`, `${value} موجود بالفعل — شجرة AVL تحافظ على مفاتيح فريدة، تجاهله.`);
         return;
       }
       cur = value < cur.value ? (cur.left as Node) : (cur.right as Node);
@@ -99,7 +112,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     const node: Node = { id: `n${idc++}`, value, left: null, right: null, parent, height: 1 };
     if (value < parent.value) parent.left = node;
     else parent.right = node;
-    toFrame({ [node.id]: "found" }, `Insert ${value} as a leaf under ${parent.value}. Now retrace upward to rebalance.`, 1, `insert ${value}`);
+    toFrame(
+      { [node.id]: "found" },
+      `Insert ${value} as a leaf under ${parent.value}. Now retrace upward to rebalance.`,
+      1,
+      `insert ${value}`,
+      `أدرج ${value} كورقة تحت ${parent.value}. الآن تتبّع الطريق صعودًا لإعادة التوازن.`,
+    );
 
     // 2) Retrace: update heights and rebalance at the first unbalanced ancestor.
     let z: Node | null = parent;
@@ -107,27 +126,45 @@ function generate(input: Input): Step<TreeFrame>[] {
       updateHeight(z);
       const balance = bf(z);
       if (balance > 1 || balance < -1) {
-        toFrame({ [z.id]: "swap" }, `Node ${z.value} is unbalanced (bf ${balance > 0 ? "+" : ""}${balance}). Rebalance with a rotation.`, 3, `rebalance`);
+        toFrame(
+          { [z.id]: "swap" },
+          `Node ${z.value} is unbalanced (bf ${balance > 0 ? "+" : ""}${balance}). Rebalance with a rotation.`,
+          3,
+          `rebalance`,
+          `العقدة ${z.value} غير متوازنة (عامل التوازن ${balance > 0 ? "+" : ""}${balance}). أعِد التوازن بدوران.`,
+        );
         if (balance > 1 && bf(z.left) >= 0) {
           // Left-Left
-          toFrame({ [z.id]: "swap", [z.left!.id]: "active" }, `Left-Left case → right-rotate ${z.value}.`, 4, `LL rotation`);
+          toFrame({ [z.id]: "swap", [z.left!.id]: "active" }, `Left-Left case → right-rotate ${z.value}.`, 4, `LL rotation`, `حالة يسار-يسار ← دوران يميني حول ${z.value}.`);
           rotateRight(z);
         } else if (balance > 1) {
           // Left-Right
-          toFrame({ [z.id]: "swap", [z.left!.id]: "active", [z.left!.right!.id]: "compare" }, `Left-Right case → left-rotate ${z.left!.value}, then right-rotate ${z.value}.`, 5, `LR rotation`);
+          toFrame(
+            { [z.id]: "swap", [z.left!.id]: "active", [z.left!.right!.id]: "compare" },
+            `Left-Right case → left-rotate ${z.left!.value}, then right-rotate ${z.value}.`,
+            5,
+            `LR rotation`,
+            `حالة يسار-يمين ← دوران يساري حول ${z.left!.value}، ثم دوران يميني حول ${z.value}.`,
+          );
           rotateLeft(z.left!);
           rotateRight(z);
         } else if (balance < -1 && bf(z.right) <= 0) {
           // Right-Right
-          toFrame({ [z.id]: "swap", [z.right!.id]: "active" }, `Right-Right case → left-rotate ${z.value}.`, 6, `RR rotation`);
+          toFrame({ [z.id]: "swap", [z.right!.id]: "active" }, `Right-Right case → left-rotate ${z.value}.`, 6, `RR rotation`, `حالة يمين-يمين ← دوران يساري حول ${z.value}.`);
           rotateLeft(z);
         } else {
           // Right-Left
-          toFrame({ [z.id]: "swap", [z.right!.id]: "active", [z.right!.left!.id]: "compare" }, `Right-Left case → right-rotate ${z.right!.value}, then left-rotate ${z.value}.`, 7, `RL rotation`);
+          toFrame(
+            { [z.id]: "swap", [z.right!.id]: "active", [z.right!.left!.id]: "compare" },
+            `Right-Left case → right-rotate ${z.right!.value}, then left-rotate ${z.value}.`,
+            7,
+            `RL rotation`,
+            `حالة يمين-يسار ← دوران يميني حول ${z.right!.value}، ثم دوران يساري حول ${z.value}.`,
+          );
           rotateRight(z.right!);
           rotateLeft(z);
         }
-        toFrame({}, `Rebalanced. Heights are AVL-valid again (all balance factors in {−1,0,+1}).`, 8, `balanced`);
+        toFrame({}, `Rebalanced. Heights are AVL-valid again (all balance factors in {−1,0,+1}).`, 8, `balanced`, `أُعيد التوازن. الارتفاعات صالحة لـAVL مجددًا (كل عوامل التوازن ضمن {−1، 0، +1}).`);
         break; // one rotation suffices for a single insertion
       }
       z = z.parent;
@@ -144,7 +181,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(n.right);
   };
   markAll(root);
-  toFrame(done, `All values inserted. The tree is height-balanced with height ${h(root)} — searches stay O(log n).`, 8, `final AVL tree`);
+  toFrame(
+    done,
+    `All values inserted. The tree is height-balanced with height ${h(root)} — searches stay O(log n).`,
+    8,
+    `final AVL tree`,
+    `أُدرجت كل القيم. الشجرة متوازنة الارتفاع بارتفاع ${h(root)} — يبقى البحث O(log n).`,
+  );
   return steps;
 }
 
@@ -158,10 +201,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "avl-tree",
   title: "AVL Tree (Self-Balancing BST)",
+  titleAr: "شجرة AVL (شجرة بحث ثنائية ذاتية التوازن)",
   category: "trees",
   difficulty: "Advanced",
   tags: ["tree", "self-balancing", "rotations", "balance factor"],
+  tagsAr: ["شجرة", "ذاتية التوازن", "دورانات", "عامل التوازن"],
   summary: "A height-balanced binary search tree that rotates after inserts to keep every balance factor in {−1, 0, +1}.",
+  summaryAr: "شجرة بحث ثنائية متوازنة الارتفاع تُجري دورانات بعد الإدراج للحفاظ على كل عوامل التوازن ضمن {−1، 0، +1}.",
   renderer: "tree",
   pseudocode: [
     "procedure insert(node, key)",
@@ -369,6 +415,63 @@ After a normal BST insertion, one subtree may become too tall, violating the inv
       { question: "AVL operations are guaranteed to run in…", options: ["O(1)", "O(log n) worst case", "O(n)", "O(n log n)"], answer: 1, explanation: "The height stays logarithmic, bounding all operations." },
       { question: "Compared with red-black trees, AVL trees are…", options: ["Less balanced", "More tightly balanced (faster lookups)", "Not ordered", "Always slower"], answer: 1, explanation: "Stricter balancing means shorter height and faster searches, but more rotations." },
       { question: "A single insertion requires at most…", options: ["No rotations", "One (single or double) rotation", "log n rotations", "n rotations"], answer: 1, explanation: "One rotation restores AVL balance after any single insertion." },
+    ],
+  },
+  contentAr: {
+    overview: `شجرة AVL (سُمّيت تيمنًا بمخترعيها أديلسون-فيلسكي ولانديس، 1962) هي أول شجرة بحث ثنائية ذاتية التوازن اختُرعت على الإطلاق. تحافظ على ارتفاع الشجرة لوغاريتميًا عبر فرض ثابت صارم: لكل عقدة، يختلف ارتفاعا شجرتيها الفرعيتين اليسرى واليمنى بمقدار واحد على الأكثر. يُسمى هذا الفرق عامل توازن العقدة، ويجب أن يكون دائمًا −1 أو 0 أو +1.
+
+بعد إدراج عادي في شجرة بحث ثنائية، قد تصبح إحدى الشجرتين الفرعيتين طويلة جدًا، مما يخالف الثابت. تستعيد الشجرة توازنها بالدورانات — إعادة ترتيب مؤشرات محلية بزمن O(1) تُقلل ارتفاع شجرة فرعية مع الحفاظ على ترتيب شجرة البحث الثنائية. توجد أربع حالات، سُمّيت وفق شكل الاختلال: يسار-يسار ويمين-يمين يحتاجان دورانًا واحدًا، بينما يسار-يمين ويمين-يسار يحتاجان دورانًا مزدوجًا. ولأن الارتفاع مضمون بنحو 1.44·log₂(n)، فإن البحث والإدراج والحذف كلها O(log n) في أسوأ الحالات — أشجار AVL أكثر توازنًا صرامة من الأشجار الحمراء-السوداء، مما يمنح بحثًا أسرع مقابل دورانات أكثر عند التحديثات.`,
+    howItWorks: [
+      "أدرج المفتاح كما في شجرة بحث ثنائية عادية، نازلًا يسارًا/يمينًا بالمقارنة.",
+      "تتبّع مسار الإدراج صعودًا، محدّثًا الارتفاع المخزَّن لكل سلف.",
+      "عند كل سلف احسب عامل التوازن = ارتفاع(اليسار) − ارتفاع(اليمين).",
+      "إذا بلغ عامل التوازن +2 أو −2، حدد الحالة (LL، RR، LR، RL).",
+      "طبّق الدوران المطابق المفرد أو المزدوج؛ دوران واحد يكفي لإدراج واحد.",
+    ],
+    complexity: {
+      time: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "الارتفاع لا يتجاوز نحو ~1.44·log₂(n)، لذا البحث/الإدراج/الحذف O(log n) في أسوأ الحالات. كل إدراج يستدعي دورانًا واحدًا (مفردًا أو مزدوجًا) على الأكثر؛ الحذف قد يسبب O(log n) من الدورانات صعودًا في المسار.",
+    },
+    applications: [
+      "خرائط/مجموعات مرتبة في الذاكرة تحتاج بحثًا سريعًا في أسوأ الحالات",
+      "قواعد البيانات وبيئات تشغيل اللغات التي تتطلب O(log n) مضمونة",
+      "الإحصاءات المرتبة واستعلامات المجال",
+      "أي حِمل عمل كثيف البحث نسبيًا إلى التحديثات",
+    ],
+    advantages: [
+      "عمليات مضمونة بزمن O(log n) في أسوأ الحالات",
+      "أكثر توازنًا بإحكام من الأشجار الحمراء-السوداء ← بحث أسرع",
+      "حالات دوران بسيطة ومحددة جيدًا",
+      "تحافظ على الترتيب المرتب للاجتياز الداخلي",
+    ],
+    disadvantages: [
+      "دورانات أكثر عند الإدراج/الحذف مقارنة بالأشجار الحمراء-السوداء",
+      "محاسبة إضافية للارتفاع/عامل التوازن لكل عقدة",
+      "منطق الحذف أعقد من الإدراج",
+      "العبء مهدور إذا كان حِمل العمل كثيف التحديثات",
+    ],
+    commonMistakes: [
+      "نسيان تحديث ارتفاعات العقد قبل فحص عامل التوازن.",
+      "الخطأ في تحديد حالة الدوران (مثل LR مقابل LL).",
+      "عدم إعادة جذر الشجرة الفرعية الجديد بعد الدوران، مما يفصل الشجرة.",
+      "افتراض أن دورانًا واحدًا يكفي دائمًا للحذف (قد يحتاج عدة دورانات).",
+    ],
+    interviewQuestions: [
+      "ما عامل التوازن وما القيم المسموحة في شجرة AVL؟",
+      "اشرح حالات الدوران الأربع وأيها يحتاج دورانًا مزدوجًا.",
+      "لماذا يكفي دوران واحد بعد الإدراج لكن ليس دائمًا بعد الحذف؟",
+      "كيف تقارن أشجار AVL بالأشجار الحمراء-السوداء في التوازن وتكلفة الدوران؟",
+      "ما أقصى ارتفاع لشجرة AVL بها n عقدة؟",
+    ],
+    summary:
+      "شجرة AVL هي شجرة بحث ثنائية تحافظ على عامل توازن كل عقدة ضمن {−1، 0، +1} بإجراء دورانات بعد الإدراج والحذف، مضمونةً عمليات O(log n). حالات الدوران الأربع (LL، RR، LR، RL) تجعلها أكثر توازنًا إحكامًا من الشجرة الحمراء-السوداء، مما يفضّل أحمال العمل كثيفة البحث.",
+    quiz: [
+      { question: "عامل التوازن لأي عقدة في شجرة AVL يجب أن يكون…", options: ["0 فقط", "بين −1 و+1", "بين −2 و+2", "أي قيمة"], answer: 1, explanation: "قد يختلف ارتفاعا الشجرتين الفرعيتين بمقدار واحد على الأكثر." },
+      { question: "اختلال يسار-يمين يُصحَّح بـ…", options: ["دوران يميني واحد", "دوران يساري ثم دوران يميني", "إعادة تلوين", "لا إجراء"], answer: 1, explanation: "يسار-يمين يحتاج دورانًا مزدوجًا: دوران يساري للابن، ثم دوران يميني للعقدة." },
+      { question: "عمليات AVL مضمونة بأن تعمل بزمن…", options: ["O(1)", "O(log n) في أسوأ الحالات", "O(n)", "O(n log n)"], answer: 1, explanation: "يبقى الارتفاع لوغاريتميًا، مما يحد كل العمليات." },
+      { question: "مقارنة بالأشجار الحمراء-السوداء، أشجار AVL…", options: ["أقل توازنًا", "أكثر توازنًا بإحكام (بحث أسرع)", "غير مرتبة", "دائمًا أبطأ"], answer: 1, explanation: "التوازن الأكثر صرامة يعني ارتفاعًا أقصر وبحثًا أسرع، لكن دورانات أكثر." },
+      { question: "إدراج واحد يتطلب على الأكثر…", options: ["لا دورانات", "دورانًا واحدًا (مفردًا أو مزدوجًا)", "log n دورانات", "n دورانات"], answer: 1, explanation: "دوران واحد يستعيد توازن AVL بعد أي إدراج مفرد." },
     ],
   },
   inputFields: [

@@ -8,7 +8,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   let comparisons = 0;
   let swaps = 0;
 
-  const toFrame = (states: Record<number, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<number, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     for (let i = 0; i < heap.length; i++) {
       const l = 2 * i + 1;
@@ -27,47 +27,55 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: heap.length ? "h0" : null, states: nodeStates, aux, note },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, swaps },
     });
   };
 
-  toFrame({}, `A min-heap keeps every parent ≤ its children, stored compactly in an array (children of i are at 2i+1 and 2i+2).`, 0, `empty heap`);
+  toFrame(
+    {},
+    `A min-heap keeps every parent ≤ its children, stored compactly in an array (children of i are at 2i+1 and 2i+2).`,
+    0,
+    `empty heap`,
+    `تحافظ الكومة الصغرى على كون كل أب ≤ أبنائه، مخزّنة بإحكام في مصفوفة (أبناء i عند 2i+1 و2i+2).`,
+  );
 
   // --- insertions (sift up) ---
   for (const v of input.values) {
     heap.push(v);
     let i = heap.length - 1;
-    toFrame({ [i]: "active" }, `insert(${v}): append at the end (index ${i}), then bubble it up.`, 2, `sift-up`);
+    toFrame({ [i]: "active" }, `insert(${v}): append at the end (index ${i}), then bubble it up.`, 2, `sift-up`, `insert(${v}): ألحقها في النهاية (الفهرس ${i})، ثم أصعدها للأعلى.`);
     while (i > 0) {
       const parent = (i - 1) >> 1;
       comparisons++;
       if (heap[i] < heap[parent]) {
-        toFrame({ [i]: "swap", [parent]: "compare" }, `${heap[i]} < parent ${heap[parent]}: swap up.`, 3, `sift-up`);
+        toFrame({ [i]: "swap", [parent]: "compare" }, `${heap[i]} < parent ${heap[parent]}: swap up.`, 3, `sift-up`, `${heap[i]} < الأب ${heap[parent]}: بدّل صعودًا.`);
         [heap[i], heap[parent]] = [heap[parent], heap[i]];
         swaps++;
         i = parent;
       } else {
-        toFrame({ [i]: "sorted", [parent]: "compare" }, `${heap[i]} ≥ parent ${heap[parent]}: heap property restored.`, 3, `sift-up`);
+        toFrame({ [i]: "sorted", [parent]: "compare" }, `${heap[i]} ≥ parent ${heap[parent]}: heap property restored.`, 3, `sift-up`, `${heap[i]} ≥ الأب ${heap[parent]}: استُعيدت خاصية الكومة.`);
         break;
       }
     }
   }
-  toFrame({ 0: "found" }, `All values inserted. The minimum, ${heap[0]}, sits at the root.`, 0, `heap built`);
+  toFrame({ 0: "found" }, `All values inserted. The minimum, ${heap[0]}, sits at the root.`, 0, `heap built`, `أُدرجت كل القيم. الحد الأدنى، ${heap[0]}، يقع في الجذر.`);
 
   // --- extract-min (sift down) ---
   const times = Math.min(input.extractCount, heap.length);
   for (let e = 0; e < times; e++) {
     const min = heap[0];
     const last = heap.pop()!;
-    toFrame({ 0: "swap" }, `extractMin(): remove root ${min}. Move last element ${last} to the root.`, 5, `extract-min`);
+    toFrame({ 0: "swap" }, `extractMin(): remove root ${min}. Move last element ${last} to the root.`, 5, `extract-min`, `extractMin(): احذف الجذر ${min}. انقل العنصر الأخير ${last} إلى الجذر.`);
     if (heap.length === 0) {
       steps[steps.length - 1].description = `extractMin(): removed ${min}. The heap is now empty.`;
+      steps[steps.length - 1].descriptionAr = `extractMin(): حُذف ${min}. أصبحت الكومة فارغة الآن.`;
       break;
     }
     heap[0] = last;
     let i = 0;
-    toFrame({ 0: "active" }, `Now sift ${last} down to its correct spot.`, 6, `sift-down`);
+    toFrame({ 0: "active" }, `Now sift ${last} down to its correct spot.`, 6, `sift-down`, `الآن أنزل ${last} إلى موضعه الصحيح.`);
     while (true) {
       const l = 2 * i + 1;
       const r = 2 * i + 2;
@@ -81,17 +89,23 @@ function generate(input: Input): Step<TreeFrame>[] {
         if (heap[r] < heap[smallest]) smallest = r;
       }
       if (smallest === i) {
-        toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 7, `sift-down`);
+        toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 7, `sift-down`, `${heap[i]} ≤ كلا الابنين: استُعيدت خاصية الكومة.`);
         break;
       }
-      toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 6, `sift-down`);
+      toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 6, `sift-down`, `بدّل ${heap[i]} مع الابن الأصغر ${heap[smallest]}.`);
       [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
       swaps++;
       i = smallest;
     }
   }
 
-  toFrame(heap.length ? { 0: "found" } : {}, heap.length ? `Done. Current minimum is ${heap[0]}.` : `Done. Heap is empty.`, 9, `final`);
+  toFrame(
+    heap.length ? { 0: "found" } : {},
+    heap.length ? `Done. Current minimum is ${heap[0]}.` : `Done. Heap is empty.`,
+    9,
+    `final`,
+    heap.length ? `تم. الحد الأدنى الحالي هو ${heap[0]}.` : `تم. الكومة فارغة.`,
+  );
   return steps;
 }
 
@@ -104,10 +118,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "min-heap",
   title: "Min-Heap (Binary Heap)",
+  titleAr: "الكومة الصغرى (الكومة الثنائية)",
   category: "trees",
   difficulty: "Intermediate",
   tags: ["heap", "priority queue", "complete tree", "sift"],
+  tagsAr: ["كومة", "طابور أولوية", "شجرة كاملة", "إزاحة"],
   summary: "Builds a binary min-heap via sift-up insertions and removes the minimum with sift-down, all in an array.",
+  summaryAr: "تبني كومة صغرى ثنائية عبر إدراجات بالإصعاد، وتحذف الحد الأدنى بالإنزال، كل ذلك في مصفوفة.",
   renderer: "tree",
   pseudocode: [
     "structure MinHeap (array a)",
@@ -351,6 +368,63 @@ Two operations maintain the invariant. Insertion appends the new value at the en
       { question: "Insertion into a heap costs…", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "Sift-up follows one path of height log n." },
       { question: "extractMin works by…", options: ["Removing a leaf", "Moving the last element to the root and sifting down", "Sorting the array", "Swapping the two smallest"], answer: 1, explanation: "The last element replaces the root, then sinks to its correct position." },
       { question: "Building a heap from n elements via sift-down is…", options: ["O(n log n)", "O(n)", "O(log n)", "O(n²)"], answer: 1, explanation: "The tighter analysis of heapify sums to O(n)." },
+    ],
+  },
+  contentAr: {
+    overview: `الكومة الثنائية شجرة ثنائية كاملة تحقق خاصية الكومة: في الكومة الصغرى كل أب أصغر من أو يساوي أبناءه، لذا يقع أصغر عنصر دائمًا في الجذر. ولأن الشجرة كاملة، تُخزَّن ضمنيًا في مصفوفة — أبناء الفهرس i يقعان عند 2i+1 و2i+2، وأبوه عند (i−1)/2 — دون الحاجة إلى مؤشرات.
+
+عمليتان تحافظان على هذا الثابت. الإدراج يُلحق القيمة الجديدة في نهاية المصفوفة و"يُصعدها"، مبدّلًا مع أبيها طالما أصغر منه، حتى تتحقق خاصية الكومة. حذف الحد الأدنى يزيل الجذر، وينقل العنصر الأخير إلى مكانه، و"يُنزله"، مبدّلًا مرارًا مع ابنه الأصغر حتى يستقر. كل عملية تمس مسارًا واحدًا فقط من الجذر إلى ورقة، لذا تعمل كلتاهما بزمن O(log n). الكومات هي التطبيق القياسي لطابور الأولوية والمحرك خلف ترتيب الكومة وخوارزميات مثل دايكسترا.`,
+    howItWorks: [
+      "خزّن الشجرة الكاملة في مصفوفة؛ أب i هو (i−1)/2، وأبناؤه 2i+1 و2i+2.",
+      "الإدراج: ألحق القيمة، ثم أصعدها — بدّل مع الأب طالما أصغر منه.",
+      "الجذر يحمل دائمًا الحد الأدنى، ويُقرأ بزمن O(1).",
+      "extractMin: احفظ الجذر، انقل العنصر الأخير إلى الفهرس 0، ثم أنزله.",
+      "الإنزال يبدّل مع الأصغر من الابنين حتى لا يكون أي ابن أصغر.",
+    ],
+    complexity: {
+      time: { best: "O(1) find-min; O(log n) insert/extract", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "الإدراج وحذف الحد الأدنى يمسان مسارًا واحدًا من الجذر إلى ورقة ← O(log n). بناء كومة من n عنصر بإنزال متكرر هو O(n)، أفضل من n عملية إدراج. النظر إلى الحد الأدنى هو O(1).",
+    },
+    applications: [
+      "طوابير الأولوية (جدولة المهام، محاكاة الأحداث)",
+      "خوارزميتا دايكسترا وپريم لأقصر المسارات / الشجرة الممتدة الصغرى",
+      "ترتيب الكومة (ترتيب في المكان بزمن O(n log n))",
+      "إيجاد أصغر/أكبر k عنصر في تدفق بيانات",
+    ],
+    advantages: [
+      "إدراج وحذف بزمن O(log n)؛ نظر إلى القيمة القصوى بزمن O(1)",
+      "مبنية على مصفوفة — بلا مؤشرات، وسلوك ذاكرة مؤقتة ممتاز",
+      "بناء الكومة بزمن O(n)",
+      "أداء بسيط ويمكن التنبؤ به لطوابير الأولوية",
+    ],
+    disadvantages: [
+      "لا بحث فعال عن عنصر عشوائي (O(n))",
+      "غير مرتبة — الجذر فقط مضمون كونه القيمة القصوى",
+      "تقليل المفتاح يحتاج تتبع فهرس العنصر",
+      "شجرة بحث ثنائية متوازنة أفضل عند الحاجة إلى اجتياز مرتب",
+    ],
+    commonMistakes: [
+      "الخلط بين صيغتي فهرس الأب والابن (خطأ بمقدار واحد في (i−1)/2).",
+      "نسيان الإنزال بعد نقل العنصر الأخير إلى الجذر.",
+      "الإنزال نحو الابن الأكبر بدلًا من الأصغر (في الكومة الصغرى).",
+      "افتراض أن المصفوفة مرتبة بالكامل — فقط خاصية الكومة متحققة.",
+    ],
+    interviewQuestions: [
+      "لماذا بناء كومة بإنزال متكرر هو O(n) وليس O(n log n)؟",
+      "كيف تُطبّق كومة عظمى انطلاقًا من كومة صغرى (أو العكس)؟",
+      "كيف تدعم تقليل المفتاح بكفاءة؟",
+      "كيف يستخدم ترتيب الكومة كومة ثنائية، وهل هو مستقر؟",
+      "متى تفضّل شجرة بحث ثنائية متوازنة على الكومة؟",
+    ],
+    summary:
+      "الكومة الصغرى الثنائية شجرة كاملة (مخزّنة في مصفوفة) جذرها هو دائمًا الحد الأدنى. الإدراج يُصعد والحذف يُنزل، وكل منهما O(log n)، مما يمنح طابور أولوية فعالًا يشغّل ترتيب الكومة وخوارزمية دايكسترا.",
+    quiz: [
+      { question: "في الكومة الصغرى، أصغر عنصر يقع دائمًا…", options: ["في ورقة", "في الجذر", "في منتصف المصفوفة", "غير معروف"], answer: 1, explanation: "خاصية الكومة تفرض وجود الحد الأدنى في الجذر." },
+      { question: "أبناء الفهرس i في المصفوفة يقعان عند…", options: ["i-1 وi+1", "2i وi+1", "2i+1 وi+2", "i/2 وi/3"], answer: 2, explanation: "للمصفوفات المفهرسة من صفر، يقع الأبناء عند 2i+1 و2i+2." },
+      { question: "الإدراج في كومة يكلّف…", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "الإصعاد يتبع مسارًا واحدًا بارتفاع log n." },
+      { question: "extractMin يعمل عبر…", options: ["حذف ورقة", "نقل العنصر الأخير إلى الجذر ثم إنزاله", "ترتيب المصفوفة", "تبديل أصغر عنصرين"], answer: 1, explanation: "العنصر الأخير يحل محل الجذر، ثم يغوص إلى موضعه الصحيح." },
+      { question: "بناء كومة من n عنصر عبر الإنزال يكلّف…", options: ["O(n log n)", "O(n)", "O(log n)", "O(n²)"], answer: 1, explanation: "التحليل الأدق لعملية heapify يجمع إلى O(n)." },
     ],
   },
   inputFields: [

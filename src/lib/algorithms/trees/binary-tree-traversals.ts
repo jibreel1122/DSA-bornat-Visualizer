@@ -42,6 +42,13 @@ const LABEL: Record<Order, string> = {
   levelorder: "Level-order (BFS)",
 };
 
+const LABEL_AR: Record<Order, string> = {
+  inorder: "الترتيب الداخلي (يسار، عقدة، يمين)",
+  preorder: "الترتيب السابق (عقدة، يسار، يمين)",
+  postorder: "الترتيب اللاحق (يسار، يمين، عقدة)",
+  levelorder: "الترتيب حسب المستوى (BFS)",
+};
+
 function generate(input: Input): Step<TreeFrame>[] {
   idc = 0;
   const root = buildBST([...input.values]);
@@ -50,24 +57,24 @@ function generate(input: Input): Step<TreeFrame>[] {
   const visited: Record<string, CellState> = {};
   let ops = 0;
 
-  const snap = (states: Record<string, CellState>, description: string, codeLine: number) => {
-    steps.push({ frame: toFrame(root, { ...visited, ...states }, output), description, codeLine, counters: { visited: output.length, steps: ops } });
+  const snap = (states: Record<string, CellState>, description: string, codeLine: number, descriptionAr?: string) => {
+    steps.push({ frame: toFrame(root, { ...visited, ...states }, output), description, descriptionAr, codeLine, counters: { visited: output.length, steps: ops } });
   };
 
-  snap({}, `${LABEL[input.order]} traversal of the tree.`, 0);
+  snap({}, `${LABEL[input.order]} traversal of the tree.`, 0, `اجتياز الشجرة بطريقة ${LABEL_AR[input.order]}.`);
 
   const emit = (n: TNode) => {
     ops++;
     output.push(n.value);
     visited[n.id] = "sorted";
-    snap({ [n.id]: "found" }, `Visit ${n.value} → output.`, input.order === "inorder" ? 3 : input.order === "preorder" ? 2 : input.order === "postorder" ? 4 : 6);
+    snap({ [n.id]: "found" }, `Visit ${n.value} → output.`, input.order === "inorder" ? 3 : input.order === "preorder" ? 2 : input.order === "postorder" ? 4 : 6, `زُر ${n.value} → أضِفه إلى الخرج.`);
   };
 
   if (input.order === "levelorder") {
     const queue: TNode[] = root ? [root] : [];
     while (queue.length) {
       const n = queue.shift()!;
-      snap({ [n.id]: "active" }, `Dequeue ${n.value}.`, 5);
+      snap({ [n.id]: "active" }, `Dequeue ${n.value}.`, 5, `أخرج ${n.value} من الطابور.`);
       emit(n);
       if (n.left) queue.push(n.left);
       if (n.right) queue.push(n.right);
@@ -75,7 +82,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   } else {
     const rec = (n: TNode | null) => {
       if (!n) return;
-      snap({ [n.id]: "active" }, `Enter node ${n.value}.`, 1);
+      snap({ [n.id]: "active" }, `Enter node ${n.value}.`, 1, `ادخل العقدة ${n.value}.`);
       if (input.order === "preorder") emit(n);
       rec(n.left);
       if (input.order === "inorder") emit(n);
@@ -85,17 +92,20 @@ function generate(input: Input): Step<TreeFrame>[] {
     rec(root);
   }
 
-  snap({}, `${LABEL[input.order]} result: ${output.join(", ")}.`, 7);
+  snap({}, `${LABEL[input.order]} result: ${output.join(", ")}.`, 7, `نتيجة ${LABEL_AR[input.order]}: ${output.join(", ")}.`);
   return steps;
 }
 
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "binary-tree-traversals",
   title: "Binary Tree Traversals",
+  titleAr: "اجتيازات الشجرة الثنائية",
   category: "trees",
   difficulty: "Beginner",
   tags: ["tree", "DFS", "BFS", "traversal"],
+  tagsAr: ["شجرة", "بحث بالعمق أولًا", "بحث بالعرض أولًا", "اجتياز"],
   summary: "Visits every node in in-order, pre-order, post-order, or level-order — the four canonical traversals.",
+  summaryAr: "يزور كل عقدة بالترتيب الداخلي أو السابق أو اللاحق أو حسب المستوى — الاجتيازات الأربعة الكلاسيكية.",
   renderer: "tree",
   pseudocode: [
     "traverse(node):",
@@ -228,6 +238,61 @@ The order you choose depends on the task. In-order on a BST prints keys sorted. 
       { question: "Post-order visits a node…", options: ["before its children", "between its children", "after both children", "randomly"], answer: 2, explanation: "Post-order recurses into both subtrees before visiting the node itself." },
       { question: "Time complexity of any full traversal is…", options: ["O(log n)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "Each of the n nodes is visited exactly once." },
       { question: "Which traversal is best for deleting/freeing a tree?", options: ["Pre-order", "In-order", "Post-order", "Level-order"], answer: 2, explanation: "Post-order frees children before their parent, avoiding dangling references." },
+    ],
+  },
+  contentAr: {
+    overview: `اجتياز الشجرة يعني زيارة كل عقدة مرة واحدة بالضبط وفق ترتيب محدد جيدًا. للأشجار الثنائية أربعة اجتيازات كلاسيكية. ثلاثة منها بالعمق أولًا (DFS) ولا تختلف إلا في توقيت زيارة العقدة نفسها بالنسبة لأبنائها: الترتيب السابق (العقدة أولًا)، والترتيب الداخلي (العقدة بين الأبناء)، والترتيب اللاحق (العقدة أخيرًا). أما الرابع، الترتيب حسب المستوى، فهو بالعرض أولًا (BFS) ويزور العقد مستوى تلو الآخر باستخدام طابور.
+
+الترتيب الذي تختاره يعتمد على المهمة. الترتيب الداخلي في شجرة بحث ثنائية يطبع المفاتيح مرتبة. الترتيب السابق ينسخ الشجرة أو يسلسلها. الترتيب اللاحق يحرر الشجرة أو يُقيّم شجرة تعبير من الأسفل إلى الأعلى. الترتيب حسب المستوى يجيب عن سؤال "ما الموجود في كل مستوى" ويؤسس لمنطق أقصر المسارات على الأشجار.`,
+    howItWorks: [
+      "الترتيب السابق: زُر العقدة، ثم عاود الدخول إلى الشجرة الفرعية اليسرى، ثم اليمنى.",
+      "الترتيب الداخلي: عاود الدخول يسارًا، ثم زُر العقدة، ثم عاود الدخول يمينًا (خرج مرتب في شجرة بحث ثنائية).",
+      "الترتيب اللاحق: عاود الدخول يسارًا، ثم يمينًا، ثم زُر العقدة.",
+      "الترتيب حسب المستوى: استخدم طابور FIFO — أخرج عقدة، زُرها، ثم أضف أبناءها إلى الطابور.",
+      "تُزار كل عقدة مرة واحدة، لذا كل اجتياز خطي في عدد العقد.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n)", worst: "O(n)" },
+      space: "O(h)",
+      notes: "تُزار كل عقدة مرة واحدة ← O(n). البحث بالعمق أولًا العودي يستخدم مساحة مكدس O(h) (h هو الارتفاع)؛ والترتيب حسب المستوى يستخدم مساحة طابور O(w) (w هو أقصى عرض، وقد يصل إلى n/2).",
+    },
+    applications: [
+      "الترتيب الداخلي في شجرة بحث ثنائية لإخراج المفاتيح مرتبة",
+      "الترتيب السابق لتسلسل/استنساخ بنية الشجرة",
+      "الترتيب اللاحق لحذف شجرة أو تقييم أشجار التعبير",
+      "الترتيب حسب المستوى لإحصاءات المستويات وعرض الشجرة وأقصر مسارات الشجرة",
+    ],
+    advantages: [
+      "صيغ عودية بسيطة للترتيبات الثلاثة بالعمق أولًا",
+      "كل اجتياز أمثل بتكلفة O(n)",
+      "الترتيبات المختلفة تخدم أغراضًا عملية متمايزة",
+    ],
+    disadvantages: [
+      "البحث العودي بالعمق أولًا يخاطر بفيضان المكدس في الأشجار العميقة جدًا",
+      "الترتيب حسب المستوى يحتاج طابورًا صريحًا وذاكرة O(العرض)",
+      "اختيار الترتيب الخاطئ ينتج نتائج خاطئة بصمت (مثل خرج غير مرتب)",
+    ],
+    commonMistakes: [
+      "الخلط بين السابق والداخلي واللاحق — تذكّر أن الأمر يتعلق بتوقيت زيارة العقدة.",
+      "توقّع أن يكون الترتيب الداخلي مرتبًا في شجرة ليست شجرة بحث ثنائية (وهو ليس كذلك).",
+      "استخدام مكدس بدلًا من طابور للترتيب حسب المستوى (ذلك يعطي بحثًا بالعمق أولًا).",
+      "العودية العميقة تُفيض المكدس؛ استخدم مكدسًا صريحًا أو اجتياز موريس.",
+    ],
+    interviewQuestions: [
+      "أي اجتياز لشجرة بحث ثنائية ينتج خرجًا مرتبًا، ولماذا؟",
+      "كيف تُجري اجتيازًا داخليًا تكراريًا باستخدام مكدس صريح؟",
+      "أعِد بناء شجرة ثنائية من تسلسلَي الترتيب السابق والداخلي.",
+      "أي اجتياز تستخدمه لتقييم شجرة تعبير؟",
+      "اشرح اجتياز موريس وميزته في استخدام مساحة O(1).",
+    ],
+    summary:
+      "اجتيازات الشجرة الثنائية الأربعة — السابق والداخلي واللاحق (DFS)، وحسب المستوى (BFS) — تزور كل منها كل عقدة مرة واحدة بزمن O(n). الترتيب الداخلي يرتب شجرة البحث الثنائية، والسابق يسلسلها، واللاحق يفككها أو يُقيّمها، وحسب المستوى يعالج مستويات الشجرة.",
+    quiz: [
+      { question: "أي اجتياز يُخرج مفاتيح شجرة بحث ثنائية مرتبة؟", options: ["الترتيب السابق", "الترتيب الداخلي", "الترتيب اللاحق", "الترتيب حسب المستوى"], answer: 1, explanation: "الترتيب الداخلي يزور الشجرة الفرعية اليسرى ثم العقدة ثم اليمنى — تصاعديًا في شجرة بحث ثنائية." },
+      { question: "الترتيب حسب المستوى يستخدم أي بنية بيانات؟", options: ["مكدس", "طابور", "طابور أولوية", "مجموعة تجزئة"], answer: 1, explanation: "طابور FIFO يعالج العقد بالعرض أولًا، مستوى تلو الآخر." },
+      { question: "الترتيب اللاحق يزور العقدة…", options: ["قبل أبنائها", "بين أبنائها", "بعد كلا ابنيها", "عشوائيًا"], answer: 2, explanation: "الترتيب اللاحق يعاود الدخول إلى كلا الشجرتين الفرعيتين قبل زيارة العقدة نفسها." },
+      { question: "التعقيد الزمني لأي اجتياز كامل هو…", options: ["O(log n)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "تُزار كل عقدة من العقد الـ n مرة واحدة بالضبط." },
+      { question: "أي اجتياز الأفضل لحذف/تحرير شجرة؟", options: ["الترتيب السابق", "الترتيب الداخلي", "الترتيب اللاحق", "الترتيب حسب المستوى"], answer: 2, explanation: "الترتيب اللاحق يحرر الأبناء قبل الأب، متجنبًا المراجع المعلّقة." },
     ],
   },
   inputFields: [

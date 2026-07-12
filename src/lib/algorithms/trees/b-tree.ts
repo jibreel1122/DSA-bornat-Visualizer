@@ -19,7 +19,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   let splits = 0;
   let inserts = 0;
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: BNode) => {
       nodes[n.id] = {
@@ -33,12 +33,19 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: root.id, states: { ...states }, note },
       description,
+      descriptionAr,
       codeLine,
       counters: { inserts, splits },
     });
   };
 
-  toFrame({ [root.id]: "active" }, `A B-tree keeps keys sorted inside nodes that hold up to ${MAX_KEYS} keys (min degree t=${T}). Full children are split before we descend, so the tree grows upward and stays balanced.`, 0, `empty B-tree (t=${T})`);
+  toFrame(
+    { [root.id]: "active" },
+    `A B-tree keeps keys sorted inside nodes that hold up to ${MAX_KEYS} keys (min degree t=${T}). Full children are split before we descend, so the tree grows upward and stays balanced.`,
+    0,
+    `empty B-tree (t=${T})`,
+    `شجرة B تُبقي المفاتيح مرتبة داخل عقد تحمل حتى ${MAX_KEYS} مفتاح (الدرجة الدنيا t=${T}). الأبناء الممتلئون يُقسَّمون قبل أن ننزل إليهم، لذا تنمو الشجرة صعودًا وتبقى متوازنة.`,
+  );
 
   const splitChild = (parent: BNode, i: number) => {
     const child = parent.children[i];
@@ -54,7 +61,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     parent.keys.splice(i, 0, upKey);
     parent.children.splice(i + 1, 0, z);
     splits++;
-    toFrame({ [parent.id]: "special", [child.id]: "swap", [z.id]: "found" }, `Split full node [${[...child.keys, upKey, ...z.keys].join(", ")}]: push median ${upKey} up to the parent, keep the rest in two children.`, 6, `split`);
+    toFrame(
+      { [parent.id]: "special", [child.id]: "swap", [z.id]: "found" },
+      `Split full node [${[...child.keys, upKey, ...z.keys].join(", ")}]: push median ${upKey} up to the parent, keep the rest in two children.`,
+      6,
+      `split`,
+      `قسّم العقدة الممتلئة [${[...child.keys, upKey, ...z.keys].join(", ")}]: ادفع الوسيط ${upKey} صعودًا إلى الأب، واحتفظ بالباقي في عقدتين.`,
+    );
   };
 
   const insertNonFull = (node: BNode, k: number) => {
@@ -62,11 +75,17 @@ function generate(input: Input): Step<TreeFrame>[] {
     if (node.leaf) {
       while (i >= 0 && k < node.keys[i]) i--;
       node.keys.splice(i + 1, 0, k);
-      toFrame({ [node.id]: "found" }, `Insert ${k} into leaf → [${node.keys.join(", ")}].`, 5, `insert ${k}`);
+      toFrame({ [node.id]: "found" }, `Insert ${k} into leaf → [${node.keys.join(", ")}].`, 5, `insert ${k}`, `أدرج ${k} في الورقة ← [${node.keys.join(", ")}].`);
     } else {
       while (i >= 0 && k < node.keys[i]) i--;
       i++;
-      toFrame({ [node.id]: "compare", [node.children[i].id]: "active" }, `${k}: descend into child ${i + 1} of node [${node.keys.join(", ")}].`, 6, `insert ${k}`);
+      toFrame(
+        { [node.id]: "compare", [node.children[i].id]: "active" },
+        `${k}: descend into child ${i + 1} of node [${node.keys.join(", ")}].`,
+        6,
+        `insert ${k}`,
+        `${k}: انزل إلى الابن ${i + 1} من العقدة [${node.keys.join(", ")}].`,
+      );
       if (node.children[i].keys.length === MAX_KEYS) {
         splitChild(node, i);
         if (k > node.keys[i]) i++;
@@ -81,7 +100,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       const s = mk(false);
       s.children = [root];
       root = s;
-      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 2, `insert ${k}`);
+      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 2, `insert ${k}`, `الجذر ممتلئ — نمِّ الشجرة: أنشئ جذرًا فارغًا جديدًا فوق القديم، ثم قسّم.`);
       splitChild(s, 0);
       insertNonFull(s, k);
     } else {
@@ -106,7 +125,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     }
     return h;
   })();
-  toFrame(done, `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`, 7, `final B-tree`);
+  toFrame(
+    done,
+    `Done. All keys inserted; the B-tree has height ${height} and every leaf is at the same depth — searches are O(log n).`,
+    7,
+    `final B-tree`,
+    `تم. أُدرجت كل المفاتيح؛ ارتفاع شجرة B هو ${height} وكل ورقة في نفس العمق — البحث O(log n).`,
+  );
   return steps;
 }
 
@@ -118,10 +143,13 @@ function randomInput(level: number, rng: { shuffle: <T>(a: readonly T[]) => T[] 
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "b-tree",
   title: "B-Tree",
+  titleAr: "شجرة B",
   category: "trees",
   difficulty: "Advanced",
   tags: ["tree", "balanced", "multiway", "database index"],
+  tagsAr: ["شجرة", "متوازنة", "متعددة الطرق", "فهرس قاعدة بيانات"],
   summary: "A balanced multiway search tree where nodes hold many keys and split when full, keeping all leaves at the same depth.",
+  summaryAr: "شجرة بحث متعددة الطرق متوازنة تحمل عقدها مفاتيح كثيرة وتنقسم عند الامتلاء، مبقية كل الأوراق في نفس العمق.",
   renderer: "tree",
   pseudocode: [
     "procedure insert(key)",
@@ -335,6 +363,63 @@ A B-tree of minimum degree t requires each non-root node to hold between t−1 a
       { question: "During top-down insertion, a full child is…", options: ["Left alone", "Split before descending into it", "Deleted", "Merged"], answer: 1, explanation: "Proactive splitting keeps the path non-full for a single pass." },
       { question: "A B-tree's height increases only when…", options: ["Any node splits", "The root splits", "A leaf fills", "A key is deleted"], answer: 1, explanation: "Splitting the root adds a level; other splits don't." },
       { question: "B-trees are favored for disk storage because…", options: ["They are binary", "Their shallow height minimizes block/disk accesses", "They need no balancing", "They store no keys"], answer: 1, explanation: "High fan-out means very few I/O operations per lookup." },
+    ],
+  },
+  contentAr: {
+    overview: `شجرة B هي شجرة بحث متوازنة معمَّمة بحيث تستطيع كل عقدة أن تحمل مفاتيح كثيرة وأن يكون لها أبناء كثيرون، بدلًا من مفتاح واحد وابنين فقط. إنها العمود الفقري لقواعد البيانات وأنظمة الملفات: ولأن العقدة الواحدة يمكن أن تُحجَّم لتطابق كتلة قرص أو صفحة ذاكرة، فإن شجرة B بارتفاع 3–4 يمكنها فهرسة ملايين السجلات بقراءات قرص قليلة جدًا. كل ورقة تقع في نفس العمق بالضبط، لذا الأداء موحد.
+
+شجرة B ذات الدرجة الدنيا t تتطلب أن تحمل كل عقدة غير جذرية بين t−1 و2t−1 مفتاحًا (يستخدم هذا التصور t=2، وهي "شجرة 2-3-4" بـ1–3 مفاتيح لكل عقدة). المفاتيح داخل العقدة تبقى مرتبة، والعقدة ذات k مفتاح لها k+1 ابن تتشابك مجالات مفاتيحهم مع المفاتيح. الإدراج يستخدم استراتيجية استباقية ذكية: أثناء النزول نحو الورقة الصحيحة، أي ابن ممتلئ (2t−1 مفتاح) يُصادَف يُقسَّم أولًا — مفتاحه الوسيط ينتقل صعودًا إلى الأب وتنقسم العقدة إلى اثنتين. هذا يبقي كل عقدة على المسار غير ممتلئة، لذا يكفي مرور واحد نازل وتنمو الشجرة ارتفاعًا فقط بتقسيم الجذر. كل العمليات O(log n) بأساس صغير جدًا.`,
+    howItWorks: [
+      "كل عقدة تحمل حتى 2t−1 مفتاحًا مرتبًا وحتى 2t ابن؛ كل الأوراق في نفس العمق.",
+      "للإدراج، إذا كان الجذر ممتلئًا، أنشئ جذرًا جديدًا وقسّم القديم — هذه هي الطريقة الوحيدة لزيادة الارتفاع.",
+      "انزل نحو الورقة الهدف؛ قبل الدخول إلى ابن ممتلئ، قسّمه، دافعًا مفتاحه الوسيط صعودًا.",
+      "لأن الانقسامات تحدث أثناء النزول، فإن الورقة التي تصلها مضمونة غير ممتلئة.",
+      "أدرج المفتاح في تلك الورقة في موضعه المرتب.",
+    ],
+    complexity: {
+      time: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "الارتفاع O(log_t n)، لذا البحث/الإدراج/الحذف يحتاج O(t·log_t n) مقارنة — ضحل جدًا لـt كبيرة. أشجار B تقلل عمليات الوصول للقرص/الصفحة، وهذا سبب استخدام قواعد البيانات وأنظمة الملفات لها (ومتغير شجرة +B).",
+    },
+    applications: [
+      "فهارس قواعد البيانات (شجرة B وشجرة +B)",
+      "بيانات نظام الملفات الوصفية (NTFS، HFS+، ext4، Btrfs)",
+      "مخازن المفتاح-القيمة والخرائط المرتبة على القرص",
+      "أي فهرس مرتب كبير محفوظ على تخزين بالكتل",
+    ],
+    advantages: [
+      "ارتفاع ضحل جدًا ← وصول قليل للقرص/الصفحة",
+      "حجم العقدة قابل للضبط وفق حجم كتلة التخزين",
+      "كل الأوراق في نفس العمق ← أداء موحد",
+      "مسح مجالات فعال واجتياز مرتب",
+    ],
+    disadvantages: [
+      "أعقد من شجرة بحث ثنائية في التطبيق",
+      "قد تكون العقد ممتلئة جزئيًا، مهدرة بعض المساحة",
+      "في الذاكرة قد تكون أبطأ من شجرة ثنائية متوازنة",
+      "الحذف مع إعادة التوازن (الدمج/الاستعارة) معقد",
+    ],
+    commonMistakes: [
+      "التقسيم بردة فعل بعد الفيضان بدلًا من الاستباق أثناء النزول.",
+      "نسيان أن تقسيم الجذر فقط هو ما يزيد ارتفاع الشجرة.",
+      "خطأ في حساب فهرس الوسيط عند التقسيم (t−1).",
+      "السماح لعقدة بتجاوز 2t−1 مفتاحًا قبل التقسيم.",
+    ],
+    interviewQuestions: [
+      "لماذا تُفضَّل أشجار B على أشجار البحث الثنائية للفهارس على القرص؟",
+      "ما الدرجة الدنيا t وكيف تحد عدد المفاتيح لكل عقدة؟",
+      "لماذا تُقسَّم العقد الممتلئة استباقيًا أثناء الإدراج من الأعلى إلى الأسفل؟",
+      "كيف تختلف شجرة +B عن شجرة B؟",
+      "كيف يرتبط حجم العقدة بحجم كتلة القرص؟",
+    ],
+    summary:
+      "شجرة B هي شجرة بحث متعددة الطرق متوازنة تحمل عقدها حتى 2t−1 مفتاحًا مرتبًا وتنقسم عند الامتلاء، مبقية كل الأوراق في نفس العمق والارتفاع O(log_t n). بمطابقة حجم العقدة مع كتلة القرص، تقلل أشجار B (وأشجار +B) الإدخال/الإخراج وتدعم قواعد البيانات وأنظمة الملفات.",
+    quiz: [
+      { question: "عقدة شجرة B يمكن أن تحمل…", options: ["مفتاحًا واحدًا بالضبط", "حتى 2t−1 مفتاحًا مرتبًا", "مفتاحين فقط", "مفاتيح غير محدودة"], answer: 1, explanation: "الدرجة الدنيا t تسمح بين t−1 و2t−1 مفتاحًا لكل عقدة." },
+      { question: "في شجرة B، كل الأوراق…", options: ["في أعماق عشوائية", "في نفس العمق", "فارغة دائمًا", "ملونة"], answer: 1, explanation: "النمو المتوازن يبقي كل ورقة في نفس العمق." },
+      { question: "أثناء الإدراج من الأعلى إلى الأسفل، الابن الممتلئ…", options: ["يُترك كما هو", "يُقسَّم قبل النزول إليه", "يُحذف", "يُدمج"], answer: 1, explanation: "التقسيم الاستباقي يبقي المسار غير ممتلئ لمرور واحد." },
+      { question: "ارتفاع شجرة B يزداد فقط عندما…", options: ["أي عقدة تنقسم", "الجذر ينقسم", "ورقة تمتلئ", "مفتاح يُحذف"], answer: 1, explanation: "تقسيم الجذر يضيف مستوى؛ الانقسامات الأخرى لا تفعل." },
+      { question: "تُفضَّل أشجار B للتخزين على القرص لأن…", options: ["إنها ثنائية", "ارتفاعها الضحل يقلل الوصول للكتل/القرص", "لا تحتاج توازنًا", "لا تخزّن مفاتيح"], answer: 1, explanation: "التفرع العالي يعني عمليات إدخال/إخراج قليلة جدًا لكل بحث." },
     ],
   },
   inputFields: [

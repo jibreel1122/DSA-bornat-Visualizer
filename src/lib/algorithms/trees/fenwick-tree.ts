@@ -17,6 +17,7 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     note: string,
+    descriptionAr?: string,
   ): void => {
     const states: Record<number, CellState> = { 0: "discarded" };
     for (const p of path) states[p] = "compare";
@@ -34,12 +35,20 @@ function generate(input: Input): Step<ArrayFrame>[] {
         note,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { ops },
     });
   };
 
-  frame(new Set(), null, `A Fenwick tree (Binary Indexed Tree) stores partial sums so prefix-sums and updates are both O(log n). Index i covers the range (i − lowbit(i), i].`, 0, `bit[] all zero`);
+  frame(
+    new Set(),
+    null,
+    `A Fenwick tree (Binary Indexed Tree) stores partial sums so prefix-sums and updates are both O(log n). Index i covers the range (i − lowbit(i), i].`,
+    0,
+    `bit[] all zero`,
+    `شجرة فينويك (الشجرة الثنائية المفهرسة) تخزّن مجاميع جزئية كي يكون كل من مجاميع البادئة والتحديثات O(log n). الفهرس i يغطي المجال (i − lowbit(i), i].`,
+  );
 
   // --- build via point updates ---
   for (let i = 1; i <= n; i++) {
@@ -51,39 +60,60 @@ function generate(input: Input): Step<ArrayFrame>[] {
       j += lowbit(j);
     }
     ops++;
-    frame(path, i, `Build: add a[${i}] = ${a[i - 1]} into bit[${[...path].join(", ")}] (each responsible for index ${i}).`, 2, `build (O(n log n))`);
+    frame(
+      path,
+      i,
+      `Build: add a[${i}] = ${a[i - 1]} into bit[${[...path].join(", ")}] (each responsible for index ${i}).`,
+      2,
+      `build (O(n log n))`,
+      `البناء: أضف a[${i}] = ${a[i - 1]} إلى bit[${[...path].join(", ")}] (كل منها مسؤول عن الفهرس ${i}).`,
+    );
   }
-  frame(new Set(), null, `Fenwick tree built. Each bit[i] holds the sum of a range of size lowbit(i) ending at i.`, 0, `built`);
+  frame(new Set(), null, `Fenwick tree built. Each bit[i] holds the sum of a range of size lowbit(i) ending at i.`, 0, `built`, `بُنيت شجرة فينويك. كل bit[i] يحمل مجموع مجال بحجم lowbit(i) ينتهي عند i.`);
 
   // --- prefix sum query ---
   const qi = input.queryIdx;
   let sum = 0;
   let i = qi;
   const qpath = new Set<number>();
-  frame(new Set(), qi, `prefixSum(${qi}): sum a[1..${qi}] by hopping down via i −= lowbit(i).`, 3, `query`);
+  frame(new Set(), qi, `prefixSum(${qi}): sum a[1..${qi}] by hopping down via i −= lowbit(i).`, 3, `query`, `prefixSum(${qi}): اجمع a[1..${qi}] بالقفز نزولًا عبر i −= lowbit(i).`);
   while (i > 0) {
     sum += bit[i];
     qpath.add(i);
-    frame(new Set(qpath), i, `Add bit[${i}] = ${bit[i]} (running sum ${sum}). Next: ${i} − ${lowbit(i)} = ${i - lowbit(i)}.`, 5, `query`);
+    frame(
+      new Set(qpath),
+      i,
+      `Add bit[${i}] = ${bit[i]} (running sum ${sum}). Next: ${i} − ${lowbit(i)} = ${i - lowbit(i)}.`,
+      5,
+      `query`,
+      `أضف bit[${i}] = ${bit[i]} (المجموع الجاري ${sum}). التالي: ${i} − ${lowbit(i)} = ${i - lowbit(i)}.`,
+    );
     i -= lowbit(i);
     ops++;
   }
-  frame(new Set(qpath), null, `prefixSum(${qi}) = ${sum}. Only ${qpath.size} node(s) visited — O(log n).`, 6, `query result`);
+  frame(new Set(qpath), null, `prefixSum(${qi}) = ${sum}. Only ${qpath.size} node(s) visited — O(log n).`, 6, `query result`, `prefixSum(${qi}) = ${sum}. زُرت فقط ${qpath.size} عقدة — O(log n).`);
 
   // --- point update ---
   const ui = input.updateIdx;
   const delta = input.updateDelta;
   let k = ui;
   const upath = new Set<number>();
-  frame(new Set(), ui, `update(${ui}, +${delta}): add ${delta} to a[${ui}], climbing via i += lowbit(i).`, 1, `update`);
+  frame(new Set(), ui, `update(${ui}, +${delta}): add ${delta} to a[${ui}], climbing via i += lowbit(i).`, 1, `update`, `update(${ui}, +${delta}): أضف ${delta} إلى a[${ui}]، متسلقًا عبر i += lowbit(i).`);
   while (k <= n) {
     bit[k] += delta;
     upath.add(k);
-    frame(new Set(upath), k, `Add ${delta} to bit[${k}] → ${bit[k]}. Next: ${k} + ${lowbit(k)} = ${k + lowbit(k)}.`, 2, `update`);
+    frame(
+      new Set(upath),
+      k,
+      `Add ${delta} to bit[${k}] → ${bit[k]}. Next: ${k} + ${lowbit(k)} = ${k + lowbit(k)}.`,
+      2,
+      `update`,
+      `أضف ${delta} إلى bit[${k}] ← ${bit[k]}. التالي: ${k} + ${lowbit(k)} = ${k + lowbit(k)}.`,
+    );
     k += lowbit(k);
     ops++;
   }
-  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 0, `done`);
+  frame(new Set(upath), null, `Update complete — every bit[] responsible for index ${ui} was adjusted in O(log n).`, 0, `done`, `اكتمل التحديث — عُدِّل كل bit[] مسؤول عن الفهرس ${ui} بزمن O(log n).`);
   return steps;
 }
 
@@ -99,10 +129,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "fenwick-tree",
   title: "Fenwick Tree (Binary Indexed Tree)",
+  titleAr: "شجرة فينويك (الشجرة الثنائية المفهرسة)",
   category: "trees",
   difficulty: "Advanced",
   tags: ["BIT", "prefix sum", "bit manipulation", "range query"],
+  tagsAr: ["BIT", "مجموع البادئة", "معالجة البتات", "استعلام مجال"],
   summary: "A compact array that answers prefix-sum queries and point updates in O(log n) using the low-bit trick i & −i.",
+  summaryAr: "مصفوفة مدمجة تُجيب عن استعلامات مجموع البادئة والتحديثات النقطية بزمن O(log n) باستخدام حيلة البت الأدنى i & −i.",
   renderer: "array",
   pseudocode: [
     "structure Fenwick(n)  // 1-indexed bit[]",
@@ -277,6 +310,63 @@ The core idea is that index i is "responsible" for a range of array elements who
       { question: "For a point update you move by…", options: ["i −= i & −i", "i += i & −i", "i /= 2", "i--"], answer: 1, explanation: "You climb to every node whose range includes i." },
       { question: "Fenwick tree query/update complexity is…", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "Each traverses O(log n) indices (one per set bit)." },
       { question: "A Fenwick tree is best suited for…", options: ["Range minimum queries", "Invertible operations like sums", "Sorting", "Graph traversal"], answer: 1, explanation: "Its subtraction-based range trick needs an invertible operation." },
+    ],
+  },
+  contentAr: {
+    overview: `شجرة فينويك، أو الشجرة الثنائية المفهرسة (BIT)، بنية بيانات مدمجة بشكل لافت تُجيب عن استعلامات مجموع البادئة وتُجري تحديثات نقطية على مصفوفة، وكلاهما بزمن O(log n)، باستخدام مصفوفة واحدة فقط وحيلة معالجة بتات. تقدم نفس تعقيد الاستعلام/التحديث لشجرة مجالات من أجل المجاميع، لكن بشيفرة وذاكرة أقل بكثير (n+1 خانة بالضبط).
+
+الفكرة الجوهرية هي أن الفهرس i "مسؤول" عن مجال من عناصر المصفوفة طوله يساوي lowbit(i) = i & (−i)، قيمة أدنى بت مضبوط في i — المجال (i − lowbit(i), i]. لحساب مجموع بادئة حتى الفهرس i، تضيف bit[i] مرارًا وتقفز نزولًا بإزالة أدنى بت مضبوط (i −= i & −i) حتى تصل إلى 0؛ المجالات المنفصلة التي تزورها تُغطي بالضبط [1..i]. لتحديث الفهرس i، تسير في الاتجاه المعاكس، مضيفًا الفرق ومتسلقًا عبر i += i & −i إلى كل عقدة يتضمن مجالها i. كلا المسارين طوله يساوي عدد البتات المضبوطة الملموسة، وهو O(log n). مجاميع المجال تأتي مجانًا كـ prefixSum(r) − prefixSum(l−1).`,
+    howItWorks: [
+      "استخدم مصفوفة مفهرسة من 1 اسمها bit[] حيث يخزّن bit[i] مجموع المجال (i − lowbit(i), i].",
+      "lowbit(i) = i & (−i) تعزل أدنى بت مضبوط — حجم مجال مسؤولية i.",
+      "prefixSum(i): أضف bit[i]، ثم أسقط أدنى بت مضبوط (i −= lowbit(i))؛ كرر حتى يصبح i صفرًا.",
+      "update(i, delta): أضف delta إلى bit[i]، ثم تسلق عبر i += lowbit(i) إلى كل عقدة متأثرة.",
+      "rangeSum(l, r) = prefixSum(r) − prefixSum(l − 1).",
+    ],
+    complexity: {
+      time: { best: "O(log n) query/update", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "كل استعلام وتحديث يزور O(log n) من الفهارس (واحد لكل بت مضبوط تم اجتيازه). البناء بـ n تحديث هو O(n log n)، أو O(n) ببناء خطي. يستخدم مصفوفة بطول (n+1) فقط — أصغر من شجرة مجالات.",
+    },
+    applications: [
+      "جداول التكرار التراكمي ومجاميع البادئة مع التحديثات",
+      "عد الانعكاسات أثناء/بعد الدمج",
+      "إحصاءات الرتبة واستعلامات الرتبة فوق مجموعة متعددة ديناميكية",
+      "مسائل مجموع المجال في البرمجة التنافسية",
+    ],
+    advantages: [
+      "استعلامات مجموع بادئة وتحديثات نقطية بزمن O(log n)",
+      "ذاكرة صغيرة جدًا (n+1) وشيفرة صغيرة صديقة للذاكرة المؤقتة",
+      "حساب أنيق بالبت الأدنى — بلا مؤشرات شجرة صريحة",
+      "مجاميع مجال سهلة عبر استعلامي بادئة",
+    ],
+    disadvantages: [
+      "تدعم بطبيعتها فقط العمليات القابلة للعكس (المجاميع)، وليس الحد الأدنى/الأعلى مباشرة",
+      "أقل مرونة من شجرة المجالات (لا حد أدنى مجال سهل، ولا تحديثات مجال كسولة)",
+      "حيلة البت غير بديهية في البداية",
+      "الفهرسة من 1 عرضة للخطأ",
+    ],
+    commonMistakes: [
+      "استخدام فهرسة من صفر (حيلة البت الأدنى تحتاج فهارس من 1).",
+      "الخلط بين اتجاه التحديث (i += lowbit) واتجاه الاستعلام (i −= lowbit).",
+      "محاولة استخدام BIT للحد الأدنى في المجال (يحتاج قابلية العكس).",
+      "خطأ بمقدار واحد في rangeSum (يجب طرح prefixSum(l − 1)، وليس prefixSum(l)).",
+    ],
+    interviewQuestions: [
+      "ماذا يحسب i & (−i) ولماذا هو جوهري في BIT؟",
+      "اشرح لماذا مجالات مسار الاستعلام تُغطي بالضبط [1..i].",
+      "متى تستخدم شجرة فينويك بدلًا من شجرة مجالات؟",
+      "كيف تعد الانعكاسات باستخدام BIT؟",
+      "كيف يمكن لـBIT دعم تحديثات المجال واستعلامات النقطة؟",
+    ],
+    summary:
+      "شجرة فينويك (BIT) تدعم استعلامات مجموع البادئة والتحديثات النقطية بزمن O(log n) باستخدام مصفوفة واحدة بطول (n+1) وحيلة البت الأدنى i & (−i). هي أكثر إحكامًا وأبسط من شجرة المجالات للعمليات القابلة للعكس من نمط المجموع.",
+    quiz: [
+      { question: "التعبير i & (−i) يحسب…", options: ["أعلى بت مضبوط", "أدنى بت مضبوط في i", "مربع i", "i مقسومًا على 2"], answer: 1, explanation: "يعزل أدنى بت مضبوط ذي الدلالة، حجم مجال i." },
+      { question: "لاستعلام مجموع بادئة تتحرك بـ…", options: ["i += i & −i", "i −= i & −i", "i *= 2", "i++"], answer: 1, explanation: "تُزيل أدنى بت مضبوط للقفز إلى المجال المنفصل التالي." },
+      { question: "لتحديث نقطي تتحرك بـ…", options: ["i −= i & −i", "i += i & −i", "i /= 2", "i--"], answer: 1, explanation: "تتسلق إلى كل عقدة يتضمن مجالها i." },
+      { question: "تعقيد استعلام/تحديث شجرة فينويك هو…", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "كل منهما يجتاز O(log n) من الفهارس (واحد لكل بت مضبوط)." },
+      { question: "شجرة فينويك مناسبة أكثر من أجل…", options: ["استعلامات الحد الأدنى للمجال", "العمليات القابلة للعكس مثل المجاميع", "الترتيب", "اجتياز الرسوم البيانية"], answer: 1, explanation: "حيلة المجال المعتمدة على الطرح تحتاج عملية قابلة للعكس." },
     ],
   },
   inputFields: [

@@ -30,41 +30,41 @@ function generate(input: Input): Step<TreeFrame>[] {
   let comparisons = 0;
   let nodeCount = 0;
 
-  const snap = (states: Record<string, CellState>, description: string, codeLine: number, note?: string) => {
-    steps.push({ frame: toFrame(root, states, note), description, codeLine, counters: { comparisons, nodes: nodeCount } });
+  const snap = (states: Record<string, CellState>, description: string, codeLine: number, note?: string, descriptionAr?: string) => {
+    steps.push({ frame: toFrame(root, states, note), description, descriptionAr, codeLine, counters: { comparisons, nodes: nodeCount } });
   };
 
-  snap({}, `A binary search tree keeps left < node < right. Let's run the operations.`, 0);
+  snap({}, `A binary search tree keeps left < node < right. Let's run the operations.`, 0, undefined, `شجرة البحث الثنائية تحافظ على يسار < العقدة < يمين. لنُنفّذ العمليات.`);
 
   const insert = (value: number) => {
     if (!root) {
       root = { id: `n${idc++}`, value, left: null, right: null };
       nodeCount++;
-      snap({ [root.id]: "found" }, `Tree empty — insert ${value} as the root.`, 2);
+      snap({ [root.id]: "found" }, `Tree empty — insert ${value} as the root.`, 2, undefined, `الشجرة فارغة — أدرج ${value} كجذر.`);
       return;
     }
     let cur: BSTNode = root;
     while (true) {
       comparisons++;
       if (value === cur.value) {
-        snap({ [cur.id]: "compare" }, `${value} already present — skip (no duplicates).`, 3);
+        snap({ [cur.id]: "compare" }, `${value} already present — skip (no duplicates).`, 3, undefined, `${value} موجود بالفعل — تجاهله (لا تكرار للمفاتيح).`);
         return;
       }
       if (value < cur.value) {
-        snap({ [cur.id]: "compare" }, `${value} < ${cur.value}: go left.`, 4);
+        snap({ [cur.id]: "compare" }, `${value} < ${cur.value}: go left.`, 4, undefined, `${value} < ${cur.value}: اتجه يسارًا.`);
         if (!cur.left) {
           cur.left = { id: `n${idc++}`, value, left: null, right: null };
           nodeCount++;
-          snap({ [cur.left.id]: "found" }, `Insert ${value} as left child of ${cur.value}.`, 5);
+          snap({ [cur.left.id]: "found" }, `Insert ${value} as left child of ${cur.value}.`, 5, undefined, `أدرج ${value} كابن أيسر للعقدة ${cur.value}.`);
           return;
         }
         cur = cur.left;
       } else {
-        snap({ [cur.id]: "compare" }, `${value} > ${cur.value}: go right.`, 6);
+        snap({ [cur.id]: "compare" }, `${value} > ${cur.value}: go right.`, 6, undefined, `${value} > ${cur.value}: اتجه يمينًا.`);
         if (!cur.right) {
           cur.right = { id: `n${idc++}`, value, left: null, right: null };
           nodeCount++;
-          snap({ [cur.right.id]: "found" }, `Insert ${value} as right child of ${cur.value}.`, 7);
+          snap({ [cur.right.id]: "found" }, `Insert ${value} as right child of ${cur.value}.`, 7, undefined, `أدرج ${value} كابن أيمن للعقدة ${cur.value}.`);
           return;
         }
         cur = cur.right;
@@ -77,13 +77,19 @@ function generate(input: Input): Step<TreeFrame>[] {
     while (cur) {
       comparisons++;
       if (value === cur.value) {
-        snap({ [cur.id]: "found" }, `Found ${value}!`, 9);
+        snap({ [cur.id]: "found" }, `Found ${value}!`, 9, undefined, `عُثِر على ${value}!`);
         return;
       }
-      snap({ [cur.id]: "compare" }, `${value} ${value < cur.value ? "<" : ">"} ${cur.value}: go ${value < cur.value ? "left" : "right"}.`, 9);
+      snap(
+        { [cur.id]: "compare" },
+        `${value} ${value < cur.value ? "<" : ">"} ${cur.value}: go ${value < cur.value ? "left" : "right"}.`,
+        9,
+        undefined,
+        `${value} ${value < cur.value ? "<" : ">"} ${cur.value}: اتجه ${value < cur.value ? "يسارًا" : "يمينًا"}.`,
+      );
       cur = value < cur.value ? cur.left : cur.right;
     }
-    snap({}, `${value} is not in the tree.`, 9);
+    snap({}, `${value} is not in the tree.`, 9, undefined, `${value} غير موجود في الشجرة.`);
   };
 
   const minNode = (n: BSTNode): BSTNode => (n.left ? minNode(n.left) : n);
@@ -106,18 +112,18 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   for (const op of input.ops) {
     if (op.kind === "insert") {
-      snap({}, `Insert ${op.value}.`, 1);
+      snap({}, `Insert ${op.value}.`, 1, undefined, `أدرج ${op.value}.`);
       insert(op.value);
     } else if (op.kind === "search") {
-      snap({}, `Search for ${op.value}.`, 8);
+      snap({}, `Search for ${op.value}.`, 8, undefined, `ابحث عن ${op.value}.`);
       search(op.value);
     } else {
-      snap({}, `Delete ${op.value}.`, 10);
+      snap({}, `Delete ${op.value}.`, 10, undefined, `احذف ${op.value}.`);
       root = remove(root, op.value);
-      snap({}, `Deleted ${op.value} (successor promoted if it had two children).`, 11);
+      snap({}, `Deleted ${op.value} (successor promoted if it had two children).`, 11, undefined, `حُذف ${op.value} (تمت ترقية الخَلَف إذا كان للعقدة ابنان).`);
     }
   }
-  snap({}, `All operations complete. In-order traversal yields sorted values.`, 12);
+  snap({}, `All operations complete. In-order traversal yields sorted values.`, 12, undefined, `اكتملت جميع العمليات. الاجتياز الداخلي يُعطي القيم مرتبة.`);
   return steps;
 }
 
@@ -142,10 +148,13 @@ function randomOps(level: number, rng: { int: (a: number, b: number) => number; 
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "binary-search-tree",
   title: "Binary Search Tree",
+  titleAr: "شجرة البحث الثنائية",
   category: "trees",
   difficulty: "Intermediate",
   tags: ["tree", "ordered", "insert/search/delete"],
+  tagsAr: ["شجرة", "مرتبة", "إدراج/بحث/حذف"],
   summary: "An ordered tree where left < node < right, giving O(h) search, insertion, and deletion.",
+  summaryAr: "شجرة مرتبة حيث يسار < العقدة < يمين، مما يمنح بحثًا وإدراجًا وحذفًا بتكلفة O(h).",
   renderer: "tree",
   pseudocode: [
     "structure BST: left < node < right",
@@ -359,6 +368,63 @@ Each operation costs O(h), where h is the height of the tree. For a balanced tre
       { question: "Deleting a node with two children replaces it with its…", options: ["parent", "left child", "in-order successor or predecessor", "root"], answer: 2, explanation: "The in-order successor (min of the right subtree) preserves the ordering invariant." },
       { question: "An in-order traversal of a BST visits keys in what order?", options: ["Random", "Sorted ascending", "Level by level", "Reverse insertion"], answer: 1, explanation: "Left–node–right ordering yields ascending sorted keys." },
       { question: "Why do AVL and red-black trees exist?", options: ["To store more data", "To keep height O(log n) and avoid the O(n) worst case", "To allow duplicates", "To use less memory"], answer: 1, explanation: "They rebalance on updates to guarantee logarithmic height." },
+    ],
+  },
+  contentAr: {
+    overview: `شجرة البحث الثنائية (BST) تخزّن المفاتيح بحيث تكون كل مفاتيح الشجرة الفرعية اليسرى لأي عقدة أصغر، وكل مفاتيح الشجرة الفرعية اليمنى أكبر. هذا الثابت الترتيبي يتيح لك إيجاد مفتاح أو إدراجه أو حذفه بالنزول من الجذر، مختارًا اليسار أو اليمين في كل خطوة — تمامًا كالبحث الثنائي، لكن على بنية مؤشرات ديناميكية تدعم إدراجًا وحذفًا فعالين.
+
+كل عملية تكلّف O(h)، حيث h هو ارتفاع الشجرة. في شجرة متوازنة h ≈ log n، لكن شجرة بحث ثنائية مبنية من إدراجات مرتبة مسبقًا تتحول إلى قائمة مترابطة بارتفاع h = n. المتغيرات ذاتية التوازن (AVL، الحمراء-السوداء) موجودة تحديدًا للحفاظ على h لوغاريتميًا.`,
+    howItWorks: [
+      "البحث/الإدراج يبدآن من الجذر ويقارنان الهدف بالعقدة الحالية.",
+      "اتجه يسارًا إذا كان الهدف أصغر، ويمينًا إذا كان أكبر؛ توقف عند التطابق (بحث) أو عند موضع فارغ (إدراج).",
+      "الإدراج يُلحق المفتاح الجديد كورقة في الموضع الفارغ حيث انتهى البحث.",
+      "الحذف له ثلاث حالات: الورقة تُحذف مباشرة؛ العقدة ذات ابن واحد تُستبدل بابنها؛ العقدة ذات ابنين تُستبدل بخَلَفها الداخلي (أصغر مفتاح في الشجرة الفرعية اليمنى).",
+      "الاجتياز الداخلي يزور المفاتيح دائمًا بترتيب تصاعدي.",
+    ],
+    complexity: {
+      time: { best: "O(log n)", average: "O(log n)", worst: "O(n)" },
+      space: "O(n)",
+      notes: "كل العمليات بتكلفة O(h). متوسط الارتفاع O(log n) للإدراجات العشوائية؛ أسوأ حالة O(n) للإدراجات المرتبة. المتغيرات المتوازنة تضمن O(log n).",
+    },
+    applications: [
+      "الخرائط والمجموعات المرتبة (مع التوازن) في المكتبات القياسية",
+      "استعلامات المجال والبحث عن أقرب مفتاح",
+      "فهرسة قواعد البيانات (أشجار B تعمم الفكرة إلى القرص)",
+      "الحفاظ على مجموعة مرتبة ديناميكيًا بتحديثات سريعة",
+    ],
+    advantages: [
+      "بحث وإدراج وحذف بتكلفة O(log n) عند التوازن",
+      "الاجتياز الداخلي يُعطي خرجًا مرتبًا مجانًا",
+      "يدعم استعلامات السابق/اللاحق والمجال",
+      "ديناميكية — تنمو وتتقلص دون إعادة تخصيص",
+    ],
+    disadvantages: [
+      "تتدهور إلى O(n) إذا أُدرجت بترتيب مرتب (غير متوازنة)",
+      "لا وصول عشوائي بتكلفة O(1) بالفهرس",
+      "عبء المؤشرات وسوء موضعية الذاكرة المؤقتة مقارنة بالمصفوفات",
+      "تتطلب منطق توازن لضمان الأداء",
+    ],
+    commonMistakes: [
+      "عدم معالجة المفاتيح المكررة باتساق (تجاهل، عد، أو اصطلاح جهة).",
+      "إفساد حذف العقدة ذات الابنين — يجب استخدام الخَلَف الداخلي (أو السلف).",
+      "افتراض أن شجرة البحث الثنائية تبقى متوازنة؛ الإدراجات المرتبة تجعلها قائمة مترابطة.",
+      "نسيان إعادة ربط مؤشر الأب عند استبدال عقدة.",
+    ],
+    interviewQuestions: [
+      "كيف تحذف عقدة ذات ابنين، ولماذا الخَلَف الداخلي؟",
+      "لماذا يمكن أن تتدهور شجرة البحث الثنائية إلى O(n)، وكيف تمنع أشجار AVL/الحمراء-السوداء ذلك؟",
+      "كيف تتحقق من أن شجرة ثنائية هي شجرة بحث ثنائية صالحة؟",
+      "كيف تجد العنصر الأصغر رقم k بكفاءة؟",
+      "صف كيفية إيجاد الخَلَف الداخلي لعقدة معطاة.",
+    ],
+    summary:
+      "شجرة البحث الثنائية تحافظ على يسار < العقدة < يمين، مما يتيح بحثًا وإدراجًا وحذفًا بتكلفة O(h) بالنزول من الجذر. متوازنة تمنح O(log n)؛ ومبنية من مدخلات مرتبة تتدهور إلى O(n) — وهذا هو الدافع وراء الأشجار ذاتية التوازن. الاجتياز الداخلي يُعيد المفاتيح مرتبة.",
+    quiz: [
+      { question: "في شجرة بحث ثنائية، أين تُخزَّن المفاتيح الأصغر من عقدة ما؟", options: ["الشجرة الفرعية اليمنى", "الشجرة الفرعية اليسرى", "كلا الشجرتين الفرعيتين", "الجذر فقط"], answer: 1, explanation: "ثابت شجرة البحث الثنائية يضع المفاتيح الأصغر في الشجرة الفرعية اليسرى، والأكبر في اليمنى." },
+      { question: "ما أسوأ زمن للبحث في شجرة بحث ثنائية؟", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 2, explanation: "شجرة مبنية من إدراجات مرتبة تصبح سلسلة بارتفاع n." },
+      { question: "حذف عقدة ذات ابنين يستبدلها بـ…", options: ["أبيها", "ابنها الأيسر", "خَلَفها أو سلفها الداخلي", "الجذر"], answer: 2, explanation: "الخَلَف الداخلي (أصغر عنصر في الشجرة الفرعية اليمنى) يحافظ على ثابت الترتيب." },
+      { question: "الاجتياز الداخلي لشجرة بحث ثنائية يزور المفاتيح بأي ترتيب؟", options: ["عشوائي", "تصاعدي مرتب", "مستوى تلو الآخر", "عكس الإدراج"], answer: 1, explanation: "ترتيب يسار-عقدة-يمين يُعطي مفاتيح مرتبة تصاعديًا." },
+      { question: "لماذا توجد أشجار AVL والحمراء-السوداء؟", options: ["لتخزين بيانات أكثر", "للحفاظ على ارتفاع O(log n) وتجنب أسوأ حالة O(n)", "للسماح بالتكرار", "لاستخدام ذاكرة أقل"], answer: 1, explanation: "تُعيد التوازن عند التحديثات لضمان ارتفاع لوغاريتمي." },
     ],
   },
   inputFields: [

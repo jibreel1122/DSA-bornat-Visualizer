@@ -21,7 +21,7 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   const isRed = (n: Node | null) => n?.color === "red";
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: Node | null) => {
       if (!n) return;
@@ -35,6 +35,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: root?.id ?? null, states: { ...states }, note },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, rotations, recolors },
     });
@@ -65,7 +66,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     rotations++;
   };
 
-  toFrame({}, `A red-black tree is a BST with colored nodes and 5 rules that keep it balanced: root is black, red nodes have black children, and every root-to-leaf path has the same number of black nodes.`, 0, `empty red-black tree`);
+  toFrame(
+    {},
+    `A red-black tree is a BST with colored nodes and 5 rules that keep it balanced: root is black, red nodes have black children, and every root-to-leaf path has the same number of black nodes.`,
+    0,
+    `empty red-black tree`,
+    `الشجرة الحمراء-السوداء هي شجرة بحث ثنائية بعقد ملونة و5 قواعد تحافظ على توازنها: الجذر أسود، أبناء العقد الحمراء سوداء، ولكل مسار من الجذر إلى ورقة نفس عدد العقد السوداء.`,
+  );
 
   const insert = (value: number) => {
     let z: Node = { id: `n${idc++}`, value, color: "red", left: null, right: null, parent: null };
@@ -75,14 +82,20 @@ function generate(input: Input): Step<TreeFrame>[] {
     while (x) {
       comparisons++;
       y = x;
-      toFrame({ [x.id]: "compare" }, `insert(${value}): ${value} ${value < x.value ? "<" : ">"} ${x.value}, go ${value < x.value ? "left" : "right"}.`, 2, `insert ${value}`);
+      toFrame(
+        { [x.id]: "compare" },
+        `insert(${value}): ${value} ${value < x.value ? "<" : ">"} ${x.value}, go ${value < x.value ? "left" : "right"}.`,
+        2,
+        `insert ${value}`,
+        `insert(${value}): ${value} ${value < x.value ? "<" : ">"} ${x.value}، اتجه ${value < x.value ? "يسارًا" : "يمينًا"}.`,
+      );
       x = value < x.value ? x.left : x.right;
     }
     z.parent = y;
     if (!y) root = z;
     else if (value < y.value) y.left = z;
     else y.right = z;
-    toFrame({ [z.id]: "active" }, `Insert ${value} as a RED leaf. Now fix any red-black violations.`, 3, `insert ${value}`);
+    toFrame({ [z.id]: "active" }, `Insert ${value} as a RED leaf. Now fix any red-black violations.`, 3, `insert ${value}`, `أدرج ${value} كورقة حمراء. الآن أصلح أي مخالفات حمراء-سوداء.`);
 
     // Fixup
     while (isRed(z.parent)) {
@@ -96,12 +109,24 @@ function generate(input: Input): Step<TreeFrame>[] {
           uncle!.color = "black";
           grand.color = "red";
           recolors++;
-          toFrame({ [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" }, `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`, 5, `recolor`);
+          toFrame(
+            { [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" },
+            `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`,
+            5,
+            `recolor`,
+            `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+          );
           z = grand;
         } else {
           if (z === parent.right) {
             // Case 2: triangle → rotate parent
-            toFrame({ [parent.id]: "active" }, `Uncle black, ${value} is an inner (LR) child → left-rotate the parent first.`, 7, `rotate`);
+            toFrame(
+              { [parent.id]: "active" },
+              `Uncle black, ${value} is an inner (LR) child → left-rotate the parent first.`,
+              7,
+              `rotate`,
+              `العم أسود، ${value} ابن داخلي (LR) ← أجرِ دورانًا يساريًا للأب أولًا.`,
+            );
             rotateLeft(parent);
             z = parent;
           }
@@ -109,7 +134,13 @@ function generate(input: Input): Step<TreeFrame>[] {
           z.parent!.color = "black";
           grand.color = "red";
           recolors++;
-          toFrame({ [z.parent!.id]: "special", [grand.id]: "swap" }, `Recolor parent black, grandparent red, then right-rotate the grandparent.`, 8, `rotate`);
+          toFrame(
+            { [z.parent!.id]: "special", [grand.id]: "swap" },
+            `Recolor parent black, grandparent red, then right-rotate the grandparent.`,
+            8,
+            `rotate`,
+            `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يمينيًا للجد.`,
+          );
           rotateRight(grand);
         }
       } else {
@@ -119,18 +150,36 @@ function generate(input: Input): Step<TreeFrame>[] {
           uncle!.color = "black";
           grand.color = "red";
           recolors++;
-          toFrame({ [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" }, `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`, 5, `recolor`);
+          toFrame(
+            { [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" },
+            `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`,
+            5,
+            `recolor`,
+            `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+          );
           z = grand;
         } else {
           if (z === parent.left) {
-            toFrame({ [parent.id]: "active" }, `Uncle black, ${value} is an inner (RL) child → right-rotate the parent first.`, 7, `rotate`);
+            toFrame(
+              { [parent.id]: "active" },
+              `Uncle black, ${value} is an inner (RL) child → right-rotate the parent first.`,
+              7,
+              `rotate`,
+              `العم أسود، ${value} ابن داخلي (RL) ← أجرِ دورانًا يمينيًا للأب أولًا.`,
+            );
             rotateRight(parent);
             z = parent;
           }
           z.parent!.color = "black";
           grand.color = "red";
           recolors++;
-          toFrame({ [z.parent!.id]: "special", [grand.id]: "swap" }, `Recolor parent black, grandparent red, then left-rotate the grandparent.`, 8, `rotate`);
+          toFrame(
+            { [z.parent!.id]: "special", [grand.id]: "swap" },
+            `Recolor parent black, grandparent red, then left-rotate the grandparent.`,
+            8,
+            `rotate`,
+            `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يساريًا للجد.`,
+          );
           rotateLeft(grand);
         }
       }
@@ -139,7 +188,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       root!.color = "black";
       recolors++;
     }
-    toFrame({}, `Root is forced black. Red-black properties restored after inserting ${value}.`, 7, `balanced`);
+    toFrame({}, `Root is forced black. Red-black properties restored after inserting ${value}.`, 7, `balanced`, `يُجبَر الجذر على أن يكون أسود. استُعيدت خصائص الشجرة الحمراء-السوداء بعد إدراج ${value}.`);
   };
 
   for (const v of input.values) insert(v);
@@ -152,7 +201,13 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(n.right);
   };
   markAll(root);
-  toFrame(done, `Done. The red-black tree stays balanced with height ≤ 2·log₂(n+1); all operations are O(log n).`, 8, `final red-black tree`);
+  toFrame(
+    done,
+    `Done. The red-black tree stays balanced with height ≤ 2·log₂(n+1); all operations are O(log n).`,
+    8,
+    `final red-black tree`,
+    `تم. تبقى الشجرة الحمراء-السوداء متوازنة بارتفاع ≤ 2·log₂(n+1)؛ كل العمليات O(log n).`,
+  );
   return steps;
 }
 
@@ -165,10 +220,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "red-black-tree",
   title: "Red-Black Tree",
+  titleAr: "الشجرة الحمراء-السوداء",
   category: "trees",
   difficulty: "Advanced",
   tags: ["tree", "self-balancing", "recoloring", "rotations"],
+  tagsAr: ["شجرة", "ذاتية التوازن", "إعادة تلوين", "دورانات"],
   summary: "A self-balancing BST that uses node colors and 5 invariants to guarantee O(log n) operations with few rotations.",
+  summaryAr: "شجرة بحث ثنائية ذاتية التوازن تستخدم ألوان العقد و5 ثوابت لضمان عمليات O(log n) بدورانات قليلة.",
   renderer: "tree",
   pseudocode: [
     "procedure insert(z)",
@@ -394,6 +452,63 @@ The five rules are: (1) every node is red or black; (2) the root is black; (3) a
       { question: "When the parent and uncle are both red, you…", options: ["Rotate twice", "Recolor and move up to the grandparent", "Delete the node", "Do nothing"], answer: 1, explanation: "Recoloring pushes the potential violation upward." },
       { question: "Insertion needs at most how many rotations?", options: ["Zero", "One", "Two", "log n"], answer: 2, explanation: "The triangle case uses two rotations; the line case one." },
       { question: "Compared with AVL trees, red-black trees…", options: ["Are more balanced", "Use fewer rotations on updates", "Have no colors", "Are always faster to search"], answer: 1, explanation: "Looser balance means fewer rotations, favoring frequent updates." },
+    ],
+  },
+  contentAr: {
+    overview: `الشجرة الحمراء-السوداء هي شجرة بحث ثنائية ذاتية التوازن تُلصق بكل عقدة لونًا — أحمر أو أسود — وتحافظ على خمسة ثوابت تضمن معًا ألا يتجاوز ارتفاع الشجرة 2·log₂(n+1). ولأن ضمان التوازن أقل صرامة من شجرة AVL، تُجري الأشجار الحمراء-السوداء دورانات أقل عند الإدراج والحذف، مما يجعلها الخيار المفضل للخرائط المرتبة كثيفة التحديث — وهي تشغّل TreeMap في جافا، وstd::map في ++C، وجدولة نواة لينكس.
+
+القواعد الخمس هي: (1) كل عقدة حمراء أو سوداء؛ (2) الجذر أسود؛ (3) كل الأوراق الفارغة سوداء؛ (4) أبناء العقدة الحمراء كلاهما أسود (لا حمراوين متتاليتين)؛ و(5) كل مسار من عقدة إلى أوراقها يحتوي نفس عدد العقد السوداء. تُدرَج العقد الجديدة حمراء، وهذا لا يمكن أن يخالف إلا القاعدة 4 (عقدة حمراء بأب أحمر). ثم يُصلح إجراء إصلاح الشجرة باستخدام أداتين: إعادة التلوين (عندما تكون عقدة "العم" حمراء، ادفع الحُمرة صعودًا) والدورانات (عندما يكون العم أسود، أدر وأعِد التلوين لإعادة التوازن). لا يُحتاج أبدًا إلى أكثر من دورانين لكل إدراج.`,
+    howItWorks: [
+      "أدرج المفتاح الجديد كورقة عادية في شجرة بحث ثنائية ولوّنه أحمر.",
+      "إذا كان أبوه أسود، فالشجرة لا تزال صالحة — انتهى.",
+      "إذا كان الأب أحمر والعم أحمر، أعِد تلوين الأب والعم أسودين والجد أحمر، ثم كرر من الجد.",
+      "إذا كان الأب أحمر والعم أسود، أدر (مرة واحدة لحالة الخط، مرتين لحالة المثلث) وأعِد التلوين لإصلاح الازدواج الأحمر.",
+      "أخيرًا، اجبر الجذر على أن يكون أسود.",
+    ],
+    complexity: {
+      time: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" },
+      space: "O(n)",
+      notes: "الارتفاع محدود بـ2·log₂(n+1)، لذا البحث/الإدراج/الحذف O(log n). يحتاج الإدراج على الأكثر دورانين وO(log n) من إعادة التلوين؛ ويحتاج الحذف على الأكثر 3 دورانات. دورانات أقل من AVL، مقابل أشجار أطول قليلًا.",
+    },
+    applications: [
+      "الخرائط/المجموعات المرتبة في المكتبات القياسية (std::map، TreeMap)",
+      "جدولة CFS العادلة تمامًا ومناطق الذاكرة الافتراضية في نواة لينكس",
+      "الحاويات الترابطية التي تحتاج تحديثات متوازنة",
+      "أي بنية مرتبة بإدراجات وحذوفات متكررة",
+    ],
+    advantages: [
+      "عمليات مضمونة O(log n) بدورانات قليلة",
+      "إدراج/حذف أرخص من AVL (خفيفة الدوران)",
+      "مستخدمة على نطاق واسع ومُختبرة في مكتبات النظام",
+      "تدعم الاجتياز المرتب واستعلامات المجال",
+    ],
+    disadvantages: [
+      "أطول قليلًا (أقل توازنًا) من AVL ← بحث أبطأ قليلًا",
+      "منطق إصلاح الإدراج، وخاصة الحذف، معقد",
+      "بت لون إضافي لكل عقدة",
+      "أصعب في التطبيق الصحيح من شجرة بحث ثنائية عادية",
+    ],
+    commonMistakes: [
+      "نسيان إعادة تلوين الجذر أسود في النهاية.",
+      "سوء معالجة حالة المثلث (الابن الداخلي) التي تحتاج دورانين.",
+      "معاملة الأوراق الفارغة كحمراء، مما يكسر قاعدة الارتفاع الأسود.",
+      "الخلط بين حالتي المرآة اليسرى/اليمنى في الإصلاح.",
+    ],
+    interviewQuestions: [
+      "اذكر الثوابت الحمراء-السوداء الخمسة ولماذا تحد الارتفاع.",
+      "متى يعيد الإدراج التلوين مقابل الدوران، وكم دورانًا على الأكثر؟",
+      "لماذا تُفضَّل الأشجار الحمراء-السوداء على AVL لأحمال العمل كثيفة التحديث؟",
+      "كيف تضمن خاصية الارتفاع الأسود O(log n)؟",
+      "كيف ترتبط الأشجار الحمراء-السوداء بأشجار 2-3-4؟",
+    ],
+    summary:
+      "الشجرة الحمراء-السوداء تحافظ على توازن شجرة بحث ثنائية بألوان العقد وخمسة ثوابت، محددة الارتفاع بـ2·log₂(n+1). الإدراجات تُصلح مخالفات الازدواج الأحمر بإعادة التلوين (عم أحمر) أو الدوران (عم أسود)، مستخدمة دورانين على الأكثر — أقل من AVL، مما يجعل الأشجار الحمراء-السوداء مثالية للخرائط المرتبة كثيفة التحديث.",
+    quiz: [
+      { question: "العقدة المُدرجة حديثًا في شجرة حمراء-سوداء تُلوَّن…", options: ["أسود", "أحمر", "أي منهما", "بلا لون"], answer: 1, explanation: "الإدراج بالأحمر لا يمكن أن يخالف إلا قاعدة عدم وجود حمراوين متتاليتين، وهي الأسهل إصلاحًا." },
+      { question: "أي قاعدة تحد الارتفاع لوغاريتميًا؟", options: ["الجذر أسود", "ارتفاع أسود متساوٍ في كل مسار من الجذر إلى ورقة", "العقد حمراء أو سوداء", "الأوراق فارغة"], answer: 1, explanation: "الارتفاع الأسود الموحد مع عدم وجود حمراوين متتاليتين يبقي الارتفاع ≤ 2·log₂(n+1)." },
+      { question: "عندما يكون الأب والعم كلاهما أحمر، فإنك…", options: ["تدور مرتين", "تعيد التلوين وتنتقل صعودًا إلى الجد", "تحذف العقدة", "لا تفعل شيئًا"], answer: 1, explanation: "إعادة التلوين تدفع المخالفة المحتملة صعودًا." },
+      { question: "الإدراج يحتاج على الأكثر كم دورانًا؟", options: ["صفر", "واحد", "اثنين", "log n"], answer: 2, explanation: "حالة المثلث تستخدم دورانين؛ وحالة الخط دورانًا واحدًا." },
+      { question: "مقارنة بأشجار AVL، الأشجار الحمراء-السوداء…", options: ["أكثر توازنًا", "تستخدم دورانات أقل عند التحديث", "بلا ألوان", "دائمًا أسرع في البحث"], answer: 1, explanation: "التوازن الأقل صرامة يعني دورانات أقل، مما يفضّل التحديثات المتكررة." },
     ],
   },
   inputFields: [

@@ -47,6 +47,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     output: number[],
     description: string,
     codeLine: number,
+    descriptionAr?: string,
   ): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: Node | null) => {
@@ -63,6 +64,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: root?.id ?? null, states: { ...states }, aux, note: `breadth-first: process the tree level by level using a FIFO queue` },
       description,
+      descriptionAr,
       codeLine,
       counters: { visits },
     });
@@ -71,10 +73,17 @@ function generate(input: Input): Step<TreeFrame>[] {
   const queue: Node[] = [];
   const output: number[] = [];
 
-  toFrame({}, queue, output, `Level-order (BFS) traversal. Start by enqueuing the root, ${root ? (root as Node).value : "null"}.`, 1);
+  toFrame(
+    {},
+    queue,
+    output,
+    `Level-order (BFS) traversal. Start by enqueuing the root, ${root ? (root as Node).value : "null"}.`,
+    1,
+    `اجتياز حسب المستوى (BFS). ابدأ بإضافة الجذر ${root ? (root as Node).value : "null"} إلى الطابور.`,
+  );
   if (root) {
     queue.push(root);
-    toFrame({ [(root as Node).id]: "active" }, queue, output, `Enqueue root ${(root as Node).value}.`, 2);
+    toFrame({ [(root as Node).id]: "active" }, queue, output, `Enqueue root ${(root as Node).value}.`, 2, `أضف الجذر ${(root as Node).value} إلى الطابور.`);
   }
 
   while (queue.length > 0) {
@@ -83,7 +92,7 @@ function generate(input: Input): Step<TreeFrame>[] {
     visits++;
     const states: Record<string, CellState> = { [node.id]: "found" };
     for (const q of queue) states[q.id] = "active";
-    toFrame(states, queue, output, `Dequeue ${node.value} and visit it. Now enqueue its children.`, 4);
+    toFrame(states, queue, output, `Dequeue ${node.value} and visit it. Now enqueue its children.`, 4, `أخرج ${node.value} من الطابور وزُره. الآن أضف أبناءه إلى الطابور.`);
 
     const childStates: Record<string, CellState> = { [node.id]: "visited" };
     if (node.left) {
@@ -102,9 +111,17 @@ function generate(input: Input): Step<TreeFrame>[] {
         output,
         `Enqueue ${[node.left?.value, node.right?.value].filter((x) => x !== undefined).join(" and ")} (children of ${node.value}).`,
         6,
+        `أضف ${[node.left?.value, node.right?.value].filter((x) => x !== undefined).join(" و")} (أبناء ${node.value}) إلى الطابور.`,
       );
     } else {
-      toFrame({ [node.id]: "visited", ...Object.fromEntries(queue.map((q) => [q.id, "active" as CellState])) }, queue, output, `${node.value} is a leaf — no children to enqueue.`, 6);
+      toFrame(
+        { [node.id]: "visited", ...Object.fromEntries(queue.map((q) => [q.id, "active" as CellState])) },
+        queue,
+        output,
+        `${node.value} is a leaf — no children to enqueue.`,
+        6,
+        `${node.value} ورقة — لا أبناء لإضافتهم إلى الطابور.`,
+      );
     }
   }
 
@@ -117,7 +134,14 @@ function generate(input: Input): Step<TreeFrame>[] {
     markAll(n.right);
   };
   markAll(root);
-  toFrame(finalStates, queue, output, `Queue empty — traversal complete. Level-order visit order: [${output.join(", ")}].`, 8);
+  toFrame(
+    finalStates,
+    queue,
+    output,
+    `Queue empty — traversal complete. Level-order visit order: [${output.join(", ")}].`,
+    8,
+    `الطابور فارغ — اكتمل الاجتياز. ترتيب الزيارة حسب المستوى: [${output.join(", ")}].`,
+  );
   return steps;
 }
 
@@ -130,10 +154,13 @@ function randomInput(level: number, rng: { int: (a: number, b: number) => number
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "level-order-traversal",
   title: "Level-Order Traversal (BFS)",
+  titleAr: "الاجتياز حسب المستوى (BFS)",
   category: "trees",
   difficulty: "Beginner",
   tags: ["tree", "bfs", "queue", "traversal"],
+  tagsAr: ["شجرة", "بحث بالعرض أولًا", "طابور", "اجتياز"],
   summary: "Visits a binary tree breadth-first, level by level, using a FIFO queue to process nodes in order.",
+  summaryAr: "يزور شجرة ثنائية بالعرض أولًا، مستوى تلو الآخر، باستخدام طابور FIFO لمعالجة العقد بترتيبها.",
   renderer: "tree",
   pseudocode: [
     "procedure levelOrder(root)",
@@ -330,6 +357,62 @@ The mechanism is a FIFO queue. You enqueue the root, then repeatedly dequeue a n
       { question: "Time complexity of level-order traversal is…", options: ["O(log n)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "Each node is enqueued and dequeued exactly once." },
       { question: "Replacing the queue with a stack would produce…", options: ["The same order", "A depth-first-like order", "Sorted order", "An error"], answer: 1, explanation: "LIFO ordering changes BFS into a DFS-style traversal." },
       { question: "Worst-case queue space is proportional to…", options: ["Tree height", "Maximum tree width", "Number of leaves only", "Always O(1)"], answer: 1, explanation: "The queue can hold an entire level, i.e. the tree's width." },
+    ],
+  },
+  contentAr: {
+    overview: `الاجتياز حسب المستوى — وهو بحث بالعرض أولًا (BFS) على شجرة — يزور العقد مستوى عمق واحدًا في كل مرة: الجذر أولًا، ثم كل عقد العمق 1 من اليسار إلى اليمين، ثم العمق 2، وهكذا. على عكس الاجتيازات بالعمق أولًا (السابق/الداخلي/اللاحق) التي تغوص في فرع واحد قبل التراجع، يستكشف BFS الشجرة في حلقات متوسعة.
+
+الآلية هي طابور FIFO. تضيف الجذر إلى الطابور، ثم تُخرج عقدة مرارًا، تزورها، وتضيف أبناءها إلى الطابور. ولأن الطابور يحافظ على ترتيب الإدراج، تخرج العقد بالضبط بترتيب المستوى. كل عقدة تُضاف وتُخرَج من الطابور مرة واحدة، لذا الاجتياز بزمن O(n)؛ والطابور قد يحمل مستوى كاملًا، لذا أسوأ مساحة هي O(w) حيث w أقصى عرض للشجرة (نحو n/2 لشجرة كاملة).`,
+    howItWorks: [
+      "إذا كانت الشجرة فارغة، فلا شيء لفعله.",
+      "أضف عقدة الجذر إلى طابور FIFO.",
+      "طالما الطابور غير فارغ، أخرج العقدة الأمامية وزُرها.",
+      "أضف ابن تلك العقدة الأيسر ثم الأيمن (إن وُجدا) إلى الطابور.",
+      "كرر؛ ترتيب FIFO يضمن ظهور العقد مستوى تلو الآخر، من اليسار إلى اليمين.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n)", worst: "O(n)" },
+      space: "O(w)",
+      notes: "كل عقدة تُضاف وتُخرَج من الطابور مرة واحدة بالضبط ← زمن O(n). الطابور يحمل مستوى واحدًا على الأكثر، لذا المساحة O(w) حيث w أقصى عرض للشجرة (حتى ~n/2).",
+    },
+    applications: [
+      "طباعة أو تسلسل شجرة مستوى تلو الآخر",
+      "إيجاد أقصر مسار / أدنى عمق في شجرة أو رسم بياني غير موزون",
+      "حساب تجميعات لكل مستوى (مثل العرض الجانبي الأيمن، متوسطات المستوى)",
+      "نمط BFS العام المستخدم عبر خوارزميات الرسوم البيانية",
+    ],
+    advantages: [
+      "يزور العقد بمسافة متزايدة من الجذر",
+      "يجد أقرب عقدة مطابقة أولًا",
+      "بسيط وتكراري — بلا عودية أو مكدس صريح",
+      "يعمم مباشرة إلى BFS على الرسوم البيانية",
+    ],
+    disadvantages: [
+      "يحتاج مساحة طابور O(w)، وقد تكون كبيرة للأشجار العريضة",
+      "ليس عوديًا بطبيعته",
+      "لا يحافظ على تعشيش الأب-الابن كما تفعل اجتيازات DFS",
+    ],
+    commonMistakes: [
+      "استخدام مكدس (LIFO) بدلًا من طابور، مما ينتج ترتيبًا شبيهًا بـDFS.",
+      "نسيان التحقق من الشجرة الفارغة قبل إضافة الجذر إلى الطابور.",
+      "إضافة اليمين قبل اليسار عندما يُطلب ترتيب من اليسار إلى اليمين.",
+      "تتبع حدود المستوى بشكل خاطئ عند الحاجة إلى تجميع لكل مستوى.",
+    ],
+    interviewQuestions: [
+      "كيف تجمع الخرج حسب المستوى (قائمة من القوائم)؟",
+      "كيف يجد BFS أدنى عمق لشجرة ثنائية؟",
+      "ما أقصى حجم للطابور أثناء الاجتياز حسب المستوى؟",
+      "كيف تنتج ترتيب مستوى متعرجًا (اتجاه متناوب)؟",
+      "كيف يرتبط BFS على الشجرة بـBFS على الرسم البياني؟",
+    ],
+    summary:
+      "الاجتياز حسب المستوى يزور شجرة بالعرض أولًا باستخدام طابور FIFO: أضف الجذر، ثم أخرج عقدة مرارًا، زُرها، وأضف أبناءها. يعمل بزمن O(n) ومساحة O(w) وهو الصيغة الشجرية لـBFS.",
+    quiz: [
+      { question: "الاجتياز حسب المستوى يستخدم أي بنية بيانات؟", options: ["مكدس", "طابور", "كومة", "خريطة تجزئة"], answer: 1, explanation: "طابور FIFO ينتج ترتيبًا بالعرض أولًا." },
+      { question: "تُزار العقد…", options: ["أعمق فرع أولًا", "مستوى تلو الآخر، من الأعلى إلى الأسفل", "بترتيب مرتب", "عشوائيًا"], answer: 1, explanation: "BFS يعالج مستوى عمق كاملًا قبل التالي." },
+      { question: "التعقيد الزمني للاجتياز حسب المستوى هو…", options: ["O(log n)", "O(n)", "O(n log n)", "O(n²)"], answer: 1, explanation: "كل عقدة تُضاف وتُخرَج من الطابور مرة واحدة بالضبط." },
+      { question: "استبدال الطابور بمكدس ينتج…", options: ["نفس الترتيب", "ترتيبًا شبيهًا بالعمق أولًا", "ترتيبًا مرتبًا", "خطأ"], answer: 1, explanation: "ترتيب LIFO يحوّل BFS إلى اجتياز شبيه بـDFS." },
+      { question: "أسوأ مساحة للطابور تتناسب مع…", options: ["ارتفاع الشجرة", "أقصى عرض للشجرة", "عدد الأوراق فقط", "دائمًا O(1)"], answer: 1, explanation: "الطابور قد يحمل مستوى كاملًا، أي عرض الشجرة." },
     ],
   },
   inputFields: [

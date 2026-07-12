@@ -14,7 +14,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   const steps: Step<TreeFrame>[] = [];
   let nodeCount = 1;
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: TNode) => {
       const kids = [...n.children.values()].sort((a, b) => a.ch.localeCompare(b.ch));
@@ -33,56 +33,75 @@ function generate(input: Input): Step<TreeFrame>[] {
     steps.push({
       frame: { nodes, rootId: root.id, states: { ...states }, note },
       description,
+      descriptionAr,
       codeLine,
       counters: { nodes: nodeCount },
     });
   };
 
-  toFrame({ root: "active" }, `A trie stores strings by shared prefixes. The root (•) holds no character; ★ marks a complete word.`, 0, `empty trie`);
+  toFrame(
+    { root: "active" },
+    `A trie stores strings by shared prefixes. The root (•) holds no character; ★ marks a complete word.`,
+    0,
+    `empty trie`,
+    `الشجرة اللاحقة (trie) تخزّن السلاسل عبر بادئات مشتركة. الجذر (•) لا يحمل حرفًا؛ و★ تُشير إلى كلمة كاملة.`,
+  );
 
   // --- insert each word ---
   for (const word of input.words) {
     let cur = root;
-    toFrame({ [cur.id]: "active" }, `insert("${word}"): start at the root.`, 2, `insert "${word}"`);
+    toFrame({ [cur.id]: "active" }, `insert("${word}"): start at the root.`, 2, `insert "${word}"`, `insert("${word}"): ابدأ من الجذر.`);
     for (const ch of word) {
       if (cur.children.has(ch)) {
         cur = cur.children.get(ch)!;
-        toFrame({ [cur.id]: "compare" }, `'${ch}' already exists — follow the existing edge.`, 4, `insert "${word}"`);
+        toFrame({ [cur.id]: "compare" }, `'${ch}' already exists — follow the existing edge.`, 4, `insert "${word}"`, `'${ch}' موجود بالفعل — اتبع الحافة الموجودة.`);
       } else {
         const node: TNode = { id: `t${idc++}`, ch, children: new Map(), isEnd: false };
         cur.children.set(ch, node);
         nodeCount++;
         cur = node;
-        toFrame({ [cur.id]: "found" }, `'${ch}' is new — create a child node for it.`, 5, `insert "${word}"`);
+        toFrame({ [cur.id]: "found" }, `'${ch}' is new — create a child node for it.`, 5, `insert "${word}"`, `'${ch}' جديد — أنشئ عقدة ابن له.`);
       }
     }
     cur.isEnd = true;
-    toFrame({ [cur.id]: "special" }, `Mark the node for '${word[word.length - 1]}' as end-of-word (★). "${word}" is now stored.`, 6, `insert "${word}"`);
+    toFrame(
+      { [cur.id]: "special" },
+      `Mark the node for '${word[word.length - 1]}' as end-of-word (★). "${word}" is now stored.`,
+      6,
+      `insert "${word}"`,
+      `ضع علامة نهاية الكلمة (★) على عقدة '${word[word.length - 1]}'. أصبحت "${word}" مخزّنة الآن.`,
+    );
   }
 
   // --- search ---
   const target = input.search;
   let cur: TNode | null = root;
   let ok = true;
-  toFrame({ root: "active" }, `search("${target}"): walk the trie character by character.`, 7, `search "${target}"`);
+  toFrame({ root: "active" }, `search("${target}"): walk the trie character by character.`, 7, `search "${target}"`, `search("${target}"): اجتز الشجرة حرفًا حرفًا.`);
   for (const ch of target) {
     if (cur && cur.children.has(ch)) {
       cur = cur.children.get(ch)!;
-      toFrame({ [cur.id]: "compare" }, `Matched '${ch}' — descend.`, 7, `search "${target}"`);
+      toFrame({ [cur.id]: "compare" }, `Matched '${ch}' — descend.`, 7, `search "${target}"`, `تطابق '${ch}' — انزل إلى الأسفل.`);
     } else {
       ok = false;
       const st: Record<string, CellState> = {};
       if (cur) st[cur.id] = "discarded";
-      toFrame(st, `No edge for '${ch}': "${target}" is not in the trie.`, 7, `search "${target}"`);
+      toFrame(st, `No edge for '${ch}': "${target}" is not in the trie.`, 7, `search "${target}"`, `لا حافة لـ'${ch}': "${target}" غير موجودة في الشجرة.`);
       cur = null;
       break;
     }
   }
   if (ok && cur) {
     if (cur.isEnd) {
-      toFrame({ [cur.id]: "found" }, `Reached the end and it is marked ★ — "${target}" is present.`, 7, `search "${target}"`);
+      toFrame({ [cur.id]: "found" }, `Reached the end and it is marked ★ — "${target}" is present.`, 7, `search "${target}"`, `وصلنا إلى النهاية وهي مُعلَّمة بـ★ — "${target}" موجودة.`);
     } else {
-      toFrame({ [cur.id]: "discarded" }, `Path exists but the final node isn't ★ — "${target}" is only a prefix, not a stored word.`, 7, `search "${target}"`);
+      toFrame(
+        { [cur.id]: "discarded" },
+        `Path exists but the final node isn't ★ — "${target}" is only a prefix, not a stored word.`,
+        7,
+        `search "${target}"`,
+        `المسار موجود لكن العقدة الأخيرة ليست ★ — "${target}" مجرد بادئة، وليست كلمة مخزّنة.`,
+      );
     }
   }
   return steps;
@@ -105,10 +124,13 @@ function randomInput(level: number, rng: { pick: <T>(a: readonly T[]) => T; int:
 const mod: AlgorithmModule<TreeFrame, Input> = {
   slug: "trie",
   title: "Trie (Prefix Tree)",
+  titleAr: "الشجرة اللاحقة (شجرة البادئات)",
   category: "trees",
   difficulty: "Intermediate",
   tags: ["trie", "prefix tree", "strings", "dictionary"],
+  tagsAr: ["شجرة لاحقة", "شجرة بادئات", "سلاسل نصية", "قاموس"],
   summary: "Stores a set of strings in a prefix tree, sharing common prefixes; supports fast insert and lookup by walking edges.",
+  summaryAr: "تخزّن مجموعة من السلاسل النصية في شجرة بادئات، تشترك في البادئات المشتركة؛ تدعم إدراجًا وبحثًا سريعين باجتياز الحواف.",
   renderer: "tree",
   pseudocode: [
     "structure Trie",
@@ -400,6 +422,63 @@ The power of a trie is that insertion and lookup cost O(L), where L is the lengt
       { question: "The end-of-word flag is needed to…", options: ["Save memory", "Distinguish stored words from mere prefixes", "Speed up hashing", "Balance the tree"], answer: 1, explanation: "Without it, a prefix like 'car' of 'card' could be mistaken for a stored word." },
       { question: "A key advantage of tries over hash sets is…", options: ["Less memory", "Efficient prefix / startsWith queries", "No traversal needed", "Guaranteed O(1) lookup"], answer: 1, explanation: "Tries answer prefix queries directly, which hashing cannot." },
       { question: "A common downside of tries is…", options: ["Slow lookups", "High memory consumption", "Hash collisions", "Inability to store strings"], answer: 1, explanation: "Many child pointers per node can consume significant memory." },
+    ],
+  },
+  contentAr: {
+    overview: `الشجرة اللاحقة (trie، وتُنطق "تراي")، أو شجرة البادئات، هي شجرة تخزّن مجموعة من السلاسل النصية حرفًا حرفًا. كل حافة تحمل حرفًا واحدًا، والمسار من الجذر يهجّي بادئة؛ والعقد المُعلَّمة بـ"نهاية الكلمة" تُشير إلى مكان انتهاء سلسلة مخزّنة كاملة. السلاسل التي تشترك في بادئة تشترك في نفس المسار الأولي، لذا "car" و"card" و"cave" تتفرع فقط حيث تبدأ في الاختلاف.
+
+قوة الشجرة اللاحقة تكمن في أن الإدراج والبحث يكلّفان O(L)، حيث L طول الكلمة — مستقل تمامًا عن عدد الكلمات المخزَّنة. هذا يتفوق على حاجة مجموعة التجزئة إلى تجزئة المفتاح كاملًا، وعلى عكس التجزئة، تجيب الشجرة اللاحقة أيضًا عن استعلامات البادئة ("هل تبدأ أي كلمة بـ'ca'؟") مباشرة، وهذا سبب استخدامها في الإكمال التلقائي والمدققات الإملائية وجداول توجيه IP. الثمن هو الذاكرة: قد تتفرع كل عقدة إلى أبناء كثيرين، لذا قد تستخدم الشجرة اللاحقة مساحة أكبر من مجموعة تجزئة مدمجة.`,
+    howItWorks: [
+      "ابدأ بعقدة جذر لا تحمل حرفًا ومجموعة أبناء فارغة.",
+      "لإدراج كلمة، اجتز من الجذر متبعًا حافة لكل حرف، منشئًا عقد أبناء للأحرف غير الموجودة بعد.",
+      "ضع علامة نهاية الكلمة على العقدة الأخيرة كي لا تُخلط البادئات بالكلمات الكاملة.",
+      "للبحث، اتبع الحواف حرفًا حرفًا؛ إذا كانت أي حافة مفقودة فالكلمة غير موجودة.",
+      "الكلمة موجودة فقط إذا كان المسار الكامل موجودًا وعقدتها الأخيرة معلّمة بنهاية الكلمة.",
+    ],
+    complexity: {
+      time: { best: "O(L)", average: "O(L)", worst: "O(L)" },
+      space: "O(total characters · alphabet)",
+      notes: "الإدراج والبحث واستعلامات البادئة كلها O(L) في طول الكلمة، بمعزل عن عدد الكلمات المخزّنة. المساحة قد تكون كبيرة: حتى O(N·L·Σ) في التخطيط الساذج بمصفوفة لكل عقدة، وتُخفَّض باستخدام أبناء بخريطة تجزئة أو الضغط (الأشجار الشعاعية/باتريشيا).",
+    },
+    applications: [
+      "الإكمال التلقائي واقتراحات الكتابة أثناء الطباعة",
+      "المدققات الإملائية وعمليات البحث في القواميس",
+      "توجيه IP (مطابقة أطول بادئة) وأدلة الهاتف",
+      "البحث القائم على البادئات وألعاب الكلمات (Boggle، حلّالات Scrabble)",
+    ],
+    advantages: [
+      "إدراج/بحث بزمن O(L) بمعزل عن عدد المفاتيح",
+      "استعلامات بادئة مباشرة واجتياز مرتب",
+      "البادئات المشتركة تُخزَّن مرة واحدة، مشتركة في البنية",
+      "لا تصادمات تجزئة يجب حلّها",
+    ],
+    disadvantages: [
+      "استخدام ذاكرة مرتفع، خاصة مع أبناء بمصفوفة لكل عقدة",
+      "موضعية ذاكرة مؤقتة ضعيفة بسبب ملاحقة المؤشرات",
+      "مبالغ فيها لمجموعات مفاتيح صغيرة مقارنة بمجموعة تجزئة",
+      "التطبيق أعقد من جدول تجزئة",
+    ],
+    commonMistakes: [
+      "نسيان علامة نهاية الكلمة، فتُحسب البادئات خطأً ككلمات.",
+      "الخلط بين البحث (كلمة دقيقة) و startsWith (بادئة فقط).",
+      "عدم معالجة السلسلة الفارغة أو حالات البادئة المشتركة.",
+      "تخصيص مصفوفة أبجدية كاملة لكل عقدة وإهدار الذاكرة.",
+    ],
+    interviewQuestions: [
+      "كيف تختلف الشجرة اللاحقة عن مجموعة التجزئة للبحث عن كلمة، ومتى تُفضَّل كل منهما؟",
+      "كيف تُطبّق الإكمال التلقائي (كل الكلمات ذات بادئة معطاة) على شجرة لاحقة؟",
+      "كيف تحذف كلمة من شجرة لاحقة وتُقلّم العقد الفارغة؟",
+      "ما الشجرة اللاحقة المضغوطة/الشعاعية ولماذا توفر مساحة؟",
+      "كيف تستخدم مطابقة أطول بادئة في توجيه IP شجرة لاحقة؟",
+    ],
+    summary:
+      "الشجرة اللاحقة تخزّن السلاسل النصية حرفًا حرفًا على طول حواف الشجرة، مشتركة في البادئات المشتركة ومُعلِّمة عقد نهاية الكلمة. الإدراج والبحث واستعلامات البادئة كلها تعمل بزمن O(L) بغض النظر عن عدد المفاتيح، مما يجعل الأشجار اللاحقة مثالية للإكمال التلقائي والقواميس على حساب ذاكرة إضافية.",
+    quiz: [
+      { question: "في الشجرة اللاحقة، كل حافة تمثل…", options: ["كلمة كاملة", "حرفًا واحدًا", "قيمة تجزئة", "شجرة فرعية"], answer: 1, explanation: "مسارات الحواف أحادية الحرف تهجّي البادئات." },
+      { question: "البحث عن كلمة طولها L يستغرق…", options: ["O(1)", "O(L)", "O(N)", "O(N·L)"], answer: 1, explanation: "تتبع حافة واحدة لكل حرف، بمعزل عن عدد الكلمات." },
+      { question: "علامة نهاية الكلمة ضرورية من أجل…", options: ["توفير الذاكرة", "تمييز الكلمات المخزَّنة عن مجرد البادئات", "تسريع التجزئة", "موازنة الشجرة"], answer: 1, explanation: "بدونها، يمكن الخلط بين بادئة مثل 'car' من 'card' وبين كلمة مخزَّنة." },
+      { question: "ميزة رئيسية للأشجار اللاحقة على مجموعات التجزئة هي…", options: ["ذاكرة أقل", "استعلامات بادئة/startsWith فعالة", "لا حاجة لاجتياز", "بحث مضمون بزمن O(1)"], answer: 1, explanation: "الأشجار اللاحقة تجيب عن استعلامات البادئة مباشرة، وهو ما لا تستطيعه التجزئة." },
+      { question: "عيب شائع في الأشجار اللاحقة هو…", options: ["بحث بطيء", "استهلاك ذاكرة مرتفع", "تصادمات تجزئة", "عدم القدرة على تخزين السلاسل"], answer: 1, explanation: "مؤشرات الأبناء الكثيرة لكل عقدة قد تستهلك ذاكرة كبيرة." },
     ],
   },
   inputFields: [
