@@ -12,11 +12,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const steps: Step<ArrayFrame>[] = [];
   let comparisons = 0;
 
-  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[]) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers, note: `block size = ${step0}` }, description, codeLine, counters: { comparisons } });
+  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[], descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers, note: `block size = ${step0}` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  snap({}, { from: 0, to: n - 1 }, `Jump search on the sorted array for ${target}, block size √n = ${step0}.`, 0);
+  snap({}, { from: 0, to: n - 1 }, `Jump search on the sorted array for ${target}, block size √n = ${step0}.`, 0, undefined, `بحث بالقفز في المصفوفة المرتبة عن ${target}، حجم الكتلة √n = ${step0}.`);
 
   let prev = 0;
   let curr = step0;
@@ -24,37 +24,40 @@ function generate(input: Input): Step<ArrayFrame>[] {
   while (prev < n && a[Math.min(curr, n) - 1] < target) {
     comparisons++;
     const idx = Math.min(curr, n) - 1;
-    snap({ [idx]: "compare" }, { from: prev, to: idx }, `Block end a[${idx}] = ${a[idx]} < ${target}: jump to the next block.`, 1, [{ index: idx, label: "jump" }]);
+    snap({ [idx]: "compare" }, { from: prev, to: idx }, `Block end a[${idx}] = ${a[idx]} < ${target}: jump to the next block.`, 1, [{ index: idx, label: "jump" }], `نهاية الكتلة a[${idx}] = ${a[idx]} < ${target}: اقفز إلى الكتلة التالية.`);
     prev = curr;
     curr += step0;
     if (prev >= n) {
-      snap({}, null, `Jumped past the end — ${target} is not present.`, 5);
+      snap({}, null, `Jumped past the end — ${target} is not present.`, 5, undefined, `تجاوز القفز النهاية — ${target} غير موجود.`);
       return steps;
     }
   }
 
   // linear scan within the block
-  snap({}, { from: prev, to: Math.min(curr, n) - 1 }, `Target may be in block [${prev}..${Math.min(curr, n) - 1}]; scan it linearly.`, 2);
+  snap({}, { from: prev, to: Math.min(curr, n) - 1 }, `Target may be in block [${prev}..${Math.min(curr, n) - 1}]; scan it linearly.`, 2, undefined, `قد يكون الهدف في الكتلة [${prev}..${Math.min(curr, n) - 1}]؛ امسحها خطيًا.`);
   for (let i = prev; i < Math.min(curr, n); i++) {
     comparisons++;
-    snap({ [i]: "active" }, { from: prev, to: Math.min(curr, n) - 1 }, `Check a[${i}] = ${a[i]}.`, 3, [{ index: i, label: "i" }]);
+    snap({ [i]: "active" }, { from: prev, to: Math.min(curr, n) - 1 }, `Check a[${i}] = ${a[i]}.`, 3, [{ index: i, label: "i" }], `افحص a[${i}] = ${a[i]}.`);
     if (a[i] === target) {
-      snap({ [i]: "found" }, { from: prev, to: Math.min(curr, n) - 1 }, `Found ${target} at index ${i} in ${comparisons} comparisons.`, 4);
+      snap({ [i]: "found" }, { from: prev, to: Math.min(curr, n) - 1 }, `Found ${target} at index ${i} in ${comparisons} comparisons.`, 4, undefined, `عُثِر على ${target} عند الفهرس ${i} في ${comparisons} مقارنة.`);
       return steps;
     }
     if (a[i] > target) break;
   }
-  snap({}, null, `${target} is not present in the array.`, 5);
+  snap({}, null, `${target} is not present in the array.`, 5, undefined, `${target} غير موجود في المصفوفة.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "jump-search",
   title: "Jump Search",
+  titleAr: "البحث بالقفز",
   category: "searching",
   difficulty: "Beginner",
   tags: ["sorted required", "block search", "O(√n)"],
+  tagsAr: ["يتطلب الترتيب", "بحث بالكتل", "O(√n)"],
   summary: "Jumps ahead in fixed √n blocks on a sorted array, then scans the block that must contain the target.",
+  summaryAr: "يقفز إلى الأمام بكتل ثابتة بحجم √n في مصفوفة مرتبة، ثم يمسح الكتلة التي لا بد أن تحتوي على الهدف.",
   renderer: "array",
   pseudocode: [
     "procedure jumpSearch(a, target)   // a sorted, step = √n",
@@ -250,6 +253,62 @@ The optimal block size is √n, which balances the number of jumps (n/√n = √
       { question: "Jump search requires the array to be…", options: ["Unsorted", "Sorted", "A power of two", "All positive"], answer: 1, explanation: "Block-end comparisons only make sense on ordered data." },
       { question: "After jumping past the target's block, the algorithm…", options: ["Halves the range", "Linearly scans the block", "Jumps again", "Stops immediately"], answer: 1, explanation: "The target, if present, lies within the last block, found by a short scan." },
       { question: "Jump search is preferable to binary search when…", options: ["Data is unsorted", "Backward jumps are expensive", "n is tiny", "Keys are strings"], answer: 1, explanation: "It only moves forward, which suits sequential/forward-biased access." },
+    ],
+  },
+  contentAr: {
+    overview: `البحث بالقفز خوارزمية بحث للمصفوفات المرتبة تقع بين البحث الخطي والبحث الثنائي. فبدلًا من فحص كل عنصر (خطيًا) أو تنصيف المجال (ثنائيًا)، تقفز إلى الأمام بكتل ثابتة الحجم تضم نحو √n من العناصر. وحين تجد كتلة قيمة نهايتها أكبر من الهدف أو تساويه، تعلم أن الهدف — إن وُجِد — لا بد أن يقع داخل تلك الكتلة، فتُجري مسحًا خطيًا قصيرًا هناك.
+
+حجم الكتلة الأمثل هو √n، الذي يوازن بين عدد القفزات (n/√n = √n) وطول المسح الخطي الأخير (√n)، مما يعطي زمن تشغيل إجماليًا قدره O(√n). البحث بالقفز مفيد حين يكون القفز إلى الوراء مكلفًا (مثل بعض وسائط التخزين الخارجية أو الشريطية) — فأنت تتحرك دائمًا إلى الأمام بخطوات كبيرة ثم تمسح مرة واحدة.`,
+    howItWorks: [
+      "اختر حجم كتلة قدره √n.",
+      "اقفز إلى الأمام كتلةً كتلة، فاحصًا العنصر الأخير من كل كتلة فقط.",
+      "توقّف حين تصبح قيمة نهاية كتلة ≥ الهدف — لا بد أن يكون الهدف في هذه الكتلة.",
+      "امسح تلك الكتلة خطيًا من بدايتها لإيجاد الهدف.",
+      "أعِد الفهرس إن وُجِد؛ وإلا فالهدف غائب.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(√n)", worst: "O(√n)" },
+      space: "O(1)",
+      notes: "حجم الكتلة √n يُقلّل مجموع العمل (√n قفزة + √n مسح). يتطلب مصفوفة مرتبة. أبطأ من زمن البحث الثنائي O(log n) لكنه يقفز إلى الأمام فقط.",
+    },
+    applications: [
+      "البيانات المرتبة حيث تكون القفزات إلى الوراء مكلفة",
+      "الأنظمة التي تفضّل الوصول التسلسلي إلى الأمام",
+      "حل وسط عندما يكون الوصول العشوائي للبحث الثنائي غير مرغوب فيه",
+      "تدريس المفاضلة بين البحث الخطي والبحث الثنائي",
+    ],
+    advantages: [
+      "O(√n) — أسرع من البحث الخطي",
+      "يقفز إلى الأمام فقط ثم يمسح مرة واحدة (محلية وصول جيدة)",
+      "سهل التنفيذ",
+      "ذاكرة إضافية O(1)",
+    ],
+    disadvantages: [
+      "أبطأ من زمن البحث الثنائي O(log n)",
+      "يتطلب مصفوفة مرتبة",
+      "أمثلي فقط بحجم كتلة √n",
+      "لا يزال يحتاج إلى وصول عشوائي لحدود الكتل",
+    ],
+    commonMistakes: [
+      "استخدام حجم كتلة غير √n، مما يضر بالأداء.",
+      "القراءة بعد نهاية المصفوفة عندما تكون الكتلة الأخيرة قصيرة (قيّدها بـ min).",
+      "نسيان قطع المسح الخطي عندما يتجاوز a[i] الهدف.",
+      "تشغيلها على بيانات غير مرتبة.",
+    ],
+    interviewQuestions: [
+      "لماذا يكون √n هو حجم القفزة الأمثل؟",
+      "كيف يقارن البحث بالقفز بالبحث الثنائي والخطي؟",
+      "متى تفضّل البحث بالقفز على البحث الثنائي؟",
+      "ما زمن التشغيل وكيف يُشتَق؟",
+    ],
+    summary:
+      "يقفز البحث بالقفز إلى الأمام عبر مصفوفة مرتبة بكتل بحجم √n حتى يتجاوز الهدف، ثم يمسح الكتلة الأخيرة خطيًا. يعمل بزمن O(√n) ومساحة O(1) — أبطأ من البحث الثنائي لكنه يتحرك إلى الأمام فقط.",
+    quiz: [
+      { question: "حجم القفزة/الكتلة الأمثل للبحث بالقفز هو…", options: ["log n", "√n", "n/2", "2"], answer: 1, explanation: "√n يوازن بين عدد القفزات وطول المسح الأخير." },
+      { question: "تعقيد الزمن للبحث بالقفز هو…", options: ["O(1)", "O(log n)", "O(√n)", "O(n)"], answer: 2, explanation: "نحو √n قفزة إضافةً إلى مسح خطي بطول √n." },
+      { question: "يتطلب البحث بالقفز أن تكون المصفوفة…", options: ["غير مرتبة", "مرتبة", "قوة للعدد اثنين", "كلها موجبة"], answer: 1, explanation: "مقارنات نهايات الكتل لا معنى لها إلا على بيانات مرتبة." },
+      { question: "بعد القفز متجاوزًا كتلة الهدف، تقوم الخوارزمية بـ…", options: ["تنصيف المجال", "مسح الكتلة خطيًا", "القفز مجددًا", "التوقف فورًا"], answer: 1, explanation: "الهدف، إن وُجِد، يقع داخل الكتلة الأخيرة، ويُعثَر عليه بمسح قصير." },
+      { question: "يُفضَّل البحث بالقفز على البحث الثنائي عندما…", options: ["تكون البيانات غير مرتبة", "تكون القفزات إلى الوراء مكلفة", "يكون n صغيرًا جدًا", "تكون المفاتيح سلاسل نصية"], answer: 1, explanation: "يتحرك إلى الأمام فقط، وهو ما يناسب الوصول التسلسلي/المنحاز إلى الأمام." },
     ],
   },
   inputFields: [

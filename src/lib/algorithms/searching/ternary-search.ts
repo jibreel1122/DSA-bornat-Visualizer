@@ -10,11 +10,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const steps: Step<ArrayFrame>[] = [];
   let comparisons = 0;
 
-  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[]) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, codeLine, counters: { comparisons } });
+  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[], descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  snap({}, { from: 0, to: a.length - 1 }, `Ternary search splits the sorted range into three parts using two midpoints.`, 0);
+  snap({}, { from: 0, to: a.length - 1 }, `Ternary search splits the sorted range into three parts using two midpoints.`, 0, undefined, `يقسم البحث الثلاثي المجال المرتب إلى ثلاثة أجزاء باستخدام نقطتي منتصف.`);
 
   let lo = 0;
   let hi = a.length - 1;
@@ -23,35 +23,38 @@ function generate(input: Input): Step<ArrayFrame>[] {
     const m1 = lo + third;
     const m2 = hi - third;
     comparisons += 2;
-    snap({ [m1]: "active", [m2]: "active" }, { from: lo, to: hi }, `Probe m1 = ${m1} (${a[m1]}) and m2 = ${m2} (${a[m2]}).`, 1, [{ index: lo, label: "lo" }, { index: m1, label: "m1" }, { index: m2, label: "m2" }, { index: hi, label: "hi" }]);
-    if (a[m1] === target) { snap({ [m1]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m1}.`, 2); return steps; }
-    if (a[m2] === target) { snap({ [m2]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m2}.`, 2); return steps; }
+    snap({ [m1]: "active", [m2]: "active" }, { from: lo, to: hi }, `Probe m1 = ${m1} (${a[m1]}) and m2 = ${m2} (${a[m2]}).`, 1, [{ index: lo, label: "lo" }, { index: m1, label: "m1" }, { index: m2, label: "m2" }, { index: hi, label: "hi" }], `افحص m1 = ${m1} (${a[m1]}) و m2 = ${m2} (${a[m2]}).`);
+    if (a[m1] === target) { snap({ [m1]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m1}.`, 2, undefined, `عُثِر على ${target} عند الفهرس ${m1}.`); return steps; }
+    if (a[m2] === target) { snap({ [m2]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${m2}.`, 2, undefined, `عُثِر على ${target} عند الفهرس ${m2}.`); return steps; }
     if (target < a[m1]) {
       const newHi = m1 - 1;
-      snap({ [m1]: "discarded", [m2]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${target} < ${a[m1]}: search the first third.`, 3);
+      snap({ [m1]: "discarded", [m2]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${target} < ${a[m1]}: search the first third.`, 3, undefined, `${target} < ${a[m1]}: ابحث في الثلث الأول.`);
       hi = newHi;
     } else if (target > a[m2]) {
       const newLo = m2 + 1;
-      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${target} > ${a[m2]}: search the last third.`, 4);
+      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${target} > ${a[m2]}: search the last third.`, 4, undefined, `${target} > ${a[m2]}: ابحث في الثلث الأخير.`);
       lo = newLo;
     } else {
       const newLo = m1 + 1;
       const newHi = m2 - 1;
-      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= newHi ? { from: newLo, to: newHi } : null, `Between the probes: search the middle third.`, 5);
+      snap({ [m1]: "discarded", [m2]: "discarded" }, newLo <= newHi ? { from: newLo, to: newHi } : null, `Between the probes: search the middle third.`, 5, undefined, `بين نقطتي الفحص: ابحث في الثلث الأوسط.`);
       lo = newLo; hi = newHi;
     }
   }
-  snap({}, null, `${target} is not present.`, 6);
+  snap({}, null, `${target} is not present.`, 6, undefined, `${target} غير موجود.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "ternary-search",
   title: "Ternary Search",
+  titleAr: "البحث الثلاثي",
   category: "searching",
   difficulty: "Intermediate",
   tags: ["sorted required", "divide by 3", "O(log₃ n)"],
+  tagsAr: ["يتطلب الترتيب", "القسمة على 3", "O(log₃ n)"],
   summary: "Divides a sorted range into three parts with two midpoints, discarding two-thirds each step.",
+  summaryAr: "يقسم مجالًا مرتبًا إلى ثلاثة أجزاء بنقطتي منتصف، متخلصًا من ثلثين في كل خطوة.",
   renderer: "array",
   pseudocode: [
     "procedure ternarySearch(a, target)",
@@ -267,6 +270,61 @@ Although it eliminates two-thirds of the range each round (versus binary search'
       { question: "Each round, ternary search can discard up to…", options: ["Half the range", "Two-thirds of the range", "One element", "The whole range"], answer: 1, explanation: "It keeps only one of the three parts (or the middle third)." },
       { question: "Ternary search's most important real application is…", options: ["Sorting", "Finding the extremum of a unimodal function", "Hashing", "Graph traversal"], answer: 1, explanation: "It efficiently locates the peak/valley of a single-peaked function." },
       { question: "Ternary search requires the array to be…", options: ["Unsorted", "Sorted", "All equal", "A power of three"], answer: 1, explanation: "Ordered data is needed to decide which third to keep." },
+    ],
+  },
+  contentAr: {
+    overview: `يقسم البحث الثلاثي مجالًا مرتبًا إلى ثلاثة أجزاء بدلًا من جزأين. فهو يحسب نقطتي فحص، m1 و m2، تقسمان المجال إلى أثلاث، ويقارن الهدف بكليهما. ووفقًا للنتيجة يتخلص من جزء أو جزأين من الثلاثة ويكرر على ما تبقى.
+
+مع أنه يستبعد ثلثي المجال في كل جولة (مقابل نصف واحد للبحث الثنائي)، فإنه يستخدم مقارنتين لكل جولة بدلًا من واحدة. وبحساب الأمر، يُجري البحث الثلاثي نحو 2·log₃ n مقارنة مقابل log₂ n للبحث الثنائي — وبما أن 2/ln 3 > 1/ln 2، فإن البحث الثلاثي يُجري في الواقع مقارنات أكثر قليلًا. وهو في المصفوفات ذو أهمية نظرية وتعليمية أساسًا؛ أما قريبه الأهم فهو البحث الثلاثي على دالة أحادية النمط لإيجاد قيمة قصوى.`,
+    howItWorks: [
+      "قسّم المجال [lo, hi] إلى أثلاث بـ m1 = lo + (hi−lo)/3 و m2 = hi − (hi−lo)/3.",
+      "إذا كان الهدف يساوي a[m1] أو a[m2]، فأعِد ذلك الفهرس.",
+      "إذا كان الهدف أصغر من a[m1]، فاحتفظ بالثلث الأول فقط.",
+      "إذا كان أكبر من a[m2]، فاحتفظ بالثلث الأخير فقط.",
+      "خلاف ذلك احتفظ بالثلث الأوسط، وكرّر حتى يفرغ المجال.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log₃ n)", worst: "O(log₃ n)" },
+      space: "O(1)",
+      notes: "جولات أقل من البحث الثنائي (log₃ n)، لكن مقارنتين في كل جولة ← مقارنات إجمالية أكثر قليلًا من البحث الثنائي. يتطلب بيانات مرتبة.",
+    },
+    applications: [
+      "إيجاد القيمة القصوى لدالة أحادية النمط (استخدامه الحقيقي الأساسي)",
+      "تدريس استراتيجيات البحث بالقسمة على أكثر من اثنين",
+      "مسائل التحسين ذات قمة/قاع واحد",
+      "المقارنة مع البحث الثنائي لإظهار أهمية عدد المقارنات",
+    ],
+    advantages: [
+      "تكرارات أقل من البحث الثنائي (log₃ n جولة)",
+      "ذاكرة O(1)",
+      "يتعمم مباشرةً إلى تحسين الدوال أحادية النمط",
+    ],
+    disadvantages: [
+      "مقارنات إجمالية أكثر من البحث الثنائي على المصفوفات",
+      "يتطلب بيانات مرتبة",
+      "مسك دفاتر أكثر تعقيدًا (نقطتا منتصف)",
+      "نادرًا ما يكون الخيار الأفضل لبحث المصفوفات العادي",
+    ],
+    commonMistakes: [
+      "افتراض أنه يتفوق على البحث الثنائي — إنه يُجري مقارنات أكثر قليلًا.",
+      "أخطاء الانزياح بمقدار واحد عند تحديث lo/hi حول m1 و m2.",
+      "نسيان فحص كلتا نقطتي الفحص للتساوي.",
+      "استخدام القسمة الصحيحة بشكل خاطئ للأثلاث.",
+    ],
+    interviewQuestions: [
+      "لماذا يُجري البحث الثلاثي مقارنات أكثر من البحث الثنائي رغم جولاته الأقل؟",
+      "كيف يُطبَّق البحث الثلاثي لإيجاد القيمة العظمى لدالة أحادية النمط؟",
+      "اشتق عدد المقارنات للبحث الثلاثي مقابل الثنائي.",
+      "متى، إن وُجِد، يُفضَّل البحث الثلاثي لبحث المصفوفات؟",
+    ],
+    summary:
+      "يقسم البحث الثلاثي مجالًا مرتبًا إلى أثلاث بنقطتي فحص، متخلصًا مما يصل إلى ثلثين في كل جولة في O(log₃ n) من التكرارات. وهو على المصفوفات يحتاج مقارنات أكثر قليلًا من البحث الثنائي؛ وقيمته الحقيقية في تحسين الدوال أحادية النمط.",
+    quiz: [
+      { question: "يقسم البحث الثلاثي المجال إلى…", options: ["نصفين", "ثلاثة أجزاء", "أربعة أرباع", "كتل بحجم √n"], answer: 1, explanation: "يستخدم نقطتي منتصف لتقسيم المجال إلى أثلاث." },
+      { question: "مقارنةً بالبحث الثنائي، يُجري البحث الثلاثي…", options: ["مقارنات أقل إجمالًا", "مقارنات أكثر قليلًا إجمالًا", "العدد نفسه تمامًا", "مقارنات تربيعية"], answer: 1, explanation: "المقارنتان في كل جولة ترجحان على تقليل عدد الجولات." },
+      { question: "في كل جولة، يمكن للبحث الثلاثي أن يتخلص مما يصل إلى…", options: ["نصف المجال", "ثلثي المجال", "عنصر واحد", "المجال بأكمله"], answer: 1, explanation: "يحتفظ بواحد فقط من الأجزاء الثلاثة (أو الثلث الأوسط)." },
+      { question: "أهم تطبيق حقيقي للبحث الثلاثي هو…", options: ["الترتيب", "إيجاد القيمة القصوى لدالة أحادية النمط", "التجزئة", "اجتياز الرسم البياني"], answer: 1, explanation: "يحدد بكفاءة قمة/قاع دالة ذات ذروة واحدة." },
+      { question: "يتطلب البحث الثلاثي أن تكون المصفوفة…", options: ["غير مرتبة", "مرتبة", "كلها متساوية", "قوة للعدد ثلاثة"], answer: 1, explanation: "البيانات المرتبة لازمة لتقرير أي ثلث يُحتفَظ به." },
     ],
   },
   inputFields: [

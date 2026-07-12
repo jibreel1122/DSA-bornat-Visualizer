@@ -9,38 +9,41 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const steps: Step<ArrayFrame>[] = [];
   let probes = 0;
 
-  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[]) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, codeLine, counters: { probes } });
+  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[], descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, descriptionAr, codeLine, counters: { probes } });
   };
 
-  snap({}, { from: 0, to: a.length - 1 }, `Interpolation search estimates the target's position assuming uniform spacing.`, 0);
+  snap({}, { from: 0, to: a.length - 1 }, `Interpolation search estimates the target's position assuming uniform spacing.`, 0, undefined, `يقدّر البحث بالاستقراء موضع الهدف بافتراض تباعد منتظم.`);
 
   let lo = 0;
   let hi = a.length - 1;
   while (lo <= hi && target >= a[lo] && target <= a[hi]) {
     if (lo === hi) {
       probes++;
-      if (a[lo] === target) { snap({ [lo]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${lo}.`, 3); return steps; }
+      if (a[lo] === target) { snap({ [lo]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${lo}.`, 3, undefined, `عُثِر على ${target} عند الفهرس ${lo}.`); return steps; }
       break;
     }
     const pos = lo + Math.floor(((target - a[lo]) * (hi - lo)) / (a[hi] - a[lo]));
     probes++;
-    snap({ [pos]: "active" }, { from: lo, to: hi }, `Estimate pos = ${lo} + (${target}−${a[lo]})·(${hi}−${lo})/(${a[hi]}−${a[lo]}) = ${pos}; a[${pos}] = ${a[pos]}.`, 2, [{ index: lo, label: "lo" }, { index: pos, label: "pos" }, { index: hi, label: "hi" }]);
-    if (a[pos] === target) { snap({ [pos]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${pos} in ${probes} probes.`, 3); return steps; }
-    if (a[pos] < target) { snap({ [pos]: "discarded" }, { from: pos + 1, to: hi }, `${a[pos]} < ${target}: search the right part.`, 4); lo = pos + 1; }
-    else { snap({ [pos]: "discarded" }, { from: lo, to: pos - 1 }, `${a[pos]} > ${target}: search the left part.`, 5); hi = pos - 1; }
+    snap({ [pos]: "active" }, { from: lo, to: hi }, `Estimate pos = ${lo} + (${target}−${a[lo]})·(${hi}−${lo})/(${a[hi]}−${a[lo]}) = ${pos}; a[${pos}] = ${a[pos]}.`, 2, [{ index: lo, label: "lo" }, { index: pos, label: "pos" }, { index: hi, label: "hi" }], `قدّر pos = ${lo} + (${target}−${a[lo]})·(${hi}−${lo})/(${a[hi]}−${a[lo]}) = ${pos}؛ a[${pos}] = ${a[pos]}.`);
+    if (a[pos] === target) { snap({ [pos]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${pos} in ${probes} probes.`, 3, undefined, `عُثِر على ${target} عند الفهرس ${pos} في ${probes} من عمليات الفحص.`); return steps; }
+    if (a[pos] < target) { snap({ [pos]: "discarded" }, { from: pos + 1, to: hi }, `${a[pos]} < ${target}: search the right part.`, 4, undefined, `${a[pos]} < ${target}: ابحث في الجزء الأيمن.`); lo = pos + 1; }
+    else { snap({ [pos]: "discarded" }, { from: lo, to: pos - 1 }, `${a[pos]} > ${target}: search the left part.`, 5, undefined, `${a[pos]} > ${target}: ابحث في الجزء الأيسر.`); hi = pos - 1; }
   }
-  snap({}, null, `${target} is not present.`, 6);
+  snap({}, null, `${target} is not present.`, 6, undefined, `${target} غير موجود.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "interpolation-search",
   title: "Interpolation Search",
+  titleAr: "البحث بالاستقراء",
   category: "searching",
   difficulty: "Intermediate",
   tags: ["sorted required", "uniform data", "O(log log n) avg"],
+  tagsAr: ["يتطلب الترتيب", "بيانات منتظمة", "O(log log n) متوسطًا"],
   summary: "Predicts the target's index by linear interpolation on value — near O(log log n) on uniformly distributed data.",
+  summaryAr: "يتنبأ بفهرس الهدف عبر الاستقراء الخطي على القيمة — قريب من O(log log n) على البيانات الموزعة بانتظام.",
   renderer: "array",
   pseudocode: [
     "procedure interpolationSearch(a, target)",
@@ -234,6 +237,61 @@ When the distribution is uniform, this estimate is so accurate that the search c
       { question: "Interpolation search's worst case is…", options: ["O(log n)", "O(√n)", "O(n)", "O(1)"], answer: 2, explanation: "Highly clustered data makes estimates poor, degrading to linear." },
       { question: "A key edge case to guard is…", options: ["Empty target", "Division by zero when a[hi] == a[lo]", "Negative indices only", "Sorted input"], answer: 1, explanation: "Equal bound values make the denominator zero." },
       { question: "Compared to binary search, interpolation search probes…", options: ["Always the middle", "An estimated position based on the target's value", "The first element", "Random positions"], answer: 1, explanation: "It interpolates where the value should lie rather than splitting in half." },
+    ],
+  },
+  contentAr: {
+    overview: `يتفوق البحث بالاستقراء على البحث الثنائي حين تكون البيانات مرتبة وموزعة توزيعًا منتظمًا تقريبًا. فبدلًا من فحص المنتصف دائمًا، يقدّر أين ينبغي أن يكون الهدف باستقراء خطي بين القيمتين عند الحدين الحاليين — تمامًا كتخمين أن اسمًا يبدأ بحرف "B" يقع قرب مقدمة دفتر الهاتف لا في منتصفه.
+
+عندما يكون التوزيع منتظمًا، يكون هذا التقدير دقيقًا لدرجة أن البحث يتقارب في O(log log n) من عمليات الفحص في المتوسط — أسرع بكثير من البحث الثنائي. لكن إذا كانت البيانات شديدة اللاانتظام (متجمّعة)، فقد تكون التقديرات رديئة وتتدهور أسوأ حالة إلى O(n).`,
+    howItWorks: [
+      "احتفظ بمجال بحث [lo, hi] حيث a[lo] ≤ الهدف ≤ a[hi].",
+      "قدّر موضع الفحص بالاستقراء: pos = lo + (الهدف − a[lo])·(hi − lo)/(a[hi] − a[lo]).",
+      "إذا كان a[pos] يساوي الهدف، فقد انتهى.",
+      "إذا كان a[pos] صغيرًا جدًا، ابحث في الجزء الأيمن (lo = pos + 1)؛ وإن كان كبيرًا جدًا، فالجزء الأيسر (hi = pos − 1).",
+      "توقّف عندما يغادر الهدف نافذة القيم [a[lo], a[hi]] أو يفرغ المجال.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log log n)", worst: "O(n)" },
+      space: "O(1)",
+      notes: "متوسط O(log log n) على البيانات الموزعة بانتظام؛ وأسوأ حالة O(n) على البيانات المتجمّعة. يتطلب مصفوفة مرتبة ويحترس من القسمة على صفر عندما a[hi] == a[lo].",
+    },
+    applications: [
+      "البحث في مجموعات بيانات مرتبة كبيرة وموزعة بانتظام",
+      "عمليات البحث في قواعد البيانات والفهارس على مفاتيح موزعة بالتساوي",
+      "عمليات البحث بأسلوب دفتر الهاتف/القاموس",
+      "الجداول العددية ذات التباعد المنتظم",
+    ],
+    advantages: [
+      "متوسط O(log log n) على البيانات المنتظمة — أسرع من البحث الثنائي",
+      "ذاكرة إضافية O(1)",
+      "تقدير موضع بديهي مبني على القيمة",
+    ],
+    disadvantages: [
+      "أسوأ حالة O(n) على البيانات غير المنتظمة/المتجمّعة",
+      "يتطلب مفاتيح مرتبة ورقمية وموزعة بانتظام",
+      "مزالق القسمة والفيضان في صيغة الموضع",
+      "أكثر تعقيدًا من البحث الثنائي مقابل مكاسب غير مؤكدة",
+    ],
+    commonMistakes: [
+      "القسمة على صفر عندما a[hi] == a[lo] (احترس من هذه الحالة).",
+      "فيضان الأعداد الصحيحة في (الهدف − a[lo])·(hi − lo).",
+      "استخدامه على بيانات غير منتظمة مع توقّع O(log log n).",
+      "نسيان شرط الحلقة a[lo] ≤ الهدف ≤ a[hi].",
+    ],
+    interviewQuestions: [
+      "لماذا يكون البحث بالاستقراء أسرع من البحث الثنائي على البيانات المنتظمة؟",
+      "متى يتدهور البحث بالاستقراء إلى O(n)؟",
+      "كيف تتجنب القسمة على صفر والفيضان في صيغة الفحص؟",
+      "كيف تعمل صيغة موضع الفحص بديهيًا؟",
+    ],
+    summary:
+      "يقدّر البحث بالاستقراء فهرس الهدف بالاستقراء الخطي على القيمة، متقاربًا في O(log log n) على البيانات المرتبة الموزعة بانتظام — لكنه يتدهور إلى O(n) على البيانات المتجمّعة. إنه بحث ثنائي أذكى في اختيار موضع الفحص.",
+    quiz: [
+      { question: "يؤدي البحث بالاستقراء أفضل ما يكون حين تكون البيانات…", options: ["غير مرتبة", "مرتبة وموزعة بانتظام", "كلها متساوية", "مرتبة تنازليًا"], answer: 1, explanation: "التباعد المنتظم يجعل تقدير الاستقراء دقيقًا جدًا." },
+      { question: "تعقيده في الحالة المتوسطة على البيانات المنتظمة هو…", options: ["O(1)", "O(log log n)", "O(log n)", "O(n)"], answer: 1, explanation: "التقديرات الدقيقة للموضع تتقارب لوغاريتميًا مضاعفًا." },
+      { question: "أسوأ حالة للبحث بالاستقراء هي…", options: ["O(log n)", "O(√n)", "O(n)", "O(1)"], answer: 2, explanation: "البيانات شديدة التجمّع تجعل التقديرات رديئة، فتتدهور إلى خطية." },
+      { question: "حالة حدّية أساسية يجب الاحتراس منها هي…", options: ["هدف فارغ", "القسمة على صفر عندما a[hi] == a[lo]", "الفهارس السالبة فقط", "المدخلات المرتبة"], answer: 1, explanation: "تساوي قيمتي الحدين يجعل المقام صفرًا." },
+      { question: "مقارنةً بالبحث الثنائي، يفحص البحث بالاستقراء…", options: ["المنتصف دائمًا", "موضعًا مقدَّرًا بناءً على قيمة الهدف", "العنصر الأول", "مواضع عشوائية"], answer: 1, explanation: "يستقرئ أين ينبغي أن تقع القيمة بدلًا من التنصيف إلى نصفين." },
     ],
   },
   inputFields: [

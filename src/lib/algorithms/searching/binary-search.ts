@@ -16,11 +16,12 @@ function generate(input: Input): Step<ArrayFrame>[] {
     description: string,
     codeLine: number,
     pointers?: { index: number; label: string }[],
+    descriptionAr?: string,
   ) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, codeLine, counters: { comparisons } });
+    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  snap({}, { from: 0, to: a.length - 1 }, `Binary search on the sorted array for ${target}.`, 0);
+  snap({}, { from: 0, to: a.length - 1 }, `Binary search on the sorted array for ${target}.`, 0, undefined, `بحث ثنائي في المصفوفة المرتبة عن ${target}.`);
   let lo = 0;
   let hi = a.length - 1;
   while (lo <= hi) {
@@ -32,32 +33,36 @@ function generate(input: Input): Step<ArrayFrame>[] {
       `Range [${lo}..${hi}]: check middle a[${mid}] = ${a[mid]}.`,
       2,
       [{ index: lo, label: "lo" }, { index: mid, label: "mid" }, { index: hi, label: "hi" }],
+      `المجال [${lo}..${hi}]: افحص العنصر الأوسط a[${mid}] = ${a[mid]}.`,
     );
     if (a[mid] === target) {
-      snap({ [mid]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${mid} in ${comparisons} comparisons.`, 3, [{ index: mid, label: "mid" }]);
+      snap({ [mid]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${mid} in ${comparisons} comparisons.`, 3, [{ index: mid, label: "mid" }], `عُثِر على ${target} عند الفهرس ${mid} في ${comparisons} مقارنة.`);
       return steps;
     }
     if (a[mid] < target) {
       const newLo = mid + 1;
-      snap({ [mid]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${a[mid]} < ${target}: discard the left half, search right.`, 4, [{ index: mid, label: "mid" }]);
+      snap({ [mid]: "discarded" }, newLo <= hi ? { from: newLo, to: hi } : null, `${a[mid]} < ${target}: discard the left half, search right.`, 4, [{ index: mid, label: "mid" }], `${a[mid]} < ${target}: تجاهل النصف الأيسر وابحث في اليمين.`);
       lo = newLo;
     } else {
       const newHi = mid - 1;
-      snap({ [mid]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${a[mid]} > ${target}: discard the right half, search left.`, 5, [{ index: mid, label: "mid" }]);
+      snap({ [mid]: "discarded" }, lo <= newHi ? { from: lo, to: newHi } : null, `${a[mid]} > ${target}: discard the right half, search left.`, 5, [{ index: mid, label: "mid" }], `${a[mid]} > ${target}: تجاهل النصف الأيمن وابحث في اليسار.`);
       hi = newHi;
     }
   }
-  snap({}, null, `${target} is not present — the search range is empty.`, 6);
+  snap({}, null, `${target} is not present — the search range is empty.`, 6, undefined, `${target} غير موجود — أصبح مجال البحث فارغًا.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "binary-search",
   title: "Binary Search",
+  titleAr: "البحث الثنائي",
   category: "searching",
   difficulty: "Beginner",
   tags: ["divide & conquer", "sorted required", "O(log n)"],
+  tagsAr: ["فرّق تسد", "يتطلب الترتيب", "O(log n)"],
   summary: "Repeatedly halves a sorted array, comparing the middle element to the target — O(log n) lookups.",
+  summaryAr: "يُنصّف مصفوفة مرتبة مرارًا، مقارنًا العنصر الأوسط بالهدف — عمليات بحث بتكلفة O(log n).",
   renderer: "array",
   pseudocode: [
     "procedure binarySearch(a, target)   // a is sorted",
@@ -253,6 +258,63 @@ This halving gives it O(log n) time — searching a billion sorted items takes o
       { question: "Why compute mid as lo + (hi − lo) / 2?", options: ["It is faster", "It avoids integer overflow", "It is more readable", "It changes the result"], answer: 1, explanation: "lo + hi can exceed the integer range for large indices; this form cannot." },
       { question: "After a[mid] < target, which half is searched next?", options: ["Left half", "Right half", "Both halves", "Neither"], answer: 1, explanation: "Everything at or before mid is too small, so lo becomes mid + 1." },
       { question: "About how many comparisons for n = 1,000,000?", options: ["~10", "~20", "~1000", "~1,000,000"], answer: 1, explanation: "log₂(10⁶) ≈ 20." },
+    ],
+  },
+  contentAr: {
+    overview: `يجد البحث الثنائي هدفًا في مصفوفة مرتبة عبر تنصيف مجال البحث مرارًا. يقارن الهدف بالعنصر الأوسط: إذا تطابقا فقد انتهى؛ وإذا كان الهدف أكبر، فلا يمكن أن يحتويه إلا النصف الأيمن؛ وإذا كان أصغر، فالنصف الأيسر فقط. كل مقارنة تستبعد نصف المرشحين المتبقين.
+
+هذا التنصيف يمنحه زمن O(log n) — فالبحث في مليار عنصر مرتب يستغرق نحو 30 مقارنة فقط. الشرط الوحيد هو أن تكون البيانات مرتبة (أو أن تبقى مرتبة)، وهو ما يجعل منطق "تخلّص من النصف" صحيحًا.`,
+    howItWorks: [
+      "احتفظ بنافذة بحث [lo, hi]، تشمل المصفوفة كلها في البداية.",
+      "احسب mid وقارن a[mid] مع الهدف.",
+      "إذا تساويا، أعِد mid — نجاح.",
+      "إذا كان a[mid] < الهدف، فالجواب لا بد أن يكون في اليمين: اجعل lo = mid + 1.",
+      "إذا كان a[mid] > الهدف، فاتجه يسارًا: اجعل hi = mid − 1. توقّف عندما تصبح النافذة فارغة.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log n)", worst: "O(log n)" },
+      space: "O(1)",
+      notes: "كل خطوة تُنصّف المجال، فبحدٍ أقصى ⌈log₂ n⌉ + 1 مقارنة. الصيغة التكرارية تستخدم مساحة O(1)؛ والصيغة العودية O(log n) من المكدس. تتطلب مدخلات مرتبة.",
+    },
+    applications: [
+      "بحث سريع في المصفوفات المرتبة وقواعد البيانات (الفهارس)",
+      "إيجاد مواضع الإدراج (الحد الأدنى/الأعلى)",
+      "البحث الثنائي على الجواب لمسائل التحسين/الجدوى",
+      "إيجاد الجذور والبحث في المُسنِدات المنطقية الرتيبة",
+    ],
+    advantages: [
+      "O(log n) — أسرع بكثير من البحث الخطي على البيانات الكبيرة",
+      "ذاكرة O(1) في الصيغة التكرارية",
+      "بسيط ومفهوم جيدًا ومعقول من حيث الذاكرة المؤقتة على المصفوفات",
+      "يتعمم إلى lower_bound/upper_bound و'البحث على الجواب'",
+    ],
+    disadvantages: [
+      "يتطلب بيانات مرتبة (الترتيب يكلّف O(n log n) مقدمًا)",
+      "غير ملائم للهياكل التي لا تتيح الوصول العشوائي (مثل القوائم المترابطة)",
+      "عمليات الإدراج/الحذف للحفاظ على الترتيب تكلّف O(n) في المصفوفة العادية",
+      "من السهل إدخال أخطاء انزياح بمقدار واحد وأخطاء فيضان خفية",
+    ],
+    commonMistakes: [
+      "حساب mid كـ (lo + hi) / 2، مما قد يفيض — استخدم lo + (hi − lo) / 2.",
+      "شرط حلقة خاطئ (lo < hi مقابل lo <= hi) يسبب مجالات مفقودة أو حلقات لا نهائية.",
+      "تحديث lo/hi إلى mid بدلًا من mid ± 1، مما يخاطر بحلقة لا نهائية.",
+      "تشغيل البحث الثنائي على بيانات غير مرتبة — النتائج بلا معنى.",
+    ],
+    interviewQuestions: [
+      "لماذا يجب أن تكون المصفوفة مرتبة كي يكون البحث الثنائي صحيحًا؟",
+      "كيف تتجنب فيضان الأعداد الصحيحة عند حساب نقطة المنتصف؟",
+      "طبّق lower_bound (أول فهرس ≥ الهدف) باستخدام البحث الثنائي.",
+      "اشرح 'البحث الثنائي على الجواب' بمثال.",
+      "كم مقارنة يحتاج البحث الثنائي من أجل n = 1,000,000؟",
+    ],
+    summary:
+      "يُنصّف البحث الثنائي مصفوفة مرتبة في كل خطوة بمقارنة العنصر الأوسط بالهدف، محققًا زمن O(log n) ومساحة O(1). قوته تعتمد كليًا على كون البيانات مرتبة، وهو يتعمم إلى ما هو أبعد من المصفوفات ليشمل إيجاد الحدود والبحث على الجواب.",
+    quiz: [
+      { question: "ما الذي يجب أن يتحقق في المدخلات كي يعمل البحث الثنائي؟", options: ["أن تكون مرتبة", "أن تكون قيمها متمايزة", "أن يكون حجمها قوة للعدد اثنين", "ألا تحتوي على أعداد سالبة"], answer: 0, explanation: "يعتمد منطق التنصيف على الترتيب لمعرفة أي جهة تُستبعد." },
+      { question: "يعمل البحث الثنائي بزمن…", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], answer: 1, explanation: "كل مقارنة تُنصّف مجال البحث." },
+      { question: "لماذا يُحسب mid كـ lo + (hi − lo) / 2؟", options: ["لأنه أسرع", "لأنه يتجنب فيضان الأعداد الصحيحة", "لأنه أوضح للقراءة", "لأنه يغيّر النتيجة"], answer: 1, explanation: "قد يتجاوز lo + hi نطاق الأعداد الصحيحة عند الفهارس الكبيرة؛ وهذه الصيغة لا تفعل." },
+      { question: "بعد a[mid] < الهدف، أي نصف يُبحَث تاليًا؟", options: ["النصف الأيسر", "النصف الأيمن", "كلا النصفين", "لا شيء"], answer: 1, explanation: "كل ما عند mid أو قبله صغير جدًا، لذا يصبح lo يساوي mid + 1." },
+      { question: "كم مقارنة تقريبًا من أجل n = 1,000,000؟", options: ["~10", "~20", "~1000", "~1,000,000"], answer: 1, explanation: "log₂(10⁶) ≈ 20." },
     ],
   },
   inputFields: [

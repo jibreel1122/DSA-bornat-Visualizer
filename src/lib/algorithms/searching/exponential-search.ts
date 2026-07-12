@@ -11,52 +11,55 @@ function generate(input: Input): Step<ArrayFrame>[] {
   const steps: Step<ArrayFrame>[] = [];
   let comparisons = 0;
 
-  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[]) => {
-    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, codeLine, counters: { comparisons } });
+  const snap = (states: Record<number, CellState>, range: { from: number; to: number } | null, description: string, codeLine: number, pointers?: { index: number; label: string }[], descriptionAr?: string) => {
+    steps.push({ frame: { values: [...a], states: { ...states }, range, pointers }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  snap({}, { from: 0, to: n - 1 }, `Exponential search: double a bound until it passes the target, then binary search inside it.`, 0);
+  snap({}, { from: 0, to: n - 1 }, `Exponential search: double a bound until it passes the target, then binary search inside it.`, 0, undefined, `البحث الأسي: ضاعِف الحد حتى يتجاوز الهدف، ثم أجرِ بحثًا ثنائيًا داخله.`);
 
   comparisons++;
-  if (a[0] === target) { snap({ 0: "found" }, { from: 0, to: 0 }, `a[0] = ${a[0]} is the target.`, 1); return steps; }
+  if (a[0] === target) { snap({ 0: "found" }, { from: 0, to: 0 }, `a[0] = ${a[0]} is the target.`, 1, undefined, `a[0] = ${a[0]} هو الهدف.`); return steps; }
 
   let bound = 1;
   while (bound < n && a[bound] < target) {
     comparisons++;
-    snap({ [bound]: "compare" }, { from: 0, to: bound }, `a[${bound}] = ${a[bound]} < ${target}: double the bound to ${bound * 2}.`, 2, [{ index: bound, label: "bound" }]);
+    snap({ [bound]: "compare" }, { from: 0, to: bound }, `a[${bound}] = ${a[bound]} < ${target}: double the bound to ${bound * 2}.`, 2, [{ index: bound, label: "bound" }], `a[${bound}] = ${a[bound]} < ${target}: ضاعِف الحد إلى ${bound * 2}.`);
     bound *= 2;
   }
   const lo = Math.floor(bound / 2);
   const hi = Math.min(bound, n - 1);
-  snap({}, { from: lo, to: hi }, `Target must be in [${lo}..${hi}]; binary search there.`, 3);
+  snap({}, { from: lo, to: hi }, `Target must be in [${lo}..${hi}]; binary search there.`, 3, undefined, `لا بد أن يكون الهدف في [${lo}..${hi}]؛ أجرِ بحثًا ثنائيًا هناك.`);
 
   let l = lo, h = hi;
   while (l <= h) {
     const mid = (l + h) >> 1;
     comparisons++;
-    snap({ [mid]: "active" }, { from: l, to: h }, `Middle a[${mid}] = ${a[mid]}.`, 4, [{ index: l, label: "lo" }, { index: mid, label: "mid" }, { index: h, label: "hi" }]);
-    if (a[mid] === target) { snap({ [mid]: "found" }, { from: l, to: h }, `Found ${target} at index ${mid} in ${comparisons} comparisons.`, 5); return steps; }
+    snap({ [mid]: "active" }, { from: l, to: h }, `Middle a[${mid}] = ${a[mid]}.`, 4, [{ index: l, label: "lo" }, { index: mid, label: "mid" }, { index: h, label: "hi" }], `العنصر الأوسط a[${mid}] = ${a[mid]}.`);
+    if (a[mid] === target) { snap({ [mid]: "found" }, { from: l, to: h }, `Found ${target} at index ${mid} in ${comparisons} comparisons.`, 5, undefined, `عُثِر على ${target} عند الفهرس ${mid} في ${comparisons} مقارنة.`); return steps; }
     if (a[mid] < target) {
       const newL = mid + 1;
-      snap({ [mid]: "discarded" }, newL <= h ? { from: newL, to: h } : null, `Too small — go right.`, 6);
+      snap({ [mid]: "discarded" }, newL <= h ? { from: newL, to: h } : null, `Too small — go right.`, 6, undefined, `صغير جدًا — اتجه يمينًا.`);
       l = newL;
     } else {
       const newH = mid - 1;
-      snap({ [mid]: "discarded" }, l <= newH ? { from: l, to: newH } : null, `Too large — go left.`, 7);
+      snap({ [mid]: "discarded" }, l <= newH ? { from: l, to: newH } : null, `Too large — go left.`, 7, undefined, `كبير جدًا — اتجه يسارًا.`);
       h = newH;
     }
   }
-  snap({}, null, `${target} is not present.`, 8);
+  snap({}, null, `${target} is not present.`, 8, undefined, `${target} غير موجود.`);
   return steps;
 }
 
 const mod: AlgorithmModule<ArrayFrame, Input> = {
   slug: "exponential-search",
   title: "Exponential Search",
+  titleAr: "البحث الأسي",
   category: "searching",
   difficulty: "Intermediate",
   tags: ["sorted required", "unbounded", "O(log n)"],
+  tagsAr: ["يتطلب الترتيب", "غير محدود", "O(log n)"],
   summary: "Doubles a range bound until it passes the target, then binary-searches that range — great for unbounded lists.",
+  summaryAr: "يضاعف حد المجال حتى يتجاوز الهدف، ثم يُجري بحثًا ثنائيًا في ذلك المجال — ممتاز للقوائم غير المحدودة.",
   renderer: "array",
   pseudocode: [
     "procedure exponentialSearch(a, target)",
@@ -277,6 +280,62 @@ Its great strength is searching unbounded or very large sorted sequences where y
       { question: "Its complexity in terms of target index i is…", options: ["O(i)", "O(log i)", "O(i log i)", "O(1)"], answer: 1, explanation: "Both the doubling and binary phases are O(log i)." },
       { question: "Exponential search is especially useful for…", options: ["Unsorted arrays", "Unbounded/unknown-length sorted arrays", "Tiny arrays", "Random access only"], answer: 1, explanation: "The doubling phase finds a range without knowing the length." },
       { question: "Before binary searching, the upper bound must be…", options: ["Set to 0", "Clamped to n − 1", "Doubled again", "Ignored"], answer: 1, explanation: "The bound may exceed the array, so clamp it to the last index." },
+    ],
+  },
+  contentAr: {
+    overview: `يجد البحث الأسي (المعروف أيضًا بالبحث بالمضاعفة أو بالعَدْو) هدفًا في مصفوفة مرتبة على مرحلتين. أولًا يجد مجالًا لا بد أن يحتوي على الهدف بالبدء من الفهرس 1 ومضاعفة الفهرس مرارًا حتى تتجاوز القيمة هناك الهدف. ثم يُجري بحثًا ثنائيًا عاديًا داخل المجال المحدَّد [bound/2, bound].
+
+قوته الكبرى في البحث ضمن تسلسلات مرتبة غير محدودة أو ضخمة جدًا لا تعرف طولها مسبقًا — فمرحلة المضاعفة تكتشف مجالًا حاصرًا في O(log i) من الخطوات، حيث i هو موضع الهدف. والبحث الثنائي اللاحق أيضًا O(log i)، فيصبح الكل O(log i)، وهو قد يكون أقل بكثير من O(log n) حين يكون الهدف قرب المقدمة.`,
+    howItWorks: [
+      "افحص الفهرس 0 أولًا كحالة خاصة.",
+      "اجعل bound = 1 وضاعِفه ما دام a[bound] أصغر من الهدف.",
+      "توقّف عندما يصبح a[bound] ≥ الهدف (أو تتجاوز النهاية) — يقع الهدف في [bound/2, bound].",
+      "أجرِ بحثًا ثنائيًا داخل ذلك المجال المحصور.",
+      "أعِد الفهرس إن وُجِد، وإلا فأبلغ بأنه غائب.",
+    ],
+    complexity: {
+      time: { best: "O(1)", average: "O(log i)", worst: "O(log n)" },
+      space: "O(1)",
+      notes: "i هو فهرس الهدف. مرحلة المضاعفة O(log i)؛ والبحث الثنائي على المجال O(log i). مثالي للتدفقات المرتبة غير المحدودة/اللانهائية. يتطلب بيانات مرتبة.",
+    },
+    applications: [
+      "البحث في تسلسلات مرتبة غير محدودة أو مجهولة الطول",
+      "المصفوفات المرتبة الضخمة جدًا حيث يُرجَّح وجود الهدف قرب المقدمة",
+      "البحث في بيانات مرتبة على القرص/التدفقات",
+      "إيجاد المجال قبل بحث ثنائي محدود",
+    ],
+    advantages: [
+      "O(log i) — ممتاز حين يكون الهدف قرب البداية",
+      "يعمل دون معرفة طول المصفوفة",
+      "ذاكرة إضافية O(1)",
+      "يعيد استخدام البحث الثنائي في المرحلة المحدودة",
+    ],
+    disadvantages: [
+      "يتطلب بيانات مرتبة",
+      "أكثر تعقيدًا قليلًا من البحث الثنائي البسيط",
+      "لا ميزة له حين يكون الهدف قرب النهاية",
+      "يحتاج إلى عناية بحد المضاعفة قرب نهاية المصفوفة",
+    ],
+    commonMistakes: [
+      "عدم تقييد الحد الأعلى إلى n − 1 قبل البحث الثنائي.",
+      "نسيان الحالة الخاصة a[0].",
+      "بدء الحد من 0 (يجب أن يبدأ من 1 كي تنمو المضاعفة).",
+      "الفيضان عند المضاعفة على مجالات ضخمة/غير محدودة.",
+    ],
+    interviewQuestions: [
+      "لماذا يناسب البحث الأسي المصفوفات غير المحدودة؟",
+      "ما التعقيد بدلالة موضع الهدف i؟",
+      "كيف تحصر مرحلة المضاعفة الهدف؟",
+      "لماذا يُقيَّد الحد إلى n − 1 قبل البحث الثنائي؟",
+    ],
+    summary:
+      "يضاعف البحث الأسي فهرسًا حتى يحصر الهدف، ثم يُجري بحثًا ثنائيًا في ذلك المجال — عاملًا بزمن O(log i) حيث i هو موضع الهدف. يتألق في التسلسلات المرتبة غير المحدودة أو الضخمة، خاصةً حين يكون الهدف قرب المقدمة.",
+    quiz: [
+      { question: "ماذا تفعل المرحلة الأولى من البحث الأسي؟", options: ["ترتّب المصفوفة", "تضاعف حدًا حتى يتجاوز الهدف", "تمسح خطيًا", "تستقرئ الموضع"], answer: 1, explanation: "تنمّي الفهرس هندسيًا لحصر مجال الهدف." },
+      { question: "المرحلة الثانية هي…", options: ["مسح خطي", "بحث ثنائي على المجال المحصور", "بحث بالقفز", "بحث في جدول تجزئة"], answer: 1, explanation: "بمجرد الحصر في [bound/2, bound]، يُنهي البحث الثنائي المهمة." },
+      { question: "تعقيده بدلالة فهرس الهدف i هو…", options: ["O(i)", "O(log i)", "O(i log i)", "O(1)"], answer: 1, explanation: "كل من مرحلة المضاعفة والمرحلة الثنائية O(log i)." },
+      { question: "البحث الأسي مفيد بشكل خاص لـ…", options: ["المصفوفات غير المرتبة", "المصفوفات المرتبة غير المحدودة/المجهولة الطول", "المصفوفات الصغيرة جدًا", "الوصول العشوائي فقط"], answer: 1, explanation: "مرحلة المضاعفة تجد مجالًا دون معرفة الطول." },
+      { question: "قبل البحث الثنائي، يجب أن يكون الحد الأعلى…", options: ["مضبوطًا على 0", "مقيَّدًا إلى n − 1", "مضاعَفًا مجددًا", "متجاهَلًا"], answer: 1, explanation: "قد يتجاوز الحد المصفوفة، لذا قيّده إلى الفهرس الأخير." },
     ],
   },
   inputFields: [
