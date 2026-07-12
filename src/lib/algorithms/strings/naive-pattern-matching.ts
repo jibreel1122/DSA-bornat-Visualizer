@@ -10,7 +10,7 @@ function generate(input: Input): Step<StringFrame>[] {
   let comparisons = 0;
   const matches: number[] = [];
 
-  const frame = (shift: number, textStates: Record<number, CellState>, patStates: Record<number, CellState>, description: string, codeLine: number, note?: string) => {
+  const frame = (shift: number, textStates: Record<number, CellState>, patStates: Record<number, CellState>, description: string, codeLine: number, note?: string, descriptionAr?: string) => {
     steps.push({
       frame: {
         text: [...t].map((ch, i) => ({ ch, state: textStates[i] })),
@@ -20,22 +20,23 @@ function generate(input: Input): Step<StringFrame>[] {
         note,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, matches: matches.length },
     });
   };
 
-  frame(0, {}, {}, `Naive search: try the pattern at every possible shift of the text.`, 0);
+  frame(0, {}, {}, `Naive search: try the pattern at every possible shift of the text.`, 0, undefined, `البحث الساذج: جرّب النمط عند كل إزاحة ممكنة من النص.`);
 
   for (let s = 0; s + p.length <= t.length; s++) {
-    frame(s, {}, {}, `Align pattern at shift ${s}.`, 1);
+    frame(s, {}, {}, `Align pattern at shift ${s}.`, 1, undefined, `حاذِ النمط عند الإزاحة ${s}.`);
     let j = 0;
     for (; j < p.length; j++) {
       comparisons++;
       const match = t[s + j] === p[j];
       const ts: Record<number, CellState> = { [s + j]: match ? "sorted" : "swap" };
       const ps: Record<number, CellState> = { [j]: match ? "sorted" : "swap" };
-      frame(s, ts, ps, `Compare text[${s + j}]='${t[s + j]}' with pattern[${j}]='${p[j]}' → ${match ? "match" : "mismatch"}.`, 2);
+      frame(s, ts, ps, `Compare text[${s + j}]='${t[s + j]}' with pattern[${j}]='${p[j]}' → ${match ? "match" : "mismatch"}.`, 2, undefined, `قارن text[${s + j}]='${t[s + j]}' مع pattern[${j}]='${p[j]}' ← ${match ? "تطابق" : "عدم تطابق"}.`);
       if (!match) break;
     }
     if (j === p.length) {
@@ -44,20 +45,23 @@ function generate(input: Input): Step<StringFrame>[] {
       for (let k = 0; k < p.length; k++) ts[s + k] = "found";
       const ps: Record<number, CellState> = {};
       for (let k = 0; k < p.length; k++) ps[k] = "found";
-      frame(s, ts, ps, `Full match at shift ${s}!`, 3);
+      frame(s, ts, ps, `Full match at shift ${s}!`, 3, undefined, `تطابق كامل عند الإزاحة ${s}!`);
     }
   }
-  frame(0, {}, {}, matches.length ? `Found ${matches.length} occurrence(s) at: ${matches.join(", ")}.` : `Pattern not found.`, 4);
+  frame(0, {}, {}, matches.length ? `Found ${matches.length} occurrence(s) at: ${matches.join(", ")}.` : `Pattern not found.`, 4, undefined, matches.length ? `عُثِر على ${matches.length} تطابق عند: ${matches.join(", ")}.` : `لم يُعثَر على النمط.`);
   return steps;
 }
 
 const mod: AlgorithmModule<StringFrame, Input> = {
   slug: "naive-pattern-matching",
   title: "Naive Pattern Matching",
+  titleAr: "مطابقة الأنماط الساذجة",
   category: "strings",
   difficulty: "Beginner",
   tags: ["string matching", "brute force", "O(nm)"],
+  tagsAr: ["مطابقة نصوص", "القوة الغاشمة", "O(nm)"],
   summary: "Tries the pattern at every text position, comparing character by character — simple but O(nm).",
+  summaryAr: "يجرّب النمط عند كل موضع في النص، مقارنًا حرفًا حرفًا — بسيط لكن بتكلفة O(nm).",
   renderer: "string",
   pseudocode: [
     "procedure naiveSearch(text, pattern)",
@@ -232,6 +236,60 @@ It requires no preprocessing and is easy to implement, but it can re-examine the
       { question: "Which input pattern triggers the worst case?", options: ["Random text", "Highly repetitive text and pattern", "Very short text", "Distinct characters"], answer: 1, explanation: "Repetition causes long partial matches that fail at the last character each shift." },
       { question: "After a mismatch at position j, naive matching shifts the pattern by…", options: ["j positions", "exactly 1 position", "m positions", "to the next match"], answer: 1, explanation: "It advances the alignment by a single position and restarts comparison." },
       { question: "Which algorithm removes the redundant re-comparisons of naive matching?", options: ["Bubble sort", "KMP", "Dijkstra", "Binary search"], answer: 1, explanation: "KMP uses a failure function to skip re-checking already-matched characters." },
+    ],
+  },
+  contentAr: {
+    overview: `مطابقة الأنماط الساذجة (القوة الغاشمة) هي أبسط طريقة مباشرة لإيجاد كل تكرار لنمط داخل نص. تُزلِق النمط عبر النص موضعًا واحدًا في كل مرة، وعند كل محاذاة تقارن الحروف من اليسار إلى اليمين حتى يتطابق النمط بأكمله أو تصادف عدم تطابق.
+
+لا تتطلب أي معالجة مسبقة وسهلة التنفيذ، لكنها قد تعيد فحص حروف النص نفسها مرات عديدة. في أسوأ حالة — تخيّل البحث عن "aaaaab" داخل "aaaaaaaaaa" — تُجري O(nm) مقارنة حرفية، ولهذا وُجدت خوارزميات أذكى مثل KMP وBoyer-Moore.`,
+    howItWorks: [
+      "لكل إزاحة s من 0 إلى n − m، حاذِ بداية النمط مع text[s].",
+      "قارن حروف النمط مع النص من اليسار إلى اليمين.",
+      "توقّف مبكرًا عند أول عدم تطابق وانزلق إلى الإزاحة التالية.",
+      "إذا تطابقت كل الحروف الـ m، سجّل تكرارًا عند s.",
+      "استمر حتى يتجاوز النمط نهاية النص.",
+    ],
+    complexity: {
+      time: { best: "O(n)", average: "O(n·m)", worst: "O(n·m)" },
+      space: "O(1)",
+      notes: "أفضل حالة O(n) عندما يحدث عدم التطابق عند الحرف الأول في كل مرة. أسوأ حالة O(nm) على نص/نمط شديد التكرار. لا حاجة إلى ذاكرة إضافية سوى الفهارس.",
+    },
+    applications: [
+      "البحث في نصوص قصيرة أو بأنماط قصيرة",
+      "أساس مرجعي لمقارنة المطابقات الأذكى به",
+      "عمليات بحث لمرة واحدة حيث لا تستحق المعالجة المسبقة العناء",
+      "تعليم مسألة مطابقة النصوص قبل KMP/Boyer-Moore",
+    ],
+    advantages: [
+      "بسيطة جدًا في التنفيذ والفهم",
+      "لا معالجة مسبقة ولا ذاكرة إضافية",
+      "مناسبة للمدخلات الصغيرة أو الأنماط القصيرة النادرة",
+    ],
+    disadvantages: [
+      "أسوأ حالة O(nm) — بطيئة على البيانات المتكررة",
+      "تعيد مقارنة حروف النص التي رأتها من قبل",
+      "تتفوق عليها KMP وBoyer-Moore وRabin-Karp على المدخلات الكبيرة",
+    ],
+    commonMistakes: [
+      "جعل الإزاحة s تتجاوز n − m، مما يسبب قراءات خارج الحدود.",
+      "عدم إيقاف المقارنة الداخلية عند أول عدم تطابق.",
+      "الخلط بين الإزاحة المبدوءة من الصفر والمواضع المُبلّغ عنها المبدوءة من واحد.",
+      "افتراض أنها سريعة بما يكفي للنصوص الكبيرة ذات البنية المتكررة.",
+    ],
+    interviewQuestions: [
+      "أي مدخل يجعل المطابقة الساذجة تبلغ أسوأ حالة O(nm)؟",
+      "كيف تتجنب KMP إعادة مقارنة حروف النص؟",
+      "متى تكون المطابقة الساذجة هي الخيار الصحيح فعلًا؟",
+      "كيف توسّعها لعدّ التكرارات المتداخلة؟",
+    ],
+    summary:
+      "تُزلِق مطابقة الأنماط الساذجة النمط عبر النص وتقارن الحروف عند كل إزاحة، مستخدمةً مساحة O(1) لكن حتى زمن O(nm). إنها أبسط مطابِق والأساس الذي تحسّنه KMP وBoyer-Moore وRabin-Karp.",
+    quiz: [
+      { question: "ما تعقيد الزمن في أسوأ حالة لمطابقة الأنماط الساذجة؟", options: ["O(n)", "O(n + m)", "O(n·m)", "O(n log m)"], answer: 2, explanation: "كل من الإزاحات الـ n تقريبًا قد تقارن حتى m حرفًا." },
+      { question: "كم ذاكرة إضافية تستخدم المطابقة الساذجة؟", options: ["O(1)", "O(m)", "O(n)", "O(nm)"], answer: 0, explanation: "تحتاج فقط إلى متغيري فهرس أو ثلاثة." },
+      { question: "أي نمط مدخلات يُطلق أسوأ حالة؟", options: ["نص عشوائي", "نص ونمط شديدا التكرار", "نص قصير جدًا", "حروف متمايزة"], answer: 1, explanation: "يسبب التكرار تطابقات جزئية طويلة تفشل عند الحرف الأخير في كل إزاحة." },
+      { question: "بعد عدم تطابق عند الموضع j، تزيح المطابقة الساذجة النمط بمقدار…", options: ["j مواضع", "موضع واحد بالضبط", "m مواضع", "إلى التطابق التالي"], answer: 1, explanation: "تتقدم بالمحاذاة موضعًا واحدًا وتعيد بدء المقارنة." },
+      { question: "أي خوارزمية تزيل المقارنات المتكررة الزائدة في المطابقة الساذجة؟", options: ["الترتيب الفقاعي", "KMP", "دايكسترا", "البحث الثنائي"], answer: 1, explanation: "تستخدم KMP دالة فشل لتخطي إعادة فحص الحروف المتطابقة سلفًا." },
     ],
   },
   inputFields: [

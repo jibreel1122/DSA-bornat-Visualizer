@@ -20,6 +20,7 @@ function generate(input: Input): Step<StringFrame>[] {
     description: string,
     codeLine: number,
     box?: { l: number; r: number },
+    descriptionAr?: string,
   ) => {
     const aux: { label: string; values: (string | number)[]; states?: Record<number, CellState> }[] = [
       { label: "Z", values: [...z], states: zStates },
@@ -34,12 +35,13 @@ function generate(input: Input): Step<StringFrame>[] {
         aux,
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, matches: matches.length },
     });
   };
 
-  frame({}, {}, `Concatenate pattern + "$" + text = "${s}". Z[i] = length of the longest substring starting at i that matches a prefix of this string. Z[i] = ${m} ⇒ pattern occurrence.`, 0);
+  frame({}, {}, `Concatenate pattern + "$" + text = "${s}". Z[i] = length of the longest substring starting at i that matches a prefix of this string. Z[i] = ${m} ⇒ pattern occurrence.`, 0, undefined, `اربط pattern + "$" + text = "${s}". Z[i] = طول أطول سلسلة جزئية تبدأ عند i وتطابق بادئة هذه السلسلة. Z[i] = ${m} ⇒ تكرار للنمط.`);
 
   let L = 0;
   let R = 0;
@@ -52,9 +54,10 @@ function generate(input: Input): Step<StringFrame>[] {
         `i=${i} is inside the Z-box [${L}, ${R - 1}]: copy Z[${i - L}] = ${z[i - L]} capped at ${R - i} → start Z[${i}] at ${z[i]}.`,
         2,
         { l: L, r: R - 1 },
+        `i=${i} داخل صندوق Z ‏[${L}, ${R - 1}]: انسخ Z[${i - L}] = ${z[i - L]} محدودًا بـ ${R - i} ← ابدأ Z[${i}] عند ${z[i]}.`,
       );
     } else {
-      frame({ [i]: "active" }, { [i]: "compare" }, `i=${i} is outside any Z-box: match from scratch.`, 3);
+      frame({ [i]: "active" }, { [i]: "compare" }, `i=${i} is outside any Z-box: match from scratch.`, 3, undefined, `i=${i} خارج أي صندوق Z: طابِق من الصفر.`);
     }
     while (i + z[i] < n && s[z[i]] === s[i + z[i]]) {
       comparisons++;
@@ -63,7 +66,7 @@ function generate(input: Input): Step<StringFrame>[] {
     if (z[i] > 0) {
       const st: Record<number, CellState> = { [i]: "active" };
       for (let k = 0; k < z[i]; k++) st[i + k] = "compare";
-      frame(st, { [i]: "found" }, `Extended: Z[${i}] = ${z[i]} (matches the prefix "${s.slice(0, z[i])}").`, 4);
+      frame(st, { [i]: "found" }, `Extended: Z[${i}] = ${z[i]} (matches the prefix "${s.slice(0, z[i])}").`, 4, undefined, `تمدَّد: Z[${i}] = ${z[i]} (يطابق البادئة "${s.slice(0, z[i])}").`);
     }
     if (i + z[i] > R) {
       L = i;
@@ -74,7 +77,7 @@ function generate(input: Input): Step<StringFrame>[] {
       matches.push(pos);
       const st: Record<number, CellState> = {};
       for (let k = 0; k < m; k++) st[i + k] = "found";
-      frame(st, { [i]: "found" }, `Z[${i}] = ${m} = pattern length ⇒ match at text index ${pos}!`, 5);
+      frame(st, { [i]: "found" }, `Z[${i}] = ${m} = pattern length ⇒ match at text index ${pos}!`, 5, undefined, `Z[${i}] = ${m} = طول النمط ⇒ تطابق عند فهرس النص ${pos}!`);
     }
   }
 
@@ -85,6 +88,10 @@ function generate(input: Input): Step<StringFrame>[] {
       ? `Done. ${matches.length} match(es) at text indices: ${matches.join(", ")} using ${comparisons} character comparisons.`
       : `Done. Pattern not found (${comparisons} character comparisons).`,
     6,
+    undefined,
+    matches.length
+      ? `انتهى. ${matches.length} تطابق عند فهارس النص: ${matches.join(", ")} باستخدام ${comparisons} مقارنة حرفية.`
+      : `انتهى. لم يُعثَر على النمط (${comparisons} مقارنة حرفية).`,
   );
   return steps;
 }
@@ -92,10 +99,13 @@ function generate(input: Input): Step<StringFrame>[] {
 const mod: AlgorithmModule<StringFrame, Input> = {
   slug: "z-algorithm",
   title: "Z-Algorithm",
+  titleAr: "خوارزمية Z",
   category: "strings",
   difficulty: "Advanced",
   tags: ["string matching", "Z-array", "prefix matching", "linear"],
+  tagsAr: ["مطابقة نصوص", "مصفوفة Z", "مطابقة البادئة", "خطي"],
   summary: "Computes for every position the longest match with the string's own prefix (Z-array) in O(n), finding all pattern occurrences.",
+  summaryAr: "يحسب لكل موضع أطول تطابق مع بادئة السلسلة نفسها (مصفوفة Z) في O(n)، فيجد كل تكرارات النمط.",
   renderer: "string",
   pseudocode: [
     "procedure zSearch(text, pattern)",
@@ -371,6 +381,61 @@ The linear-time trick is the Z-box [L, R): the rightmost segment found so far th
       { question: "The Z-box [L, R) is…", options: ["A queue of characters", "The rightmost segment found that matches the string's prefix", "The alphabet range", "A hash window"], answer: 1, explanation: "Positions inside it can reuse earlier Z-values instead of comparing from scratch." },
       { question: "The Z-algorithm's total time is O(n) because…", options: ["The inner loop never runs", "Every successful comparison pushes R forward, and R never decreases", "It uses hashing", "It skips half the string"], answer: 1, explanation: "Comparisons only extend past R, so their total across the whole run is at most n." },
       { question: "A pattern occurrence at text index j corresponds to…", options: ["Z[j] = 0", "Z[j + m + 1] = m in the concatenated string", "Z[j] = j", "R = L"], answer: 1, explanation: "Text position j sits at concatenation index j + m + 1 (after the pattern and separator)." },
+    ],
+  },
+  contentAr: {
+    overview: `تحسب خوارزمية Z، لكل موضع i من سلسلة، طول أطول سلسلة جزئية تبدأ عند i وتطابق بادئة السلسلة — وهي مصفوفة Z. لمطابقة الأنماط، اربط pattern + "$" + text بفاصل لا يظهر في أيٍّ منهما: حيثما ساوت قيمة Z طول النمط، يظهر النمط في النص عند ذلك الموضع.
+
+حيلة الزمن الخطي هي صندوق Z ‏[L, R): أقصى مقطع يمين مكتشَف حتى الآن يطابق بادئة. عند حساب Z[i] لموضع i داخل الصندوق، فإن الموضع الأسبق المقابل i−L يخبرنا مسبقًا بحد أدنى مضمون لطول التطابق، فلا تمتد المقارنات إلا بعد R — دون إعادة فحص الحروف داخل الصندوق أبدًا. يُقارَن كل حرف من السلسلة بنجاح مرة واحدة على الأكثر، مما يعطي زمنًا كليًا O(n + m) بتنفيذ قصير للغاية.`,
+    howItWorks: [
+      "ابنِ s = pattern + '$' + text بحرف فاصل لا يظهر في أيٍّ من السلسلتين.",
+      "احتفظ بأقصى صندوق Z يمينًا ‏[L, R): مقطع يبدأ عند L ويطابق بادئة السلسلة.",
+      "لموضع i داخل الصندوق، هيّئ Z[i] = min(R − i, Z[i − L]) — أعِد استخدام البنية المحسوبة سابقًا.",
+      "مدِّد Z[i] بمقارنة حرفية مباشرة بعد R؛ فإن تجاوز التمديد R، ينتقل الصندوق إلى [i, i + Z[i]).",
+      "كل موضع يساوي فيه Z[i] طول النمط هو تكرار، عند فهرس النص i − m − 1.",
+    ],
+    complexity: {
+      time: { best: "O(n + m)", average: "O(n + m)", worst: "O(n + m)" },
+      space: "O(n + m)",
+      notes: "لا يتحرك R إلا إلى الأمام وكل مقارنة ناجحة تدفع R، فيكون مجموع المقارنات خطيًا. مصفوفة Z فوق السلسلة المربوطة تستخدم مساحة O(n + m).",
+    },
+    applications: [
+      "مطابقة الأنماط الدقيقة بزمن خطي مضمون",
+      "إيجاد كل حدود/دورات السلسلة (الدورة = بنية n − قيمة Z)",
+      "عدّ السلاسل الجزئية المتمايزة وتحليلات ضغط النصوص",
+      "لبنة أساسية في البرمجة التنافسية للعديد من مسائل النصوص",
+    ],
+    advantages: [
+      "زمن O(n + m) مضمون بتنفيذ قصير جدًا يعتمد على الفهارس فقط",
+      "مصفوفة Z نفسها بنية قابلة لإعادة الاستخدام (دورات، حدود، تكرارات)",
+      "لا تجزئة — حتمية وبلا خطر تصادم",
+    ],
+    disadvantages: [
+      "تتطلب ربطًا بحرف فاصل غير موجود في أيٍّ من السلسلتين",
+      "تستخدم ذاكرة إضافية O(n + m) للسلسلة المربوطة ومصفوفة Z",
+      "أقل شهرة في الكتب من KMP، فتُكتب تنفيذاتها من الصفر أكثر (وتُكتب خطأً أكثر)",
+    ],
+    commonMistakes: [
+      "نسيان الفاصل '$' — دونه قد تتسرب التطابقات عبر حدود النمط/النص.",
+      "استخدام min(R − i, Z[i − L]) بشكل خاطئ (انزياح بمقدار واحد حول ما إذا كان R شاملًا).",
+      "تحديث [L, R] حتى عندما لا يتجاوز i + Z[i] القيمة R.",
+      "الإبلاغ عن موضع التطابق دون طرح طول النمط والفاصل (i − m − 1).",
+    ],
+    interviewQuestions: [
+      "ماذا يمثل Z[i]، ولماذا تشير Z[i] = m إلى تطابق نمط في حيلة الربط؟",
+      "اشرح لماذا خوارزمية Z بزمن O(n) رغم حلقة while الداخلية.",
+      "كيف ترتبط مصفوفة Z بدالة فشل KMP؟",
+      "كيف يمكن استخدام مصفوفة Z لإيجاد أصغر دورة لسلسلة؟",
+      "لماذا يُشترط حرف الفاصل، وأي خاصية يجب أن يحققها؟",
+    ],
+    summary:
+      "تحسب خوارزمية Z مصفوفة Z — أطول تطابق بادئة عند كل موضع — بزمن خطي باستخدام تحسين صندوق Z الذي لا يعيد أبدًا مقارنة الحروف. ربط pattern + '$' + text يحوّلها إلى مطابِق أنماط دقيق أنيق بتكلفة O(n + m)، وتعمل مصفوفة Z أيضًا أداةً للدورات والحدود وبنى النصوص الأخرى.",
+    quiz: [
+      { question: "تخزّن Z[i]…", options: ["تكرار الحرف رقم i", "طول أطول سلسلة جزئية عند i تطابق بادئة السلسلة", "عدد التطابقات", "رتبة مصفوفة اللواحق"], answer: 1, explanation: "طول تطابق البادئة هذا هو بالضبط ما يجعل Z[i] = m يكشف تكرارات النمط." },
+      { question: "لماذا نربط pattern + '$' + text؟", options: ["لتوفير الذاكرة", "كي تحدد قيم Z المساوية لطول النمط التكرارات دون تطابقات عابرة للحدود", "لترتيب الحروف", "إنه اختياري"], answer: 1, explanation: "الفاصل (الغائب عن السلسلتين) يحد كل قيمة Z عند m ويمنع تطابقات تمتد عبر الحد." },
+      { question: "صندوق Z ‏[L, R) هو…", options: ["طابور من الحروف", "أقصى مقطع يمين مكتشَف يطابق بادئة السلسلة", "مجال الأبجدية", "نافذة تجزئة"], answer: 1, explanation: "يمكن للمواضع داخله إعادة استخدام قيم Z الأسبق بدلًا من المقارنة من الصفر." },
+      { question: "زمن خوارزمية Z الكلي O(n) لأن…", options: ["الحلقة الداخلية لا تعمل أبدًا", "كل مقارنة ناجحة تدفع R إلى الأمام، وR لا يتناقص أبدًا", "تستخدم التجزئة", "تتخطى نصف السلسلة"], answer: 1, explanation: "لا تمتد المقارنات إلا بعد R، فمجموعها عبر التشغيل كله لا يتجاوز n." },
+      { question: "تكرار نمط عند فهرس النص j يقابل…", options: ["Z[j] = 0", "Z[j + m + 1] = m في السلسلة المربوطة", "Z[j] = j", "R = L"], answer: 1, explanation: "موضع النص j يقع عند فهرس الربط j + m + 1 (بعد النمط والفاصل)." },
     ],
   },
   inputFields: [

@@ -22,6 +22,7 @@ function generate(input: Input): Step<StringFrame>[] {
     description: string,
     codeLine: number,
     extraAux: { label: string; values: (string | number)[] }[] = [],
+    descriptionAr?: string,
   ) => {
     steps.push({
       frame: {
@@ -34,6 +35,7 @@ function generate(input: Input): Step<StringFrame>[] {
         ],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, hashHits, matches: matches.length },
     });
@@ -47,7 +49,7 @@ function generate(input: Input): Step<StringFrame>[] {
   for (let i = 0; i < m; i++) patHash = (patHash * BASE + p.charCodeAt(i)) % MOD;
   frame({}, {}, `Compute the pattern's rolling hash once: hash("${p}") = ${patHash} (mod ${MOD}).`, 0, [
     { label: "pattern hash", values: [patHash] },
-  ]);
+  ], `احسب تجزئة النمط المتدحرجة مرة واحدة: hash("${p}") = ${patHash} (mod ${MOD}).`);
 
   let textHash = 0;
   for (let i = 0; i < m && i < n; i++) textHash = (textHash * BASE + t.charCodeAt(i)) % MOD;
@@ -58,7 +60,7 @@ function generate(input: Input): Step<StringFrame>[] {
     frame(windowStates, {}, `Window [${s}, ${s + m - 1}]: hash = ${textHash}.`, 2, [
       { label: "pattern hash", values: [patHash] },
       { label: "window hash", values: [textHash] },
-    ]);
+    ], `النافذة [${s}, ${s + m - 1}]: التجزئة = ${textHash}.`);
 
     if (textHash === patHash) {
       hashHits++;
@@ -85,12 +87,15 @@ function generate(input: Input): Step<StringFrame>[] {
           : `Hashes match but characters differ (collision) — not a real match at index ${s}.`,
         3,
         [{ label: "pattern hash", values: [patHash] }, { label: "window hash", values: [textHash] }],
+        ok
+          ? `التجزئتان متطابقتان — وتحقّقنا حرفًا حرفًا: تطابق حقيقي عند الفهرس ${s}.`
+          : `التجزئتان متطابقتان لكن الحروف مختلفة (تصادم) — ليس تطابقًا حقيقيًا عند الفهرس ${s}.`,
       );
       if (ok) {
         matches.push(s);
         const found: Record<number, CellState> = {};
         for (let k = 0; k < m; k++) found[s + k] = "found";
-        frame(found, {}, `Confirmed match at index ${s}.`, 4);
+        frame(found, {}, `Confirmed match at index ${s}.`, 4, [], `تطابق مؤكَّد عند الفهرس ${s}.`);
       }
     }
 
@@ -108,6 +113,10 @@ function generate(input: Input): Step<StringFrame>[] {
       ? `Done. ${matches.length} match(es) at: ${matches.join(", ")}. ${hashHits} hash hit(s) checked, ${comparisons} character comparison(s).`
       : `Done. Pattern not found. ${hashHits} hash hit(s) checked, ${comparisons} character comparison(s).`,
     5,
+    [],
+    matches.length
+      ? `انتهى. ${matches.length} تطابق عند: ${matches.join(", ")}. فُحِص ${hashHits} تطابق تجزئة، و${comparisons} مقارنة حرفية.`
+      : `انتهى. لم يُعثَر على النمط. فُحِص ${hashHits} تطابق تجزئة، و${comparisons} مقارنة حرفية.`,
   );
   return steps;
 }
@@ -115,10 +124,13 @@ function generate(input: Input): Step<StringFrame>[] {
 const mod: AlgorithmModule<StringFrame, Input> = {
   slug: "rabin-karp",
   title: "Rabin-Karp String Matching",
+  titleAr: "مطابقة النصوص برابين-كارب",
   category: "strings",
   difficulty: "Intermediate",
   tags: ["string matching", "rolling hash", "hashing", "average O(n+m)"],
+  tagsAr: ["مطابقة نصوص", "تجزئة متدحرجة", "تجزئة", "متوسط O(n+m)"],
   summary: "Hashes each text window and only compares characters when hashes collide — average O(n + m).",
+  summaryAr: "يجزّئ كل نافذة من النص ولا يقارن الحروف إلا عند تصادم التجزئات — بمتوسط O(n + m).",
   renderer: "string",
   pseudocode: [
     "procedure rabinKarp(text, pattern)",
@@ -366,6 +378,61 @@ A hash match doesn't guarantee a real match — different strings can collide to
       { question: "Rabin-Karp's worst-case time complexity is…", options: ["O(n + m)", "O(n log m)", "O(nm)", "O(m log n)"], answer: 2, explanation: "Adversarial inputs causing many hash collisions force full character verification at every window." },
       { question: "Rabin-Karp's main practical advantage over KMP is…", options: ["Always faster", "Easy extension to searching for multiple patterns at once", "No preprocessing needed", "Uses less memory"], answer: 1, explanation: "Hashing generalizes naturally to checking a set of pattern hashes per window." },
       { question: "The pattern's hash is computed…", options: ["Once, before scanning", "At every window", "Only if a match is found", "Never — hashes are for the text only"], answer: 0, explanation: "It's fixed throughout the scan, computed a single time up front." },
+    ],
+  },
+  contentAr: {
+    overview: `تجد رابين-كارب النمط في النص بمقارنة تجزئات نوافذ ثابتة الطول بدلًا من مقارنة الحروف مباشرة. تحسب تجزئة النمط مرة واحدة، ثم تُزلِق نافذة بالطول نفسه عبر النص، متحققةً مما إذا كانت تجزئة النافذة تساوي تجزئة النمط. يتيح تحديث التجزئة المتدحرجة اشتقاق تجزئة كل نافذة من سابقتها في O(1)، متجنبًا إعادة الحساب من الصفر.
+
+تطابق التجزئتين لا يضمن تطابقًا حقيقيًا — فقد تتصادم سلاسل مختلفة على التجزئة نفسها — لذا تتحقق رابين-كارب دائمًا من تطابق التجزئة بمقارنة حرفية مباشرة. على النص العشوائي يجعلها هذا بمتوسط O(n + m)؛ أما أسوأ حالة (مدخلات خصمية تسبب تصادمات كثيرة) فتتدهور إلى O(nm)، مثل النهج الساذج. قوتها الحقيقية في تعميمها بكفاءة إلى البحث عن أنماط متعددة (البحث عن تجزئات أنماط كثيرة في مرور واحد).`,
+    howItWorks: [
+      "احسب تجزئة كثيرة الحدود متدحرجة للنمط مرة واحدة.",
+      "احسب تجزئة أول نافذة من النص بالطول نفسه.",
+      "أزلِق النافذة موضعًا واحدًا في كل مرة؛ وعند كل موضع قارن تجزئة النافذة بتجزئة النمط.",
+      "عند تطابق التجزئتين، تحقّق بمقارنة حرفية مباشرة (فالتجزئات قد تتصادم).",
+      "دحرِج التجزئة إلى الأمام في O(1): أزِل إسهام الحرف الخارج، وأزِح، وأضِف الحرف الداخل.",
+    ],
+    complexity: {
+      time: { best: "O(n + m)", average: "O(n + m)", worst: "O(nm)" },
+      space: "O(1)",
+      notes: "الحالة المتوسطة خطية بفضل تحديثات التجزئة المتدحرجة بتكلفة O(1) وندرة التصادمات مع تجزئة/معامل جيدين. تتدهور أسوأ حالة إذا أجبرت تصادمات تجزئة زائفة كثيرة على تحقق كامل عند كل نافذة.",
+    },
+    applications: [
+      "كشف الانتحال (تجزئة أجزاء من المستندات)",
+      "البحث عن أنماط متعددة (البحث عن مجموعة أنماط في آن واحد)",
+      "كشف السلاسل الجزئية المكررة أو بصمة الملفات",
+      "البحث في تسلسلات الحمض النووي حيث تهم سرعة الحالة المتوسطة أكثر من أسوأ حالة",
+    ],
+    advantages: [
+      "فكرة التجزئة المتدحرجة بسيطة، وسهلة التوسيع إلى أنماط ثنائية الأبعاد أو أنماط متعددة",
+      "متوسط O(n + m)، وسريعة عمليًا",
+      "مساحة إضافية O(1) فقط لكل نافذة (باستثناء جدول التجزئة في متغيرات الأنماط المتعددة)",
+    ],
+    disadvantages: [
+      "أسوأ حالة O(nm) إذا تصادمت دالة التجزئة كثيرًا",
+      "تتطلب حسابًا معياريًا دقيقًا لتجنب الفيضان",
+      "تضمن KMP/خوارزمية Z زمنًا خطيًا دون شروط، بينما لا تضمنه رابين-كارب",
+    ],
+    commonMistakes: [
+      "تخطي التحقق الحرفي بعد تطابق التجزئة (قبول نتائج إيجابية كاذبة).",
+      "تحديث خاطئ للتجزئة المتدحرجة (نسيان إزالة إسهام الحرف الخارج الموزون).",
+      "فيضان الأعداد الصحيحة بسبب عدم أخذ المعامل عند كل خطوة ضرب.",
+      "استخدام زوج معامل/أساس عرضة لتصادمات متكررة على أبجدية المدخلات.",
+    ],
+    interviewQuestions: [
+      "لماذا يجب التحقق من تطابق التجزئة حرفًا حرفًا رغم ذلك؟",
+      "اشتقّ صيغة تحديث التجزئة المتدحرجة بتكلفة O(1).",
+      "ما تعقيد زمن رابين-كارب في أسوأ حالة، ومتى يحدث؟",
+      "كيف توسّع رابين-كارب للبحث عن أنماط كثيرة في آن واحد؟",
+      "قارن ضمانات رابين-كارب بضمانات KMP.",
+    ],
+    summary:
+      "تقارن رابين-كارب تجزئات متدحرجة لنوافذ النص بتجزئة النمط، متحققةً من تطابق التجزئات بمقارنة مباشرة. تحقق متوسط زمن O(n + m) عبر تحديثات متدحرجة بتكلفة O(1)، وإن كانت قد تتدهور إلى O(nm) تحت تصادمات تجزئة خصمية — وميزتها الحقيقية سهولة التوسيع إلى البحث عن أنماط متعددة.",
+    quiz: [
+      { question: "لماذا تتحقق رابين-كارب من تطابق التجزئة حرفًا حرفًا؟", options: ["لتحسين السرعة", "لأن سلاسل مختلفة قد تُجزَّأ إلى القيمة نفسها (تصادم)", "ليس ضروريًا", "لحساب التجزئة التالية"], answer: 1, explanation: "تطابق التجزئة شرط ضروري لكنه غير كافٍ للتطابق الحقيقي، إذ التصادمات ممكنة." },
+      { question: "تحديث التجزئة المتدحرجة يعمل في…", options: ["O(m)", "O(1)", "O(n)", "O(log m)"], answer: 1, explanation: "إزالة الحرف الخارج وإضافة الحرف الداخل حساب بزمن ثابت." },
+      { question: "تعقيد زمن رابين-كارب في أسوأ حالة هو…", options: ["O(n + m)", "O(n log m)", "O(nm)", "O(m log n)"], answer: 2, explanation: "تُجبر المدخلات الخصمية التي تسبب تصادمات تجزئة كثيرة على تحقق حرفي كامل عند كل نافذة." },
+      { question: "الميزة العملية الأساسية لرابين-كارب على KMP هي…", options: ["أسرع دائمًا", "سهولة التوسيع للبحث عن أنماط متعددة في آن واحد", "لا حاجة إلى معالجة مسبقة", "تستخدم ذاكرة أقل"], answer: 1, explanation: "تتعمم التجزئة طبيعيًا لفحص مجموعة تجزئات أنماط لكل نافذة." },
+      { question: "تُحسب تجزئة النمط…", options: ["مرة واحدة، قبل المسح", "عند كل نافذة", "فقط إذا وُجد تطابق", "أبدًا — التجزئات للنص فقط"], answer: 0, explanation: "تبقى ثابتة طوال المسح، وتُحسب مرة واحدة مقدمًا." },
     ],
   },
   inputFields: [

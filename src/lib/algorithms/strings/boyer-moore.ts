@@ -23,6 +23,7 @@ function generate(input: Input): Step<StringFrame>[] {
     patStates: Record<number, CellState>,
     description: string,
     codeLine: number,
+    descriptionAr?: string,
   ) => {
     steps.push({
       frame: {
@@ -38,6 +39,7 @@ function generate(input: Input): Step<StringFrame>[] {
         ],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, shifts, matches: matches.length },
     });
@@ -51,6 +53,9 @@ function generate(input: Input): Step<StringFrame>[] {
       .map(([c, i]) => `${c}→${i}`)
       .join(", ")}). Compare right-to-left; on mismatch, jump the pattern forward.`,
     0,
+    `قاعدة الحرف السيئ: احسب مسبقًا آخر موضع لكل حرف في النمط (${Object.entries(last)
+      .map(([c, i]) => `${c}→${i}`)
+      .join(", ")}). قارن من اليمين إلى اليسار؛ وعند عدم التطابق، اقفز بالنمط إلى الأمام.`,
   );
 
   let s = 0;
@@ -74,6 +79,7 @@ function generate(input: Input): Step<StringFrame>[] {
         ps,
         `Alignment ${s}: compare text[${s + j}]='${t[s + j]}' with pattern[${j}]='${p[j]}' (right-to-left) → ${match ? "match" : "mismatch"}.`,
         2,
+        `المحاذاة ${s}: قارن text[${s + j}]='${t[s + j]}' مع pattern[${j}]='${p[j]}' (من اليمين إلى اليسار) ← ${match ? "تطابق" : "عدم تطابق"}.`,
       );
       if (!match) break;
       j--;
@@ -85,7 +91,7 @@ function generate(input: Input): Step<StringFrame>[] {
       for (let k = 0; k < m; k++) ts[s + k] = "found";
       const ps: Record<number, CellState> = {};
       for (let k = 0; k < m; k++) ps[k] = "found";
-      frame(s, ts, ps, `Full match at index ${s}!`, 3);
+      frame(s, ts, ps, `Full match at index ${s}!`, 3, `تطابق كامل عند الفهرس ${s}!`);
       s += 1;
       shifts++;
     } else {
@@ -100,6 +106,9 @@ function generate(input: Input): Step<StringFrame>[] {
           ? `'${bad}' does not occur in the pattern — shift the whole pattern past it (by ${jump}).`
           : `Bad character '${bad}' last occurs at pattern index ${lastIdx} — shift by max(1, ${j} − ${lastIdx}) = ${jump} to align it.`,
         4,
+        lastIdx === -1
+          ? `'${bad}' لا يظهر في النمط — أزِح النمط كله بعده (بمقدار ${jump}).`
+          : `الحرف السيئ '${bad}' يظهر آخر مرة عند فهرس النمط ${lastIdx} — أزِح بمقدار max(1, ${j} − ${lastIdx}) = ${jump} لمحاذاته.`,
       );
       s += jump;
       shifts++;
@@ -114,6 +123,9 @@ function generate(input: Input): Step<StringFrame>[] {
       ? `Done. ${matches.length} match(es) at: ${matches.join(", ")} — ${comparisons} comparisons over ${shifts} alignment shifts (naive would try ${n - m + 1} alignments).`
       : `Done. Pattern not found — ${comparisons} comparisons over ${shifts} shifts.`,
     5,
+    matches.length
+      ? `انتهى. ${matches.length} تطابق عند: ${matches.join(", ")} — ${comparisons} مقارنة عبر ${shifts} إزاحة محاذاة (النهج الساذج كان سيجرّب ${n - m + 1} محاذاة).`
+      : `انتهى. لم يُعثَر على النمط — ${comparisons} مقارنة عبر ${shifts} إزاحة.`,
   );
   return steps;
 }
@@ -121,10 +133,13 @@ function generate(input: Input): Step<StringFrame>[] {
 const mod: AlgorithmModule<StringFrame, Input> = {
   slug: "boyer-moore",
   title: "Boyer-Moore (Bad Character Rule)",
+  titleAr: "خوارزمية باير-مور (قاعدة الحرف السيئ)",
   category: "strings",
   difficulty: "Advanced",
   tags: ["string matching", "bad character rule", "right-to-left", "sublinear"],
+  tagsAr: ["مطابقة نصوص", "قاعدة الحرف السيئ", "من اليمين إلى اليسار", "دون الخطي"],
   summary: "Compares the pattern right-to-left and uses the bad-character rule to skip large chunks of text — often sublinear in practice.",
+  summaryAr: "يقارن النمط من اليمين إلى اليسار ويستخدم قاعدة الحرف السيئ لتخطي أجزاء كبيرة من النص — غالبًا دون الخطي عمليًا.",
   renderer: "string",
   pseudocode: [
     "procedure boyerMoore(text, pattern)",
@@ -379,6 +394,61 @@ This module visualizes the bad-character rule: when text character c mismatches 
       { question: "If the mismatched text character doesn't occur in the pattern at all…", options: ["The search fails", "The pattern shifts fully past that character", "Shift by 1", "The pattern reverses"], answer: 1, explanation: "last[c] = −1 gives a shift of j + 1, jumping the whole window past the offending character." },
       { question: "Boyer-Moore performs best when…", options: ["The alphabet is tiny (like binary)", "The alphabet is large and the pattern is long", "The pattern is one character", "The text is very short"], answer: 1, explanation: "Large alphabets make mismatches frequent and skips close to the full pattern length." },
       { question: "With only the bad-character rule, the worst-case time is…", options: ["O(n + m)", "O(n/m)", "O(nm)", "O(log n)"], answer: 2, explanation: "Repetitive small-alphabet inputs (e.g. aaaa… / baaa) force near-full comparisons at every alignment; the good-suffix rule is needed for a linear worst case." },
+    ],
+  },
+  contentAr: {
+    overview: `خوارزمية باير-مور هي مطابِق النصوص الكلاسيكي القائم على "القفز إلى الأمام"، وأساس كثير من تطبيقات البحث الواقعية (بما فيها متغيرات grep). فكرتاها المخالفتان للحدس: قارن النمط بالنص من اليمين إلى اليسار، وعند عدم التطابق استخدم المعرفة بالنمط لتقفز بالمحاذاة إلى الأمام أكثر من موضع واحد — متخطيًا غالبًا معظم النص بالكامل.
+
+تصوّر هذه الوحدة قاعدة الحرف السيئ: عندما يخالف حرف النص c عند موضع النمط j، أزلِق النمط بحيث يحاذي آخر ظهور له للحرف c مع الحرف c في النص (أو يتجاوز c كليًا إن لم يحتوِ النمط عليه). تضيف الخوارزمية الكاملة أيضًا قاعدة اللاحقة الجيدة، لكن قاعدة الحرف السيئ وحدها تجسّد سلوك القفز المميز: على الأبجديات الكبيرة (مثل النص الإنجليزي)، يحدث معظم عدم التطابق عند أول مقارنة في المحاذاة ويتخطى قرابة m حرف دفعة واحدة، مما يجعل باير-مور دون الخطي في المتوسط — بل لا تنظر حتى إلى معظم النص.`,
+    howItWorks: [
+      "احسب مسبقًا جدول آخر ظهور: لكل حرف، أقصى فهرس له في النمط (−1 إن كان غائبًا).",
+      "حاذِ النمط عند موضع النص s وقارن الحروف من اليمين إلى اليسار، بدءًا من نهاية النمط.",
+      "إذا تطابقت كل الحروف الـ m، أبلِغ عن تكرار عند s وأزِح بمقدار 1 (أو بمقدار اللاحقة الجيدة في الخوارزمية الكاملة).",
+      "عند عدم تطابق في فهرس النمط j مع حرف النص c، أزِح بمقدار max(1, j − last[c]) — بمحاذاة آخر c في النمط تحت c في النص، أو بالقفز كليًا بعد c إن كان غائبًا.",
+      "كرّر حتى تتجاوز نافذة النمط نهاية النص.",
+    ],
+    complexity: {
+      time: { best: "O(n/m)", average: "~O(n)", worst: "O(nm)" },
+      space: "O(alphabet + m)",
+      notes: "أفضل حالة تتخطى m حرف لكل عدم تطابق (دون الخطي — معظم النص لا يُفحص أبدًا). قاعدة الحرف السيئ وحدها O(nm) في أسوأ حالة؛ وإضافة قاعدة اللاحقة الجيدة تحدّ عمليات البحث غير الدورية بـ O(n + m).",
+    },
+    applications: [
+      "محررات النصوص وميزات 'البحث في الملفات' (بحث حرفي سريع)",
+      "أدوات عائلة grep وكشف تسلل الشبكات (البحث في حمولات طويلة)",
+      "عمليات البحث في الأبجديات الكبيرة (اللغة الطبيعية) حيث تكون القفزات كبيرة",
+      "أي بحث يكون فيه النمط طويلًا والنص ضخمًا",
+    ],
+    advantages: [
+      "غالبًا دون الخطي: يتخطى أجزاء كبيرة من النص دون فحصها",
+      "يزداد سرعةً مع الأنماط الأطول (قفزات أكبر)",
+      "جدول الحرف السيئ سهل البناء (مرور واحد على النمط)",
+    ],
+    disadvantages: [
+      "قاعدة الحرف السيئ وحدها تتدهور إلى O(nm) على الأبجديات الصغيرة (مثل الحمض النووي أو الثنائي)",
+      "الخوارزمية الكاملة (مع قاعدة اللاحقة الجيدة) أصعب بكثير في التنفيذ الصحيح",
+      "قفزات ضعيفة على الأنماط القصيرة أو النص شديد التكرار — قد تتفوق KMP هناك",
+    ],
+    commonMistakes: [
+      "نسيان max(1, …): إزاحة سالبة أو صفرية عندما last[c] > j تحرّك النمط للوراء أو تدور إلى الأبد.",
+      "المقارنة من اليسار إلى اليمين — منطق القفز يعمل فقط بالمسح من اليمين إلى اليسار.",
+      "بناء جدول آخر ظهور بأول ظهور بدلًا من آخر ظهور.",
+      "افتراض الخطية في أسوأ حالة بقاعدة الحرف السيئ وحدها (يحتاج ذلك إلى قاعدة اللاحقة الجيدة أيضًا).",
+    ],
+    interviewQuestions: [
+      "لماذا تقارن باير-مور من اليمين إلى اليسار، ولماذا يتيح ذلك قفزات كبيرة؟",
+      "استعرض صيغة إزاحة الحرف السيئ max(1, j − last[c]) — لماذا الـ max؟",
+      "متى تتدهور قاعدة الحرف السيئ وحدها إلى O(nm)؟",
+      "ماذا تضيف قاعدة اللاحقة الجيدة، ومتى تتفوق على قاعدة الحرف السيئ؟",
+      "لماذا تكون باير-مور غالبًا أسرع من KMP على النص الإنجليزي لكن ليس على الحمض النووي؟",
+    ],
+    summary:
+      "تمسح باير-مور النمط من اليمين إلى اليسار وتستخدم قاعدة الحرف السيئ لإزلاق النمط إلى الأمام بما يصل إلى m موضع لكل عدم تطابق، متخطيةً غالبًا معظم النص — دون الخطي في المتوسط للأبجديات الكبيرة. يقود جدول آخر ظهور البسيط القفزات؛ وتضيف الخوارزمية الكاملة قاعدة اللاحقة الجيدة لحدٍّ خطي في أسوأ حالة.",
+    quiz: [
+      { question: "تقارن باير-مور النمط بالنص…", options: ["من اليسار إلى اليمين", "من اليمين إلى اليسار", "من الوسط إلى الخارج", "بترتيب عشوائي"], answer: 1, explanation: "المقارنة من اليمين إلى اليسار تعني أن عدم تطابق الحرف الأول قد يبرر تخطي طول النمط كله تقريبًا." },
+      { question: "عند عدم تطابق مع حرف النص c في فهرس النمط j، تكون إزاحة الحرف السيئ…", options: ["1 دائمًا", "j + 1", "max(1, j − last[c])", "m − j"], answer: 2, explanation: "تحاذي آخر ظهور للحرف c في النمط تحت c في النص؛ وتمنع max(1,…) الإزاحة الصفرية أو للوراء." },
+      { question: "إذا لم يظهر حرف النص المخالف في النمط إطلاقًا…", options: ["يفشل البحث", "يُزاح النمط كليًا بعد ذلك الحرف", "يُزاح بمقدار 1", "يُعكَس النمط"], answer: 1, explanation: "last[c] = −1 يعطي إزاحة j + 1، فتقفز بالنافذة كلها بعد الحرف المخالف." },
+      { question: "تؤدي باير-مور أفضل ما لديها عندما…", options: ["تكون الأبجدية صغيرة جدًا (كالثنائي)", "تكون الأبجدية كبيرة والنمط طويلًا", "يكون النمط حرفًا واحدًا", "يكون النص قصيرًا جدًا"], answer: 1, explanation: "تجعل الأبجديات الكبيرة عدم التطابق متكررًا والقفزات قريبة من طول النمط الكامل." },
+      { question: "بقاعدة الحرف السيئ وحدها، زمن أسوأ حالة هو…", options: ["O(n + m)", "O(n/m)", "O(nm)", "O(log n)"], answer: 2, explanation: "تجبر مدخلات الأبجدية الصغيرة المتكررة (مثل aaaa… / baaa) على مقارنات شبه كاملة عند كل محاذاة؛ وتلزم قاعدة اللاحقة الجيدة لأسوأ حالة خطية." },
     ],
   },
   inputFields: [

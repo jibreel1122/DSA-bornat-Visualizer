@@ -19,6 +19,7 @@ function generate(input: Input): Step<StringFrame>[] {
     lpsStates: Record<number, CellState>,
     description: string,
     codeLine: number,
+    descriptionAr?: string,
   ) => {
     steps.push({
       frame: {
@@ -31,41 +32,42 @@ function generate(input: Input): Step<StringFrame>[] {
         ],
       },
       description,
+      descriptionAr,
       codeLine,
       counters: { comparisons, matches: matches.length },
     });
   };
 
   // Phase 1: build LPS (longest proper prefix that is also suffix)
-  frame(0, {}, {}, {}, `Phase 1: build the LPS (failure) array so we never re-compare text characters.`, 0);
+  frame(0, {}, {}, {}, `Phase 1: build the LPS (failure) array so we never re-compare text characters.`, 0, `المرحلة 1: ابنِ مصفوفة LPS (دالة الفشل) كي لا نعيد أبدًا مقارنة حروف النص.`);
   let len = 0;
   let i = 1;
-  frame(0, {}, { 0: "sorted" }, { 0: "sorted" }, `lps[0] = 0 by definition.`, 1);
+  frame(0, {}, { 0: "sorted" }, { 0: "sorted" }, `lps[0] = 0 by definition.`, 1, `lps[0] = 0 بحكم التعريف.`);
   while (i < m) {
     comparisons++;
     if (p[i] === p[len]) {
       len++;
       lps[i] = len;
-      frame(0, {}, { [i]: "sorted", [len - 1]: "compare" }, { [i]: "found" }, `p[${i}]='${p[i]}' matches p[${len - 1}]; lps[${i}] = ${len}.`, 2);
+      frame(0, {}, { [i]: "sorted", [len - 1]: "compare" }, { [i]: "found" }, `p[${i}]='${p[i]}' matches p[${len - 1}]; lps[${i}] = ${len}.`, 2, `p[${i}]='${p[i]}' يطابق p[${len - 1}]؛ إذن lps[${i}] = ${len}.`);
       i++;
     } else if (len > 0) {
-      frame(0, {}, { [i]: "swap", [len]: "swap" }, { [len - 1]: "compare" }, `Mismatch; fall back to lps[${len - 1}] = ${lps[len - 1]}.`, 3);
+      frame(0, {}, { [i]: "swap", [len]: "swap" }, { [len - 1]: "compare" }, `Mismatch; fall back to lps[${len - 1}] = ${lps[len - 1]}.`, 3, `عدم تطابق؛ تراجَع إلى lps[${len - 1}] = ${lps[len - 1]}.`);
       len = lps[len - 1];
     } else {
       lps[i] = 0;
-      frame(0, {}, { [i]: "swap" }, { [i]: "found" }, `p[${i}] mismatches and len=0; lps[${i}] = 0.`, 4);
+      frame(0, {}, { [i]: "swap" }, { [i]: "found" }, `p[${i}] mismatches and len=0; lps[${i}] = 0.`, 4, `p[${i}] لا يطابق وlen=0؛ إذن lps[${i}] = 0.`);
       i++;
     }
   }
 
   // Phase 2: scan
-  frame(0, {}, {}, {}, `Phase 2: scan the text, using LPS to skip on mismatch.`, 5);
+  frame(0, {}, {}, {}, `Phase 2: scan the text, using LPS to skip on mismatch.`, 5, `المرحلة 2: امسح النص، مستخدمًا LPS للتخطي عند عدم التطابق.`);
   let ti = 0;
   let pj = 0;
   while (ti < t.length) {
     comparisons++;
     const match = t[ti] === p[pj];
-    frame(ti - pj, { [ti]: match ? "sorted" : "swap" }, { [pj]: match ? "sorted" : "swap" }, {}, `Compare text[${ti}]='${t[ti]}' with pattern[${pj}]='${p[pj]}' → ${match ? "match" : "mismatch"}.`, 6);
+    frame(ti - pj, { [ti]: match ? "sorted" : "swap" }, { [pj]: match ? "sorted" : "swap" }, {}, `Compare text[${ti}]='${t[ti]}' with pattern[${pj}]='${p[pj]}' → ${match ? "match" : "mismatch"}.`, 6, `قارن text[${ti}]='${t[ti]}' مع pattern[${pj}]='${p[pj]}' ← ${match ? "تطابق" : "عدم تطابق"}.`);
     if (match) {
       ti++;
       pj++;
@@ -76,27 +78,30 @@ function generate(input: Input): Step<StringFrame>[] {
         for (let k = 0; k < m; k++) ts[s + k] = "found";
         const ps: Record<number, CellState> = {};
         for (let k = 0; k < m; k++) ps[k] = "found";
-        frame(s, ts, ps, {}, `Full match at index ${s}! Jump using lps[${m - 1}] = ${lps[m - 1]}.`, 7);
+        frame(s, ts, ps, {}, `Full match at index ${s}! Jump using lps[${m - 1}] = ${lps[m - 1]}.`, 7, `تطابق كامل عند الفهرس ${s}! اقفز باستخدام lps[${m - 1}] = ${lps[m - 1]}.`);
         pj = lps[pj - 1];
       }
     } else if (pj > 0) {
-      frame(ti - pj, {}, { [pj]: "swap" }, { [pj - 1]: "compare" }, `Mismatch: shift pattern using lps[${pj - 1}] = ${lps[pj - 1]} (no text rewind).`, 8);
+      frame(ti - pj, {}, { [pj]: "swap" }, { [pj - 1]: "compare" }, `Mismatch: shift pattern using lps[${pj - 1}] = ${lps[pj - 1]} (no text rewind).`, 8, `عدم تطابق: أزِح النمط باستخدام lps[${pj - 1}] = ${lps[pj - 1]} (دون إرجاع النص).`);
       pj = lps[pj - 1];
     } else {
       ti++;
     }
   }
-  frame(0, {}, {}, {}, matches.length ? `Done. ${matches.length} match(es) at: ${matches.join(", ")}.` : `Done. Pattern not found.`, 9);
+  frame(0, {}, {}, {}, matches.length ? `Done. ${matches.length} match(es) at: ${matches.join(", ")}.` : `Done. Pattern not found.`, 9, matches.length ? `انتهى. ${matches.length} تطابق عند: ${matches.join(", ")}.` : `انتهى. لم يُعثَر على النمط.`);
   return steps;
 }
 
 const mod: AlgorithmModule<StringFrame, Input> = {
   slug: "kmp",
   title: "Knuth–Morris–Pratt (KMP)",
+  titleAr: "خوارزمية كنوث-موريس-برات (KMP)",
   category: "strings",
   difficulty: "Advanced",
   tags: ["string matching", "failure function", "O(n+m)", "linear"],
+  tagsAr: ["مطابقة نصوص", "دالة الفشل", "O(n+m)", "خطي"],
   summary: "Precomputes a failure function so mismatches skip ahead without ever re-scanning text — O(n + m).",
+  summaryAr: "يحسب مسبقًا دالة فشل بحيث يتخطى عدم التطابق إلى الأمام دون إعادة مسح النص أبدًا — O(n + m).",
   renderer: "string",
   pseudocode: [
     "procedure KMP(text, pattern)",
@@ -403,6 +408,62 @@ That knowledge is captured in the LPS ("longest proper prefix which is also a su
       { question: "On a mismatch with j > 0, KMP sets j to…", options: ["0", "j − 1", "lps[j − 1]", "m"], answer: 2, explanation: "It falls back to the longest usable prefix length recorded in the LPS array." },
       { question: "During the scan phase, the text index i…", options: ["Can move backward", "Never moves backward", "Resets each shift", "Is unused"], answer: 1, explanation: "This non-rewinding property is what guarantees O(n) scanning." },
       { question: "Compared to naive matching, KMP eliminates…", options: ["All comparisons", "Redundant re-comparison of already-matched text", "The need for the pattern", "Memory usage"], answer: 1, explanation: "The failure function reuses known matches instead of rescanning the text." },
+    ],
+  },
+  contentAr: {
+    overview: `تجد خوارزمية كنوث-موريس-برات النمط في النص بزمن خطي O(n + m) دون إعادة فحص أي حرف من النص. فكرتها الجوهرية: عندما يحدث عدم تطابق بعد تطابق بعض الحروف، يخبرنا النمط نفسه كم يمكننا الإزاحة بأمان دون تفويت أي تطابق.
+
+تُختزَن هذه المعرفة في مصفوفة LPS ("أطول بادئة فعلية هي أيضًا لاحقة")، وتُحسب من النمط وحده في مرحلة معالجة مسبقة. أثناء المسح، عند عدم تطابق في موضع النمط j، تقفز KMP بـ j إلى lps[j−1] بدلًا من البدء من جديد — مُعيدة استخدام الحروف التي تعرف مسبقًا أنها متطابقة.`,
+    howItWorks: [
+      "عالِج النمط مسبقًا إلى مصفوفة LPS: lps[i] هو طول أطول بادئة فعلية من pattern[0..i] هي أيضًا لاحقة.",
+      "امسح النص بفهرسين: i على النص، وj على النمط.",
+      "عند التطابق، تقدّم بكلٍّ من i وj؛ ويحدث تطابق كامل للنمط عندما يبلغ j القيمة m.",
+      "عند عدم تطابق مع j > 0، اجعل j = lps[j−1] — أزِح النمط بالبنية المعروفة دون إرجاع i للوراء.",
+      "عند عدم تطابق مع j = 0، تقدّم بـ i فقط. فهرس النص i لا يتناقص أبدًا.",
+    ],
+    complexity: {
+      time: { best: "O(n + m)", average: "O(n + m)", worst: "O(n + m)" },
+      space: "O(m)",
+      notes: "بناء LPS يكلّف O(m)؛ والمسح O(n) لأن i لا يتحرك للوراء وj يتناقص بعدد مرات لا يتجاوز عدد مرات تزايده. المساحة الإضافية هي مصفوفة LPS بحجم O(m).",
+    },
+    applications: [
+      "بحث سريع عن سلاسل جزئية في محررات النصوص وأدوات البحث",
+      "مطابقة تسلسلات الحمض النووي/البروتين في المعلوماتية الحيوية",
+      "كشف التسلل وفحص السجلات بحثًا عن أنماط معروفة",
+      "أي بحث متكرر عن نمط واحد فوق نص كبير",
+    ],
+    advantages: [
+      "زمن خطي مضمون O(n + m) — دون انفجار في أسوأ حالة",
+      "لا يعيد أبدًا مسح حروف النص",
+      "حتمية (لا تجزئة ولا نتائج إيجابية كاذبة)",
+      "المعالجة المسبقة تعتمد على النمط فقط",
+    ],
+    disadvantages: [
+      "دالة LPS/الفشل دقيقة وعرضة للأخطاء في التنفيذ",
+      "غالبًا ما تكون Boyer-Moore أسرع عمليًا على الأبجديات الكبيرة",
+      "تعالج نمطًا واحدًا فقط (تُعمِّم Aho-Corasick إلى أنماط متعددة)",
+    ],
+    commonMistakes: [
+      "بناء LPS بشكل خاطئ (سوء التعامل مع التراجع len = lps[len−1]).",
+      "تقديم فهرس النص i عند عدم تطابق حين j > 0 — يجب تغيير j فقط.",
+      "الخلط بين lps[j−1] وlps[j] في قفزة عدم التطابق.",
+      "خطأ انزياح بمقدار واحد عند الإبلاغ عن موضع التطابق (i − m).",
+    ],
+    interviewQuestions: [
+      "ماذا يمثل lps[i]، وكيف يُحسب في O(m)؟",
+      "لماذا لا يتحرك فهرس النص في KMP للوراء أبدًا؟",
+      "أثبت أن مسح KMP الكلي O(n) رغم حلقة التراجع الداخلية.",
+      "كيف ترتبط KMP ببناء آلة حالة منتهية (DFA) للنمط؟",
+      "كيف توسّع أفكار KMP لمطابقة أنماط كثيرة دفعة واحدة؟",
+    ],
+    summary:
+      "تحقق KMP مطابقة نمط واحد بزمن خطي عبر حساب مصفوفة فشل LPS مسبقًا من النمط، ثم مسح النص دون أي إرجاع — وعند عدم التطابق تزيح النمط باستخدام lps[j−1]. زمن O(n + m) ومساحة O(m) وبلا نتائج إيجابية كاذبة.",
+    quiz: [
+      { question: "ماذا تخزّن lps[i]؟", options: ["الحرف رقم i", "طول أطول بادئة فعلية هي أيضًا لاحقة من pattern[0..i]", "عدد التطابقات حتى الآن", "فهرس النص التالي"], answer: 1, explanation: "هذا الطول يخبر KMP كم يمكنها الإزاحة مع الحفاظ على السياق المتطابق." },
+      { question: "تعقيد زمن KMP الكلي هو…", options: ["O(nm)", "O(n + m)", "O(n log m)", "O(m²)"], answer: 1, explanation: "خطي لأن مؤشر النص لا يتحرك للوراء والمعالجة المسبقة O(m)." },
+      { question: "عند عدم تطابق مع j > 0، تجعل KMP قيمة j…", options: ["0", "j − 1", "lps[j − 1]", "m"], answer: 2, explanation: "تتراجع إلى أطول طول بادئة قابل للاستخدام مسجَّل في مصفوفة LPS." },
+      { question: "أثناء مرحلة المسح، فهرس النص i…", options: ["قد يتحرك للوراء", "لا يتحرك للوراء أبدًا", "يُعاد ضبطه كل إزاحة", "غير مستخدَم"], answer: 1, explanation: "خاصية عدم الإرجاع هذه هي ما يضمن مسحًا بزمن O(n)." },
+      { question: "مقارنةً بالمطابقة الساذجة، تلغي KMP…", options: ["كل المقارنات", "إعادة المقارنة الزائدة للنص المتطابق سلفًا", "الحاجة إلى النمط", "استخدام الذاكرة"], answer: 1, explanation: "تعيد دالة الفشل استخدام التطابقات المعروفة بدلًا من إعادة مسح النص." },
     ],
   },
   inputFields: [
