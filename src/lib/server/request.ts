@@ -5,7 +5,12 @@ const JSON_LIMIT = 256_000;
 /** Reject cross-origin browser mutations while allowing non-browser deployment tooling. */
 export function requireSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  const url = new URL(request.url);
+  // Nginx terminates TLS before forwarding to the localhost-only Next server.
+  // It overwrites these headers, so browser requests are compared to their public HTTPS origin.
+  const protocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || url.protocol.replace(":", "");
+  const host = request.headers.get("host") || url.host;
+  if (origin && origin !== `${protocol}://${host}`) {
     return NextResponse.json({ error: "Cross-origin requests are not allowed." }, { status: 403 });
   }
   return null;
