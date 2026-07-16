@@ -15,7 +15,7 @@ Use a strong database password and a non-superuser account. Apply each migration
 
 ## Environment
 
-Copy `.env.example` to `.env.local` and set `DATABASE_URL`, `APP_URL`, `SUPPORT_EMAIL=1230872@student.birzeit.edu`, and SMTP settings. Password reset links are only sent when both `APP_URL` and `SMTP_URL` are configured. The endpoint intentionally returns a generic response when email is unavailable so it does not disclose whether an account exists.
+Copy `.env.example` to `.env.local` and set `DATABASE_URL`, a random `AUTH_SECRET` of at least 32 bytes, `APP_URL`, `SUPPORT_EMAIL=1230872@student.birzeit.edu`, and SMTP settings. Password reset links are only sent when both `APP_URL` and `SMTP_URL` are configured. The endpoint intentionally returns a generic response when email is unavailable so it does not disclose whether an account exists.
 
 ## Build and run
 

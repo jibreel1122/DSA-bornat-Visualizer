@@ -1,4 +1,4 @@
-import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { cookies } from "next/headers";
 import { getDb } from "./db";
@@ -8,6 +8,9 @@ const COOKIE = "bdsv_session";
 const SESSION_DAYS = 30;
 
 function digest(value: string) {
+  const secret = process.env.AUTH_SECRET;
+  if (secret) return createHmac("sha256", secret).update(value).digest("hex");
+  if (process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET must be configured in production.");
   return createHash("sha256").update(value).digest("hex");
 }
 
@@ -72,4 +75,3 @@ export function createToken() {
 export function hashToken(value: string) {
   return digest(value);
 }
-
