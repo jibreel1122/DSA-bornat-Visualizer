@@ -469,5 +469,22 @@
   "nn.zWeightedSum": "z (weighted sum)",
   "nn.weightedSumLabel": "Weighted sum",
   "nn.backpropNote": "During backprop this neuron receives error signal δ = {delta}. Each weight's gradient is δ·aᵢ, so gradient descent nudges w by −learningRate·δ·aᵢ.",
-  "nn.clickToEdit": "Click to edit"
+  "nn.clickToEdit": "Click to edit",
+  "learning.why": "Why it matters",
+  "learning.realWorld": "Real-world view",
+  "learning.debug": "Debug",
+  "learning.phase": "Phase",
+  "learning.variables": "Variables",
+  "learning.condition": "Condition",
+  "learning.replayTransformation": "Replay structural transformation",
+  "learning.skipTransformation": "Skip structural transformation",
+  "settings.learning": "Learning preferences",
+  "settings.debugMode": "Debug Mode",
+  "settings.debugModeDesc": "Show variables, pointers, conditions, and internal execution details in visualizers.",
+  "settings.realWorldMode": "Real-world view",
+  "settings.realWorldModeDesc": "Show an optional everyday analogy without changing the algorithm frames.",
+  "settings.gamification": "Study motivation",
+  "settings.gamificationDesc": "Track XP, streaks, challenges, and achievements. You can turn this off anytime.",
+  "settings.pauseTransforms": "Pause before transformations",
+  "settings.pauseTransformsDesc": "Automatically pause before balancing, resizing, rebuilding, and similar structural changes."
 }

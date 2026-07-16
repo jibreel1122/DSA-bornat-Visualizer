@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { toPng } from "html-to-image";
 import {
   Camera,
+  Bug,
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
@@ -13,17 +14,20 @@ import {
   Eraser,
   FileDown,
   FileUp,
+  FastForward,
   FolderOpen,
   Gauge,
   HelpCircle,
   ImageDown,
   ListMinus,
   ListPlus,
+  Lightbulb,
   Pause,
   Pencil,
   Play,
   Redo2,
   RotateCcw,
+  Rewind,
   Save,
   Search,
   Shuffle,
@@ -40,8 +44,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { useVisualizerPlayer } from "@/lib/engine/player";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type Level, type Step } from "@/lib/engine/types";
+import { bridgeIncrementalSteps, enrichSteps } from "@/lib/engine/learning";
 import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
+import { useLearning } from "@/components/providers/learning-provider";
 import { useLocale } from "@/lib/i18n";
 import { cn, downloadText, readFileAsText } from "@/lib/utils";
 import { RendererSwitch } from "./renderers";
@@ -49,6 +55,7 @@ import { ZoomPan, type ZoomPanHandle } from "./zoom-pan";
 import { StatsPanel } from "./stats-panel";
 import { InputDialog } from "./input-dialog";
 import { EditPromptButton, ValuePromptButton } from "./value-prompt-button";
+import type { SharedPlayback } from "./compare-session";
 import type { DictKey } from "@/lib/i18n";
 
 interface SavedState {
@@ -87,6 +94,8 @@ export function VisualizerShell({
   liveInput: externalLiveInput,
   showBuilderBar = true,
   onLiveReady,
+  sharedPlayback,
+  panelIndex,
 }: {
   module: AlgorithmModule;
   /** optional pre-filled manual input (deep links, playground hand-off) */
@@ -97,8 +106,12 @@ export function VisualizerShell({
   showBuilderBar?: boolean;
   /** Reports this panel's own live-input up so a shared bar can broadcast actions to every panel (synced compare mode). */
   onLiveReady?: (live: LiveInput) => void;
+  /** A compare page can replace this panel's local clock with one shared, semantic clock. */
+  sharedPlayback?: SharedPlayback;
+  panelIndex?: number;
 }) {
   const { settings } = useSettings();
+  const { recordStudy } = useLearning();
   const { t, locale } = useLocale();
   const [inputOpen, setInputOpen] = React.useState(false);
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
@@ -114,6 +127,11 @@ export function VisualizerShell({
   const live = externalLiveInput ?? ownLiveInput;
   const { level, listFieldKey, searchFieldKey } = live;
   const input = live.input;
+  const lastVisibleStep = React.useRef<Step | undefined>(undefined);
+
+  React.useEffect(() => {
+    recordStudy(module.slug, module.category);
+  }, [module.slug, module.category, recordStudy]);
 
   // Report our own live-input up so a shared compare bar can drive every panel.
   React.useEffect(() => {
@@ -123,19 +141,40 @@ export function VisualizerShell({
   // ---- steps ----
   const { steps, error } = React.useMemo((): { steps: Step[]; error: string | null } => {
     try {
-      const s = module.generate(input) as Step[];
-      return { steps: s.slice(0, MAX_STEPS), error: null };
+      const operation = live.consumeOperation();
+      const generated = operation && module.generateOperation
+        ? module.generateOperation(operation)
+        : module.generate(input);
+      const continuous = operation && !module.generateOperation
+        ? bridgeIncrementalSteps(lastVisibleStep.current, generated as Step[], operation.detail ?? operation.kind)
+        : generated as Step[];
+      return { steps: enrichSteps(continuous.slice(0, MAX_STEPS)), error: null };
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
-  }, [module, input, t]);
+  }, [module, input, live, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);
   }, [error]);
 
   const player = useVisualizerPlayer(steps.length, settings.defaultSpeed);
+  const { goto: gotoPlayer } = player;
   const step = steps[player.cursor];
+
+  React.useEffect(() => {
+    if (!sharedPlayback || panelIndex === undefined) return;
+    sharedPlayback.reportTimeline(panelIndex, steps);
+    gotoPlayer(sharedPlayback.targetFor(panelIndex, steps));
+  }, [sharedPlayback, panelIndex, steps, gotoPlayer]);
+
+  React.useEffect(() => {
+    if (step) lastVisibleStep.current = step;
+  }, [step]);
+
+  React.useEffect(() => {
+    if (settings.pauseBeforeTransformations && player.playing && step?.transformation) player.pause();
+  }, [settings.pauseBeforeTransformations, player, step]);
 
   // Auto-play through a live insert/delete/edit/search so the user watches
   // the new operation animate instead of landing silently on frame 0.
@@ -145,7 +184,7 @@ export function VisualizerShell({
   React.useEffect(() => {
     if (live.consumeLiveActionFlag()) {
       player.goto(0);
-      player.play();
+      if (!sharedPlayback?.active) player.play();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input]);
@@ -331,6 +370,12 @@ export function VisualizerShell({
 
   const canUndo = live.canUndo;
   const canRedo = live.canRedo;
+  let transformationStart = player.cursor;
+  let transformationEnd = player.cursor;
+  if (step?.transformation) {
+    while (transformationStart > 0 && steps[transformationStart - 1]?.transformation) transformationStart--;
+    while (transformationEnd < steps.length - 1 && steps[transformationEnd + 1]?.transformation) transformationEnd++;
+  }
 
   return (
     <div
@@ -379,9 +424,10 @@ export function VisualizerShell({
             )}
           >
             <Tabs defaultValue="pseudocode" className="flex min-h-0 flex-1 flex-col">
-              <TabsList className="m-2 grid grid-cols-2">
+              <TabsList className={cn("m-2 grid", settings.debugMode ? "grid-cols-3" : "grid-cols-2")}>
                 <TabsTrigger value="pseudocode">{t("shell.tabPseudocode")}</TabsTrigger>
                 <TabsTrigger value="stats">{t("shell.tabStatistics")}</TabsTrigger>
+                {settings.debugMode && <TabsTrigger value="debug"><Bug className="size-3.5" /> {t("learning.debug")}</TabsTrigger>}
               </TabsList>
               <TabsContent value="pseudocode" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 pb-3">
                 <ol ref={codeListRef} className="font-mono text-[11.5px] leading-relaxed">
@@ -403,6 +449,20 @@ export function VisualizerShell({
               <TabsContent value="stats" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 pb-3">
                 <StatsPanel step={step} cursor={player.cursor} total={steps.length} />
               </TabsContent>
+              {settings.debugMode && (
+                <TabsContent value="debug" className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 pb-3 text-xs">
+                  <div className="grid gap-3">
+                    <DebugRow label={t("learning.phase")} value={step?.phase ?? "execute"} />
+                    <DebugRow label="Operation" value={step?.debug?.operation ?? step?.description ?? "—"} />
+                    {step?.codeLine !== undefined && <DebugRow label="Pseudocode line" value={step.codeLine + 1} />}
+                    {step?.debug?.condition && <DebugRow label={t("learning.condition")} value={step.debug.condition} />}
+                    <DebugValues label={t("learning.variables")} values={{ ...step?.debug?.variables, ...step?.debug?.pointers }} />
+                    {step?.debug?.dataStructures?.map((item) => (
+                      <DebugRow key={item.label} label={item.label} value={item.values.join(", ")} />
+                    ))}
+                  </div>
+                </TabsContent>
+              )}
             </Tabs>
           </aside>
         </div>
@@ -415,7 +475,25 @@ export function VisualizerShell({
           {step ? (locale === "ar" && step.descriptionAr ? step.descriptionAr : step.description) : t("shell.generateToBegin")}
         </div>
 
+        {(step?.why || (settings.realWorldMode && step)) && (
+          <div className="grid gap-2 border-t border-border px-4 py-2.5 text-xs text-muted-foreground sm:grid-cols-2">
+            {step?.why && (
+              <div className="flex gap-2">
+                <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                <div><span className="font-medium text-foreground">{t("learning.why")}:</span> {locale === "ar" && step.whyAr ? step.whyAr : step.why}</div>
+              </div>
+            )}
+            {settings.realWorldMode && step && (
+              <div className="flex gap-2">
+                <Lightbulb className="mt-0.5 size-4 shrink-0 text-sky-500" />
+                <div><span className="font-medium text-foreground">{t("learning.realWorld")}:</span> {locale === "ar" && step.realWorld?.descriptionAr ? step.realWorld.descriptionAr : step.realWorld?.description ?? "Follow the same state change as you would when organizing real items: inspect, decide, then update only what is necessary."}</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* playback */}
+        {!sharedPlayback?.active && (
         <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
           <div className="flex items-center gap-3">
             <Slider
@@ -428,7 +506,8 @@ export function VisualizerShell({
               className="flex-1"
             />
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-between">
+          {/* Timeline controls use fixed chronological directions; dir=ltr prevents accidental RTL icon mirroring. */}
+          <div dir="ltr" className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-between">
             <div className="flex items-center gap-1">
               <IconBtn label={t("shell.reset")} onClick={player.reset} disabled={player.atStart}>
                 <RotateCcw />
@@ -454,6 +533,16 @@ export function VisualizerShell({
               <IconBtn label={t("shell.lastStep")} onClick={player.goToEnd} disabled={player.atEnd}>
                 <ChevronLast />
               </IconBtn>
+              {step?.transformation && (
+                <>
+                  <IconBtn label={t("learning.replayTransformation")} onClick={() => player.goto(Math.max(0, transformationStart))}>
+                    <Rewind />
+                  </IconBtn>
+                  <IconBtn label={t("learning.skipTransformation")} onClick={() => player.goto(Math.min(steps.length - 1, transformationEnd + 1))}>
+                    <FastForward />
+                  </IconBtn>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -509,6 +598,7 @@ export function VisualizerShell({
             </Popover>
           </div>
         </div>
+        )}
 
         {/* toolbar */}
         <div className="flex flex-wrap items-center gap-1.5 border-t border-border bg-muted/30 px-4 py-2.5">
@@ -685,4 +775,19 @@ function IconBtn({
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   );
+}
+
+function DebugRow({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="grid gap-0.5 rounded-lg border border-border/70 bg-muted/30 px-2.5 py-2">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="break-words font-mono text-[11px] text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function DebugValues({ label, values }: { label: string; values: Record<string, string | number | boolean | null | undefined> }) {
+  const entries = Object.entries(values).filter(([, value]) => value !== undefined);
+  if (entries.length === 0) return null;
+  return <DebugRow label={label} value={entries.map(([key, value]) => `${key} = ${String(value)}`).join(" · ")} />;
 }

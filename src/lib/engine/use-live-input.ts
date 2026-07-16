@@ -3,7 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { createRNG, randomSeed } from "@/lib/engine/random";
-import type { AlgorithmModule, Level } from "@/lib/engine/types";
+import type { AlgorithmModule, Level, LiveOperationKind, OperationRequest } from "@/lib/engine/types";
 import { useLocale } from "@/lib/i18n";
 import { isListValue } from "@/components/visualizer/chip-list-input";
 
@@ -53,6 +53,7 @@ export interface LiveInput<I = unknown> {
   commitLiveFields: (fields: Record<string, string>) => void;
   /** True immediately after any live action above — read once by the caller's auto-play effect, which resets it back to false. */
   consumeLiveActionFlag: () => boolean;
+  consumeOperation: () => OperationRequest<I> | undefined;
 }
 
 export interface UseLiveInputOptions {
@@ -89,10 +90,16 @@ export function useLiveInput<I>(
   const input = history[hIndex];
 
   const liveActionRef = React.useRef(false);
+  const operationRef = React.useRef<OperationRequest<I> | undefined>(undefined);
   const consumeLiveActionFlag = React.useCallback(() => {
     const v = liveActionRef.current;
     liveActionRef.current = false;
     return v;
+  }, []);
+  const consumeOperation = React.useCallback(() => {
+    const operation = operationRef.current;
+    operationRef.current = undefined;
+    return operation;
   }, []);
 
   const pushInput = React.useCallback(
@@ -119,6 +126,13 @@ export function useLiveInput<I>(
     const parsed = module.parseInput(fields) as I; // throws friendly errors
     pushInput(parsed);
     liveActionRef.current = true;
+    operationRef.current = { kind: "edit-grid", before: input, after: parsed, detail: "the selected cell edit" };
+  };
+
+  const commitOperation = (kind: LiveOperationKind, parsed: I, detail: string) => {
+    pushInput(parsed);
+    liveActionRef.current = true;
+    operationRef.current = { kind, before: input, after: parsed, detail };
   };
 
   const shuffleInput = () => {
@@ -176,8 +190,7 @@ export function useLiveInput<I>(
     const current = fields[listFieldKey] ?? "";
     const next = { ...fields, [listFieldKey]: current ? `${current}, ${raw}` : raw };
     try {
-      pushInput(module.parseInput(next) as I);
-      liveActionRef.current = true;
+      commitOperation("insert", module.parseInput(next) as I, `inserting ${raw}`);
       toast.success(t("shell.toastInserted", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
@@ -196,8 +209,7 @@ export function useLiveInput<I>(
     tokens.splice(idx, 1);
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
-      pushInput(module.parseInput(next) as I);
-      liveActionRef.current = true;
+      commitOperation("delete", module.parseInput(next) as I, `removing ${raw}`);
       toast.success(t("shell.toastRemoved", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotRemove"));
@@ -216,8 +228,7 @@ export function useLiveInput<I>(
     tokens[idx] = newRaw.trim();
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
-      pushInput(module.parseInput(next) as I);
-      liveActionRef.current = true;
+      commitOperation("update", module.parseInput(next) as I, `changing ${oldRaw} to ${newRaw}`);
       toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotEdit"));
@@ -229,8 +240,7 @@ export function useLiveInput<I>(
     const fields = module.serializeInput(input);
     const next = { ...fields, [searchFieldKey]: raw };
     try {
-      pushInput(module.parseInput(next) as I);
-      liveActionRef.current = true;
+      commitOperation("search", module.parseInput(next) as I, `searching for ${raw}`);
       toast.success(t("shell.toastSearching", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotSearch"));
@@ -257,5 +267,6 @@ export function useLiveInput<I>(
     searchValue,
     commitLiveFields,
     consumeLiveActionFlag,
+    consumeOperation,
   };
 }

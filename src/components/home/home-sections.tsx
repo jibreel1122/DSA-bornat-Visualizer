@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Accessibility,
+  ArrowLeft,
   ArrowRight,
   Code2,
   FlaskConical,
@@ -26,7 +27,8 @@ const fadeUp = {
 };
 
 export function Hero({ algoCount }: { algoCount: number }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const ForwardArrow = locale === "ar" ? ArrowLeft : ArrowRight;
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 hero-grid" />
@@ -51,7 +53,7 @@ export function Hero({ algoCount }: { algoCount: number }) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="lg" asChild>
               <Link href="/algorithms">
-                {t("home.heroExploreAlgorithms")} <ArrowRight />
+                {t("home.heroExploreAlgorithms")} <ForwardArrow />
               </Link>
             </Button>
             <Button size="lg" variant="secondary" asChild>
@@ -138,7 +140,8 @@ export function Stats({ algoCount, categoryCount }: { algoCount: number; categor
 }
 
 export function CategoryShowcase() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const ForwardArrow = locale === "ar" ? ArrowLeft : ArrowRight;
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <motion.div {...fadeUp} transition={{ duration: 0.4 }} className="mb-10 text-center">
@@ -156,7 +159,7 @@ export function CategoryShowcase() {
                     <c.icon className="size-5" />
                   </span>
                   <h3 className="font-semibold transition-colors group-hover:text-primary">{c.short}</h3>
-                  <ArrowRight className="ms-auto size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                  <ForwardArrow className="ms-auto size-4 text-muted-foreground transition-transform group-hover:text-primary" />
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{c.description}</p>
               </Card>
@@ -169,7 +172,8 @@ export function CategoryShowcase() {
 }
 
 export function FinalCta() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const ForwardArrow = locale === "ar" ? ArrowLeft : ArrowRight;
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
       <motion.div {...fadeUp} transition={{ duration: 0.4 }}>
@@ -185,7 +189,7 @@ export function FinalCta() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button size="lg" asChild>
                 <Link href="/algorithms">
-                  {t("home.ctaStartExploring")} <ArrowRight />
+                  {t("home.ctaStartExploring")} <ForwardArrow />
                 </Link>
               </Button>
               <Button size="lg" variant="secondary" asChild>

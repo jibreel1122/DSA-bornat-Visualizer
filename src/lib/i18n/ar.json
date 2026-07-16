@@ -469,5 +469,22 @@
   "nn.zWeightedSum": "z (المجموع الموزون)",
   "nn.weightedSumLabel": "المجموع الموزون",
   "nn.backpropNote": "أثناء الانتشار الخلفي، يستقبل هذا العصبون إشارة الخطأ δ = {delta}. تدرّج كل وزن هو δ·aᵢ، لذا يُعدّل الانحدار التدريجي w بمقدار −learningRate·δ·aᵢ.",
-  "nn.clickToEdit": "انقر للتعديل"
+  "nn.clickToEdit": "انقر للتعديل",
+  "learning.why": "لماذا يهم",
+  "learning.realWorld": "عرض من العالم الواقعي",
+  "learning.debug": "التصحيح",
+  "learning.phase": "المرحلة",
+  "learning.variables": "المتغيرات",
+  "learning.condition": "الشرط",
+  "learning.replayTransformation": "إعادة تشغيل التحويل البنيوي",
+  "learning.skipTransformation": "تخطي التحويل البنيوي",
+  "settings.learning": "تفضيلات التعلم",
+  "settings.debugMode": "وضع التصحيح",
+  "settings.debugModeDesc": "إظهار المتغيرات والمؤشرات والشروط وتفاصيل التنفيذ الداخلية في المصورات.",
+  "settings.realWorldMode": "عرض واقعي",
+  "settings.realWorldModeDesc": "إظهار تشبيه من الحياة اليومية بدون تغيير إطارات الخوارزمية.",
+  "settings.gamification": "تحفيز الدراسة",
+  "settings.gamificationDesc": "تتبع XP والسلسلة والتحديات والإنجازات. يمكنك إيقافه في أي وقت.",
+  "settings.pauseTransforms": "إيقاف قبل التحولات",
+  "settings.pauseTransformsDesc": "إيقاف الرسوم قبل الموازنة وتغيير الحجم وإعادة البناء والتحولات المشابهة."
 }

@@ -16,11 +16,12 @@ import { useLocale } from "@/lib/i18n";
 interface LoadedQ extends QuizQuestion {
   source: string;
   category: CategoryId;
+  slug: string;
 }
 
 const MAX_Q = 10;
 
-export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correct: boolean) => void }) {
+export function QuizSprint({ onRecord }: { onRecord: (categoryId: CategoryId, correct: boolean, slug: string) => void }) {
   const { t } = useLocale();
   const [category, setCategory] = React.useState<CategoryId | "all">("all");
   const [phase, setPhase] = React.useState<"idle" | "loading" | "playing" | "done">("idle");
@@ -44,7 +45,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
       const mod = await loadAlgorithm(meta.slug);
       if (!mod) continue;
       for (const q of mod.content.quiz) {
-        pool.push({ ...q, source: meta.title, category: meta.category });
+        pool.push({ ...q, source: meta.title, category: meta.category, slug: meta.slug });
       }
     }
     const chosen = rng.shuffle(pool).slice(0, MAX_Q);
@@ -68,7 +69,7 @@ export function QuizSprint({ onRecord }: { onRecord: (categoryId: string, correc
     setPicked(i);
     const correct = i === q.answer;
     if (correct) setScore((s) => s + (hintUsed ? 0.5 : 1));
-    onRecord(q.category, correct);
+    onRecord(q.category, correct, q.slug);
   };
 
   const next = () => {

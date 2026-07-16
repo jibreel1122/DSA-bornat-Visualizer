@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrayView } from "@/components/visualizer/renderers/array-view";
 import { ALGORITHMS, loadAlgorithm } from "@/lib/algorithms";
-import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
+import type { AlgorithmModule, ArrayFrame, CategoryId, Step } from "@/lib/engine/types";
 import { createRNG, randomSeed } from "@/lib/engine/random";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n";
@@ -20,6 +20,8 @@ interface Challenge {
   options: number[][];
   answer: number;
   source: string;
+  slug: string;
+  category: CategoryId;
 }
 
 function arraysEqual(a: number[], b: number[]) {
@@ -85,10 +87,12 @@ async function buildChallenge(): Promise<Challenge | null> {
     options: shuffled,
     answer: answer < 0 ? 0 : answer,
     source: meta.title,
+    slug: meta.slug,
+    category: meta.category,
   };
 }
 
-export function PredictStep({ onRecord }: { onRecord: (categoryId: string, correct: boolean) => void }) {
+export function PredictStep({ onRecord }: { onRecord: (categoryId: CategoryId, correct: boolean, slug: string) => void }) {
   const { t } = useLocale();
   const [phase, setPhase] = React.useState<"idle" | "loading" | "playing" | "done">("idle");
   const [challenge, setChallenge] = React.useState<Challenge | null>(null);
@@ -122,7 +126,7 @@ export function PredictStep({ onRecord }: { onRecord: (categoryId: string, corre
     setPicked(i);
     const correct = i === challenge.answer;
     if (correct) setScore((s) => s + 1);
-    onRecord("sorting", correct);
+    onRecord(challenge.category, correct, challenge.slug);
   };
 
   const next = () => {

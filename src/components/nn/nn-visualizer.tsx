@@ -415,13 +415,14 @@ export function NNVisualizer() {
             <CardTitle className="text-base">{t("nn.calculationInspector")}</CardTitle>
             {neuronSequence.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <Button variant="ghost" size="icon-sm" onClick={stepPrev} disabled={stepIndex === 0} aria-label={t("shell.shortcutPrevStep")}>
+                {/* Inspector steps are chronological, so their arrow geometry is deliberately fixed in RTL too. */}
+                <Button dir="ltr" variant="ghost" size="icon-sm" onClick={stepPrev} disabled={stepIndex === 0} aria-label={t("shell.shortcutPrevStep")}>
                   <ChevronLeft />
                 </Button>
                 <span dir="ltr" className="font-mono text-xs text-muted-foreground">
                   {t("nn.stepOf", { current: stepIndex < 0 ? "–" : stepIndex + 1, total: neuronSequence.length })}
                 </span>
-                <Button variant="ghost" size="icon-sm" onClick={stepNext} disabled={stepIndex === neuronSequence.length - 1} aria-label={t("shell.shortcutNextStep")}>
+                <Button dir="ltr" variant="ghost" size="icon-sm" onClick={stepNext} disabled={stepIndex === neuronSequence.length - 1} aria-label={t("shell.shortcutNextStep")}>
                   <ChevronRight />
                 </Button>
               </div>

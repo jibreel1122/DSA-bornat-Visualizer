@@ -84,6 +84,48 @@ export interface Step<F = unknown> {
   /** Counters at this step — usually CUMULATIVE (e.g. { comparisons: 3, swaps: 1 }),
    *  but some are live gauges that can fall (e.g. recursion depth, live item count). */
   counters?: Record<string, number>;
+  /** Optional semantic phase such as compare, relax, rotate, or backtrack. */
+  phase?: string;
+  /** A learner-focused explanation of why this transition is necessary. */
+  why?: string;
+  /** Translation of `why` for the Arabic locale. */
+  whyAr?: string;
+  /**
+   * Marks a structural change (rotation, resize, rehash, rebuild, ...). The
+   * player can pause before these steps so learners can inspect the change.
+   */
+  transformation?: {
+    kind: "balance" | "rebuild" | "resize" | "reorder" | "rehash" | "other";
+    label?: string;
+  };
+  /** Optional state exposed only when Debug Mode is enabled. */
+  debug?: DebugInfo;
+  /** Optional real-world lens rendered over the exact same frame. */
+  realWorld?: RealWorldExplanation;
+}
+
+export interface DebugInfo {
+  variables?: Record<string, string | number | boolean | null>;
+  pointers?: Record<string, string | number | null>;
+  condition?: string;
+  dataStructures?: { label: string; values: (string | number)[] }[];
+  operation?: string;
+}
+
+export interface RealWorldExplanation {
+  title: string;
+  description: string;
+  titleAr?: string;
+  descriptionAr?: string;
+}
+
+export type LiveOperationKind = "insert" | "delete" | "update" | "search" | "edit-grid" | "replace";
+
+export interface OperationRequest<I = unknown> {
+  kind: LiveOperationKind;
+  before: I;
+  after: I;
+  detail?: string;
 }
 
 /** Hard cap on generated steps; generators must stop and note truncation. */
@@ -365,6 +407,12 @@ export interface AlgorithmModule<F = unknown, I = unknown> {
   parseInput: (fields: Record<string, string>) => I;
   serializeInput: (input: I) => Record<string, string>;
   generate: (input: I) => Step<F>[];
+  /**
+   * Optional operation-level generator. Modules that provide it can animate a
+   * mutation from the current structure without replaying their whole run.
+   * Modules without it use the shared reversible bridge in `incremental.ts`.
+   */
+  generateOperation?: (operation: OperationRequest<I>) => Step<F>[];
 }
 
 /** Lightweight metadata used by nav/search/category pages (no content). */

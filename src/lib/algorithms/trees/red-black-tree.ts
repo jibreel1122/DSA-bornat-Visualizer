@@ -128,6 +128,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `العم أسود، ${value} ابن داخلي (LR) ← أجرِ دورانًا يساريًا للأب أولًا.`,
             );
             rotateLeft(parent);
+            toFrame({}, "Complete the left rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليساري عند الأب؛ افحص حالة الخط بعد التحويل.");
             z = parent;
           }
           // Case 3: line → recolor + rotate grandparent
@@ -142,6 +143,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يمينيًا للجد.`,
           );
           rotateRight(grand);
+          toFrame({}, "Complete the right rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليميني عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.");
         }
       } else {
         const uncle = grand.left;
@@ -168,6 +170,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `العم أسود، ${value} ابن داخلي (RL) ← أجرِ دورانًا يمينيًا للأب أولًا.`,
             );
             rotateRight(parent);
+            toFrame({}, "Complete the right rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليميني عند الأب؛ افحص حالة الخط بعد التحويل.");
             z = parent;
           }
           z.parent!.color = "black";
@@ -181,6 +184,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يساريًا للجد.`,
           );
           rotateLeft(grand);
+          toFrame({}, "Complete the left rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليساري عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.");
         }
       }
     }

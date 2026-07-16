@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Dices, Eraser, ListMinus, ListPlus, Pencil, Plus, Redo2, Search, Undo2, X } from "lucide-react";
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Dices, Eraser, Gauge, ListMinus, ListPlus, Pause, Pencil, Play, Plus, Redo2, RotateCcw, Save, Search, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { byCategory, loadAlgorithm } from "@/lib/algorithms";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { LEVELS, type AlgorithmMeta, type AlgorithmModule, type CategoryId, type Level } from "@/lib/engine/types";
@@ -97,6 +98,11 @@ export function CompareShell({ category }: { category: CategoryId }) {
   };
 
   const synced = session.mode === "synced";
+  const saveComparison = () => {
+    const existing = (() => { try { return JSON.parse(localStorage.getItem("bdsv:saved-comparisons") ?? "[]") as unknown[]; } catch { return []; } })();
+    const key = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem("bdsv:saved-comparisons", JSON.stringify([...existing, { key, label: `${info.short}: ${slugs.map((slug) => modules[slug]?.title ?? slug).join(" vs ")}`, payload: { category, slugs, mode: session.mode, strategy: session.strategy, level: session.level, savedAt: Date.now() } }].slice(-30)));
+  };
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
@@ -154,6 +160,9 @@ export function CompareShell({ category }: { category: CategoryId }) {
             <X /> {t("compare.removePanel")}
           </Button>
         )}
+        <Button variant="ghost" size="sm" onClick={saveComparison}>
+          <Save /> Save comparison
+        </Button>
       </div>
 
       {/* shared control bar (synced mode) */}
@@ -162,6 +171,7 @@ export function CompareShell({ category }: { category: CategoryId }) {
           session={session}
           listFieldKey={listFieldKey}
           searchFieldKey={searchFieldKey}
+          algorithms={slugs.map((slug) => modules[slug]).filter((module): module is AlgorithmModule => !!module)}
         />
       )}
 
@@ -176,6 +186,8 @@ export function CompareShell({ category }: { category: CategoryId }) {
                   module={mod}
                   showBuilderBar={!synced}
                   onLiveReady={synced ? session.register(i) : undefined}
+                  sharedPlayback={synced ? session.playback : undefined}
+                  panelIndex={i}
                 />
               ) : (
                 <Card className="grid h-96 place-items-center text-sm text-muted-foreground">
@@ -194,16 +206,19 @@ function SharedBar({
   session,
   listFieldKey,
   searchFieldKey,
+  algorithms,
 }: {
   session: CompareSession;
   listFieldKey: string | undefined;
   searchFieldKey: string | undefined;
+  algorithms: AlgorithmModule[];
 }) {
   const { t } = useLocale();
   const run = (fn: (live: LiveInput) => void) => session.broadcast(fn);
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2">
+    <div className="mb-4 grid gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1.5">
       <span className="me-1 text-xs font-medium text-primary">{t("compare.sharedControls")}</span>
 
       <Select value={String(session.level)} onValueChange={(v) => session.changeLevel(Number(v) as Level)}>
@@ -216,6 +231,15 @@ function SharedBar({
               {t(LEVEL_LABEL_KEYS[l.level])}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={session.strategy} onValueChange={(value) => session.setStrategy(value as "progress" | "phase" | "operation")}>
+        <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="progress">Relative progress</SelectItem>
+          <SelectItem value="phase">Matching phases</SelectItem>
+          <SelectItem value="operation">Matching operations</SelectItem>
         </SelectContent>
       </Select>
 
@@ -280,6 +304,31 @@ function SharedBar({
       <Button variant="ghost" size="sm" onClick={() => run((l) => l.redo())}>
         <Redo2 /> {t("shell.redo")}
       </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-primary/15 pt-2">
+        <Button variant="ghost" size="icon-sm" aria-label={t("shell.reset")} onClick={session.reset} disabled={session.atStart}><RotateCcw /></Button>
+        <Button variant="ghost" size="icon-sm" aria-label={t("shell.firstStep")} onClick={session.reset} disabled={session.atStart}><ChevronFirst /></Button>
+        <Button variant="ghost" size="icon-sm" aria-label={t("shell.previous")} onClick={session.prev} disabled={session.atStart}><ChevronLeft /></Button>
+        <Button size="icon-sm" className="rounded-full" aria-label={session.playing ? t("shell.pause") : t("shell.play")} onClick={session.toggle}>{session.playing ? <Pause /> : <Play />}</Button>
+        <Button variant="ghost" size="icon-sm" aria-label={t("shell.next")} onClick={session.next} disabled={session.atEnd}><ChevronRight /></Button>
+        <Button variant="ghost" size="icon-sm" aria-label={t("shell.lastStep")} onClick={session.goToEnd} disabled={session.atEnd}><ChevronLast /></Button>
+        <Slider value={[session.clock]} min={0} max={1} step={1 / Math.max(1, session.maxLength - 1)} onValueChange={([value]) => session.goto(value)} className="min-w-32 flex-1" aria-label={t("shell.stepScrubber")} />
+        <Gauge className="size-4 text-muted-foreground" />
+        <Slider value={[session.speed]} min={0.25} max={4} step={0.25} onValueChange={([value]) => session.setSpeed(value)} className="w-24" aria-label={t("shell.animationSpeed")} />
+        <span className="w-10 font-mono text-xs text-muted-foreground">{session.speed}×</span>
+        <span className="text-xs text-muted-foreground">{Math.round(session.clock * Math.max(0, session.maxLength - 1)) + 1}/{session.maxLength}</span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-primary/15 pt-2 text-xs text-muted-foreground">
+        <span><strong className="text-foreground">Step:</strong> {session.referenceStep?.phase ?? "prepare"}</span>
+        {Object.entries(session.referenceStep?.counters ?? {}).slice(0, 3).map(([label, value]) => <span key={label}><strong className="text-foreground">{label}:</strong> {value}</span>)}
+        <span><strong className="text-foreground">Alignment:</strong> {session.strategy === "progress" ? "relative timeline" : session.strategy === "phase" ? "semantic phase when available" : "operation marker when available"}</span>
+      </div>
+
+      <div className="border-t border-primary/15 pt-2 text-xs text-muted-foreground">
+        <strong className="text-foreground">Comparison takeaway:</strong> {algorithms.map((algorithm) => `${algorithm.title} (${algorithm.difficulty})`).join(" vs ")}. Use the same input and inspect steps, counters, and the stated trade-offs in each panel; matching phases align conceptually, while relative progress remains the safe fallback.
+      </div>
     </div>
   );
 }

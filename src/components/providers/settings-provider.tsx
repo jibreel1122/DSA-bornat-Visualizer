@@ -11,6 +11,11 @@ export interface AppSettings {
   largeText: boolean;
   defaultSpeed: number;
   defaultLevel: Level;
+  /** Advanced aids remain opt-in so the standard study surface stays focused. */
+  debugMode: boolean;
+  realWorldMode: boolean;
+  gamification: boolean;
+  pauseBeforeTransformations: boolean;
 }
 
 const DEFAULTS: AppSettings = {
@@ -19,6 +24,10 @@ const DEFAULTS: AppSettings = {
   largeText: false,
   defaultSpeed: 1,
   defaultLevel: 2,
+  debugMode: false,
+  realWorldMode: false,
+  gamification: true,
+  pauseBeforeTransformations: true,
 };
 
 interface SettingsContextValue {

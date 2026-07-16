@@ -12,7 +12,7 @@ export interface ZoomPanHandle {
 }
 
 /**
- * Zoom (wheel / buttons) + pan (drag background) container for the canvas.
+ * Button-only zoom + pan (drag background) container for the canvas.
  * Transform is CSS-only so renderer animations stay GPU-composited.
  */
 export const ZoomPan = React.forwardRef<
@@ -39,10 +39,6 @@ export const ZoomPan = React.forwardRef<
   return (
     <div
       className="relative h-full w-full overflow-hidden"
-      onWheel={(e) => {
-        if (e.ctrlKey) return; // let browser-level pinch zoom be
-        zoom(e.deltaY < 0 ? 0.12 : -0.12);
-      }}
       onPointerDown={(e) => {
         // pan only from the background, not interactive children (graph nodes)
         if ((e.target as Element).closest("[data-viz-interactive]")) return;

@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { Monitor, Moon, Sun, Trash2 } from "lucide-react";
+import { Monitor, Moon, Sun, Trash2, UserRound } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -93,6 +94,49 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Account & sync</CardTitle>
+            <CardDescription>Optional. Guest data stays in this browser; an account adds cross-device synchronization and recovery.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="secondary" asChild><Link href="/account"><UserRound /> Manage account</Link></Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("settings.learning")}</CardTitle>
+            <CardDescription>Optional study aids stay out of the way until you enable them.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-1">
+            <ToggleRow
+              label={t("settings.debugMode")}
+              desc={t("settings.debugModeDesc")}
+              checked={settings.debugMode}
+              onChange={(v) => update({ debugMode: v })}
+            />
+            <ToggleRow
+              label={t("settings.realWorldMode")}
+              desc={t("settings.realWorldModeDesc")}
+              checked={settings.realWorldMode}
+              onChange={(v) => update({ realWorldMode: v })}
+            />
+            <ToggleRow
+              label={t("settings.pauseTransforms")}
+              desc={t("settings.pauseTransformsDesc")}
+              checked={settings.pauseBeforeTransformations}
+              onChange={(v) => update({ pauseBeforeTransformations: v })}
+            />
+            <ToggleRow
+              label={t("settings.gamification")}
+              desc={t("settings.gamificationDesc")}
+              checked={settings.gamification}
+              onChange={(v) => update({ gamification: v })}
+            />
           </CardContent>
         </Card>
 

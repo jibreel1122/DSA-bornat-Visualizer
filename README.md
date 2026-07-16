@@ -125,6 +125,10 @@ npm run check      # typecheck + lint (zero warnings) + all tests
 All state (favorites, notes, saved runs, quiz progress, language) lives in
 `localStorage` — no backend, fully static-exportable.
 
+### Optional accounts and sync
+
+Guests can use the entire platform without registration. A PostgreSQL-backed account layer is available for cross-device synchronization, password recovery, account export, and deletion. See [the VPS deployment guide](docs/DEPLOYMENT.md) and `.env.example` to enable it.
+
 ## Testing
 
 `npm test` runs 3,000+ Vitest tests:

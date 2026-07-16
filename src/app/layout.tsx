@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/components/providers/settings-provider";
+import { LearningProvider } from "@/components/providers/learning-provider";
 import { LocaleProvider } from "@/lib/i18n";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LocaleProvider>
             <SettingsProvider>
+              <LearningProvider>
               <TooltipProvider delayDuration={250}>
                 <div className="flex min-h-screen flex-col">
                   <Navbar />
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <Toaster richColors position="bottom-right" />
               </TooltipProvider>
+              </LearningProvider>
             </SettingsProvider>
           </LocaleProvider>
         </ThemeProvider>

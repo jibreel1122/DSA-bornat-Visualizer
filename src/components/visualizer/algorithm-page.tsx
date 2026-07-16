@@ -9,6 +9,7 @@ import {
   Braces,
   BrainCircuit,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Lightbulb,
@@ -78,7 +79,8 @@ export function AlgorithmPage({ meta }: { meta: AlgorithmMeta }) {
           <Link href={`/${meta.category}`} className="transition-colors hover:text-foreground">
             {category.title}
           </Link>
-          <ChevronRight className="size-3.5" />
+          {/* Breadcrumbs point toward the current page: choose the logical arrow explicitly, never CSS-mirror it. */}
+          {ar ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
           <span className="text-foreground">{title}</span>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-3">
