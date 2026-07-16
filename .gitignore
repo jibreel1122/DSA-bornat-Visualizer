@@ -17,3 +17,6 @@ yarn-error.log*
 next-env.d.ts
 # local
 .env*.local
+.env
+.env.*
+!.env.example
