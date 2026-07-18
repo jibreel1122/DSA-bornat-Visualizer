@@ -234,6 +234,15 @@ export function VisualizerShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
 
+  const draftPlayerAtEnd = player.atEnd;
+  const draftPlayerPlaying = player.playing;
+  const runDraft = live.runDraft;
+  const togglePlayer = player.toggle;
+  const togglePlayback = React.useCallback(() => {
+    if (!draftPlayerPlaying && draftPlayerAtEnd && runDraft() !== "none") return;
+    togglePlayer();
+  }, [draftPlayerAtEnd, draftPlayerPlaying, runDraft, togglePlayer]);
+
   // ---- refs ----
   const rootRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -383,7 +392,7 @@ export function VisualizerShell({
       switch (e.key) {
         case " ":
           e.preventDefault();
-          player.toggle();
+          togglePlayback();
           break;
         case "ArrowRight":
           player.next();
@@ -411,7 +420,7 @@ export function VisualizerShell({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.toggle, player.next, player.prev, player.reset, player.setSpeed, player.speed]);
+  }, [togglePlayback, player.next, player.prev, player.reset, player.setSpeed, player.speed]);
 
   const canUndo = live.canUndo;
   const canRedo = live.canRedo;
@@ -565,7 +574,7 @@ export function VisualizerShell({
               </IconBtn>
               <Button
                 size="icon"
-                onClick={player.toggle}
+                onClick={togglePlayback}
                 aria-label={player.playing ? t("shell.pause") : t("shell.play")}
                 className="mx-1 rounded-full shadow-lg shadow-primary/30"
               >

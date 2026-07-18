@@ -49,6 +49,8 @@ export interface LiveInput<I = unknown> {
   searchFieldKey: string | undefined;
   canSearch: boolean;
   draftMutation: DraftMutation | undefined;
+  /** Promotes a set built through repeated Insert actions into the full algorithm timeline. */
+  runDraft: () => "none" | "started" | "invalid";
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
@@ -251,20 +253,20 @@ export function useLiveInput<I>(
     const startingFresh = Boolean(actionOptions?.startNewSet) && !draftMutation;
     const before = startingFresh ? [] : currentTokens;
     const tokens = [...before, ...incoming];
+    if ((startingFresh || draftMutation) && canVisualizeDraft(module.renderer, tokens)) {
+      setDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` });
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.toastInserted", { value: raw }));
+      return;
+    }
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("insert", module.parseInput(next) as I, `inserting ${raw}`);
       setDraftMutation(undefined);
       toast.success(t("shell.toastInserted", { value: raw }));
     } catch (e) {
-      if ((startingFresh || draftMutation) && canVisualizeDraft(module.renderer, tokens)) {
-        setDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` });
-        operationRef.current = undefined;
-        liveActionRef.current = true;
-        setRevision((value) => value + 1);
-        toast.success(t("shell.toastInserted", { value: raw }));
-        return;
-      }
       toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
     }
   };
@@ -282,6 +284,14 @@ export function useLiveInput<I>(
     }
     const before = [...tokens];
     tokens.splice(idx, 1);
+    if (draftMutation && canVisualizeDraft(module.renderer, tokens)) {
+      setDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` });
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.toastRemoved", { value: raw }));
+      return;
+    }
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("delete", module.parseInput(next) as I, `removing ${raw}`);
@@ -313,6 +323,14 @@ export function useLiveInput<I>(
     }
     const before = [...tokens];
     tokens[idx] = newRaw.trim();
+    if (draftMutation && canVisualizeDraft(module.renderer, tokens)) {
+      setDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` });
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
+      return;
+    }
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("update", module.parseInput(next) as I, `changing ${oldRaw} to ${newRaw}`);
@@ -333,6 +351,13 @@ export function useLiveInput<I>(
 
   const searchValue = (raw: string) => {
     if (!canSearch) return;
+    if (draftMutation) {
+      operationRef.current = { kind: "search", before: input, after: input, detail: `searching for ${raw}`, value: raw };
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.toastSearching", { value: raw }));
+      return;
+    }
     const fields = module.serializeInput(input);
     const next = searchFieldKey ? { ...fields, [searchFieldKey]: raw } : fields;
     try {
@@ -340,6 +365,25 @@ export function useLiveInput<I>(
       toast.success(t("shell.toastSearching", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotSearch"));
+    }
+  };
+
+  const runDraft = (): "none" | "started" | "invalid" => {
+    if (!draftMutation || !listFieldKey) return "none";
+    const fields = module.serializeInput(input);
+    try {
+      const parsed = module.parseInput({ ...fields, [listFieldKey]: draftMutation.after.join(", ") }) as I;
+      setDraftMutation(undefined);
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      pushInput(parsed);
+      setRevision((value) => value + 1);
+      const algorithm = locale === "ar" ? module.titleAr ?? module.title : module.title;
+      toast.success(t("shell.customInitialized", { algorithm }));
+      return "started";
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("shell.invalidInput"));
+      return "invalid";
     }
   };
 
@@ -352,6 +396,7 @@ export function useLiveInput<I>(
     searchFieldKey,
     canSearch,
     draftMutation,
+    runDraft,
     canUndo: hIndex > 0,
     canRedo: hIndex < history.length - 1,
     undo: () => setHIndex((i) => Math.max(0, i - 1)),

@@ -18,6 +18,20 @@ describe("draft dataset visualization", () => {
     expect(steps[1].descriptionAr).toContain("مباشرة");
   });
 
+  it("keeps existing values mounted and animates only the next insertion", () => {
+    const steps = buildDraftMutationSteps("array", {
+      before: ["7"],
+      after: ["7", "3"],
+      kind: "insert",
+      detail: "inserting 3",
+    });
+
+    expect((steps[0].frame as ArrayFrame).values).toEqual([7]);
+    expect((steps[1].frame as ArrayFrame).values).toEqual([7, 3]);
+    expect((steps[1].frame as ArrayFrame).states).toEqual({ 1: "active" });
+    expect((steps[1].frame as ArrayFrame).pointers).toEqual([{ index: 1, label: "new" }]);
+  });
+
   it("preserves list and tree structure while a below-minimum set is edited", () => {
     const list = buildDraftMutationSteps("list", {
       before: ["A", "B"],

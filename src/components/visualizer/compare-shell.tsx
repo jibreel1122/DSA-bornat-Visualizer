@@ -228,6 +228,18 @@ function SharedBar({
     session.broadcast(fn);
     session.restartAndPlay();
   };
+  const togglePlayback = () => {
+    if (!session.playing && session.atEnd) {
+      const results: ReturnType<LiveInput["runDraft"]>[] = [];
+      session.broadcast((live) => results.push(live.runDraft()));
+      if (results.includes("invalid")) return;
+      if (results.includes("started")) {
+        session.restartAndPlay();
+        return;
+      }
+    }
+    session.toggle();
+  };
 
   const randomize = () => {
     session.syncDataset(session.level);
@@ -344,7 +356,7 @@ function SharedBar({
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.reset")} onClick={session.reset} disabled={session.atStart}><RotateCcw /></Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.firstStep")} onClick={session.reset} disabled={session.atStart}><ChevronFirst /></Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.previous")} onClick={session.prev} disabled={session.atStart}><ChevronLeft /></Button>
-        <Button size="icon-sm" className="rounded-full" aria-label={session.playing ? t("shell.pause") : t("shell.play")} onClick={session.toggle}>{session.playing ? <Pause /> : <Play />}</Button>
+        <Button size="icon-sm" className="rounded-full" aria-label={session.playing ? t("shell.pause") : t("shell.play")} onClick={togglePlayback}>{session.playing ? <Pause /> : <Play />}</Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.next")} onClick={session.next} disabled={session.atEnd}><ChevronRight /></Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.lastStep")} onClick={session.goToEnd} disabled={session.atEnd}><ChevronLast /></Button>
         <Slider value={[session.clock]} min={0} max={1} step={1 / Math.max(1, session.maxLength - 1)} onValueChange={([value]) => session.goto(value)} className="min-w-32 flex-1" aria-label={t("shell.stepScrubber")} />
