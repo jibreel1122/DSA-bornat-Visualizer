@@ -1,4 +1,5 @@
 import type {
+  AlgorithmModule,
   ArrayFrame,
   CallStackFrame,
   GraphFrame,
@@ -19,6 +20,55 @@ export interface DraftMutation {
   after: string[];
   kind: DraftMutationKind;
   detail: string;
+}
+
+function changedValue(mutation: DraftMutation) {
+  if (mutation.kind === "insert") return mutation.after.at(-1);
+  if (mutation.kind === "update") {
+    return mutation.after.find((value, index) => value !== mutation.before[index]);
+  }
+  return undefined;
+}
+
+function generatedTreeFrame<F, I>(
+  module: AlgorithmModule<F, I>,
+  input: I,
+  listFieldKey: string,
+  values: string[],
+  activeValue?: string,
+) {
+  if (values.length === 0) return undefined;
+  try {
+    const fields = module.serializeInput(input);
+    const parsed = module.parseInput({ ...fields, [listFieldKey]: values.join(", ") });
+    const frame = module.generate(parsed).at(-1)?.frame as TreeFrame | undefined;
+    if (!frame) return undefined;
+    const states = activeValue === undefined
+      ? {}
+      : Object.fromEntries(
+          Object.entries(frame.nodes)
+            .filter(([, node]) => String(node.value) === activeValue)
+            .slice(-1)
+            .map(([id]) => [id, "active" as const]),
+        );
+    return { ...frame, states };
+  } catch {
+    return undefined;
+  }
+}
+
+/** Uses the selected tree module's real generator so construction previews preserve its structural invariants and rotations. */
+export function resolveDraftMutationFrames<F, I>(
+  module: AlgorithmModule<F, I>,
+  input: I,
+  listFieldKey: string | undefined,
+  mutation: DraftMutation,
+) {
+  if (module.renderer !== "tree" || !listFieldKey) return undefined;
+  return {
+    before: generatedTreeFrame(module, input, listFieldKey, mutation.before),
+    after: generatedTreeFrame(module, input, listFieldKey, mutation.after, changedValue(mutation)),
+  };
 }
 
 function scalar(value: string): string | number {
@@ -57,15 +107,15 @@ function frameFor(renderer: RendererKind, values: string[], activeIndex = -1) {
   if (renderer === "tree") {
     const nodes: TreeFrame["nodes"] = {};
     values.forEach((value, index) => {
-      const id = `draft-${index}`;
-      const left = index * 2 + 1 < values.length ? `draft-${index * 2 + 1}` : null;
-      const right = index * 2 + 2 < values.length ? `draft-${index * 2 + 2}` : null;
+      const id = `n${index}`;
+      const left = index * 2 + 1 < values.length ? `n${index * 2 + 1}` : null;
+      const right = index * 2 + 2 < values.length ? `n${index * 2 + 2}` : null;
       nodes[id] = { id, value: scalar(value), left, right };
     });
     return {
       nodes,
-      rootId: values.length ? "draft-0" : null,
-      states: activeIndex >= 0 ? { [`draft-${activeIndex}`]: "active" as const } : {},
+      rootId: values.length ? "n0" : null,
+      states: activeIndex >= 0 ? { [`n${activeIndex}`]: "active" as const } : {},
       note: "Building a new set",
     } satisfies TreeFrame;
   }
@@ -138,13 +188,17 @@ function frameFor(renderer: RendererKind, values: string[], activeIndex = -1) {
 }
 
 /** A temporary, reversible visualization used while a learner builds a dataset that is still below an algorithm's minimum size. */
-export function buildDraftMutationSteps(renderer: RendererKind, mutation: DraftMutation): Step[] {
+export function buildDraftMutationSteps(
+  renderer: RendererKind,
+  mutation: DraftMutation,
+  resolved?: { before?: unknown; after?: unknown },
+): Step[] {
   const active = highlightedIndex(mutation);
   const action = mutation.kind === "update" ? "edit" : mutation.kind;
   const actionAr = mutation.kind === "insert" ? "الإدراج" : mutation.kind === "delete" ? "الحذف" : mutation.kind === "update" ? "التعديل" : mutation.kind === "clear" ? "المسح" : "الخلط";
   return [
     {
-      frame: frameFor(renderer, mutation.before),
+      frame: resolved?.before ?? frameFor(renderer, mutation.before),
       description: `Current set before ${mutation.detail}.`,
       descriptionAr: `المجموعة الحالية قبل ${actionAr}.`,
       phase: "prepare",
@@ -153,7 +207,7 @@ export function buildDraftMutationSteps(renderer: RendererKind, mutation: DraftM
       counters: { items: mutation.before.length },
     },
     {
-      frame: frameFor(renderer, mutation.after, active),
+      frame: resolved?.after ?? frameFor(renderer, mutation.after, active),
       description: `Apply ${action}: ${mutation.detail}. The new set is visible immediately.`,
       descriptionAr: `تنفيذ ${actionAr}: أصبحت المجموعة الجديدة ظاهرة مباشرة.`,
       phase: mutation.kind,

@@ -46,7 +46,7 @@ import { useVisualizerPlayer } from "@/lib/engine/player";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type ArrayFrame, type Level, type ListFrame, type Step, type TreeFrame } from "@/lib/engine/types";
 import { bridgeIncrementalSteps, enrichSteps } from "@/lib/engine/learning";
 import { buildGenericSearchSteps } from "@/lib/engine/search-steps";
-import { buildDraftMutationSteps } from "@/lib/engine/draft-steps";
+import { buildDraftMutationSteps, resolveDraftMutationFrames } from "@/lib/engine/draft-steps";
 import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
 import { useLearning } from "@/components/providers/learning-provider";
@@ -178,10 +178,17 @@ export function VisualizerShell({
             operation.value ?? "",
           )
         : [];
+      const draftSteps = live.draftMutation && !operation
+        ? buildDraftMutationSteps(
+            module.renderer,
+            live.draftMutation,
+            resolveDraftMutationFrames(module, input, listFieldKey, live.draftMutation),
+          )
+        : [];
       const generated = genericSearch.length > 0
         ? genericSearch
-        : live.draftMutation && !operation
-          ? buildDraftMutationSteps(module.renderer, live.draftMutation)
+        : draftSteps.length > 0
+          ? draftSteps
         : operation && module.generateOperation
           ? module.generateOperation(operation)
           : module.generate(input);
@@ -192,7 +199,7 @@ export function VisualizerShell({
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
-  }, [module, input, searchFieldKey, consumeOperation, live.draftMutation, t]);
+  }, [module, input, listFieldKey, searchFieldKey, consumeOperation, live.draftMutation, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);
