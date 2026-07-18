@@ -126,6 +126,8 @@ export interface OperationRequest<I = unknown> {
   before: I;
   after: I;
   detail?: string;
+  /** Raw lookup value for renderer-level search operations. */
+  value?: string;
 }
 
 /** Hard cap on generated steps; generators must stop and note truncation. */

@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Dices, Eraser, Gauge, ListMinus, ListPlus, Pause, Pencil, Play, Plus, Redo2, RotateCcw, Save, Search, Undo2, X } from "lucide-react";
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Dices, Eraser, Gauge, ListMinus, ListPlus, Pause, Pencil, Play, Plus, Redo2, RotateCcw, Save, Search, SlidersHorizontal, Undo2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -10,11 +11,14 @@ import { Slider } from "@/components/ui/slider";
 import { byCategory, loadAlgorithm } from "@/lib/algorithms";
 import { CATEGORY_MAP } from "@/lib/categories";
 import { LEVELS, type AlgorithmMeta, type AlgorithmModule, type CategoryId, type Level } from "@/lib/engine/types";
+import { supportsGenericSearch } from "@/lib/engine/search-steps";
+import { createRNG } from "@/lib/engine/random";
 import { listFieldKeyOf, searchFieldKeyOf, type LiveInput } from "@/lib/engine/use-live-input";
 import { useLocale } from "@/lib/i18n";
 import { useCompareSession, type CompareSession } from "./compare-session";
 import { VisualizerShell } from "./visualizer-shell";
 import { EditPromptButton, ValuePromptButton } from "./value-prompt-button";
+import { InputDialog } from "./input-dialog";
 
 const MAX_PANELS = 4;
 const LEVEL_LABEL_KEYS = {
@@ -58,6 +62,7 @@ export function CompareShell({ category }: { category: CategoryId }) {
 
   const referenceModule = modules[slugs[0]];
   const session = useCompareSession(referenceModule);
+  const { mode: sessionMode, level: sessionLevel, syncDataset } = session;
 
   const listFieldKey = referenceModule ? listFieldKeyOf(referenceModule) : undefined;
   const searchFieldKey = referenceModule ? searchFieldKeyOf(referenceModule) : undefined;
@@ -69,14 +74,16 @@ export function CompareShell({ category }: { category: CategoryId }) {
   // a mode switch from leaving the panels on divergent inputs.
   const lastSyncKey = React.useRef<string>("");
   React.useEffect(() => {
-    if (session.mode !== "synced" || !allLoaded) return;
-    const key = `${slugs.join("|")}@${session.level}`;
+    if (sessionMode !== "synced" || !allLoaded) return;
+    const key = `${slugs.join("|")}@${sessionLevel}`;
     if (lastSyncKey.current === key) return;
-    lastSyncKey.current = key;
     // let panels register their live inputs first
-    const id = window.setTimeout(() => session.syncDataset(session.level), 0);
+    const id = window.setTimeout(() => {
+      syncDataset(sessionLevel, { autoPlay: false });
+      lastSyncKey.current = key;
+    }, 0);
     return () => window.clearTimeout(id);
-  }, [session, slugs, allLoaded]);
+  }, [sessionMode, sessionLevel, syncDataset, slugs, allLoaded]);
 
   const setSlugAt = (index: number, slug: string) => {
     setSlugs((prev) => prev.map((s, i) => (i === index ? slug : s)));
@@ -213,10 +220,33 @@ function SharedBar({
   searchFieldKey: string | undefined;
   algorithms: AlgorithmModule[];
 }) {
-  const { t } = useLocale();
-  const run = (fn: (live: LiveInput) => void) => session.broadcast(fn);
+  const { t, locale } = useLocale();
+  const [inputOpen, setInputOpen] = React.useState(false);
+  const canSearch = Boolean(searchFieldKey || (listFieldKey && algorithms.every(supportsGenericSearch)));
+  const reference = algorithms[0];
+  const run = (fn: (live: LiveInput) => void) => {
+    session.broadcast(fn);
+    session.play();
+  };
+
+  const randomize = () => {
+    session.syncDataset(session.level);
+    const reference = algorithms[0];
+    const algorithm = locale === "ar" ? reference?.titleAr ?? reference?.title : reference?.title;
+    toast.success(t("shell.randomInitialized", {
+      algorithm: algorithm ?? t("compare.title", { category: "" }),
+      difficulty: t(LEVEL_LABEL_KEYS[session.level]),
+    }));
+  };
+
+  const applyCustomDataset = (fields: Record<string, string>) => {
+    session.applyDataset(fields);
+    const algorithm = locale === "ar" ? reference?.titleAr ?? reference?.title : reference?.title;
+    toast.success(t("shell.customInitialized", { algorithm: algorithm ?? "" }));
+  };
 
   return (
+    <>
     <div className="mb-4 grid gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2">
       <div className="flex flex-wrap items-center gap-1.5">
       <span className="me-1 text-xs font-medium text-primary">{t("compare.sharedControls")}</span>
@@ -243,11 +273,15 @@ function SharedBar({
         </SelectContent>
       </Select>
 
-      <Button variant="secondary" size="sm" onClick={() => session.syncDataset(session.level)}>
+      <Button variant="secondary" size="sm" onClick={randomize}>
         <Dices /> {t("shell.random")}
       </Button>
 
-      {(listFieldKey || searchFieldKey) && (
+      <Button variant="secondary" size="sm" onClick={() => setInputOpen(true)}>
+        <SlidersHorizontal /> {t("shell.customInput")}
+      </Button>
+
+      {(listFieldKey || canSearch) && (
         <div className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-background/60 p-1">
           {listFieldKey && (
             <ValuePromptButton
@@ -255,7 +289,7 @@ function SharedBar({
               label={t("shell.insertValue")}
               placeholder={t("shell.placeholderExample")}
               confirmLabel={t("shell.confirmInsert")}
-              onSubmit={(v) => run((l) => l.insertValue(v))}
+              onSubmit={(v) => run((l) => l.insertValue(v, { startNewSet: session.atStart && !session.playing }))}
               emphasized
             />
           )}
@@ -279,7 +313,7 @@ function SharedBar({
               onSubmit={(o, n) => run((l) => l.editValue(o, n))}
             />
           )}
-          {searchFieldKey && (
+          {canSearch && (
             <ValuePromptButton
               icon={<Search />}
               label={t("shell.searchValue")}
@@ -330,5 +364,16 @@ function SharedBar({
         <strong className="text-foreground">Comparison takeaway:</strong> {algorithms.map((algorithm) => `${algorithm.title} (${algorithm.difficulty})`).join(" vs ")}. Use the same input and inspect steps, counters, and the stated trade-offs in each panel; matching phases align conceptually, while relative progress remains the safe fallback.
       </div>
     </div>
+    {reference && (
+      <InputDialog
+        open={inputOpen}
+        onOpenChange={setInputOpen}
+        fields={reference.inputFields}
+        initial={session.getDatasetFields() ?? reference.serializeInput(reference.defaultInput(session.level, createRNG(1)))}
+        onSubmit={applyCustomDataset}
+        parseInput={reference.parseInput}
+      />
+    )}
+    </>
   );
 }

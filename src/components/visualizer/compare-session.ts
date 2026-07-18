@@ -29,6 +29,7 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const [speed, setSpeed] = React.useState(1);
   const registry = React.useRef<Map<number, LiveInput>>(new Map());
   const timelines = React.useRef<Map<number, Step[]>>(new Map());
+  const currentDataset = React.useRef<Record<string, string> | undefined>(undefined);
   const [, refreshTimelines] = React.useState(0);
 
   const referenceTimeline = timelines.current.get(0) ?? [];
@@ -43,17 +44,28 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
     return () => window.clearTimeout(timer);
   }, [playing, mode, clock, speed, maxLength]);
 
-  const register = React.useCallback((index: number) => (live: LiveInput) => { registry.current.set(index, live); }, []);
+  const register = React.useCallback((index: number) => (live: LiveInput) => {
+    const firstRegistration = !registry.current.has(index);
+    registry.current.set(index, live);
+    if (firstRegistration && mode === "synced" && currentDataset.current) {
+      try { live.applyFields(currentDataset.current, { announce: false, autoPlay: false }); } catch { /* incompatible panels keep their own valid input */ }
+    }
+  }, [mode]);
   const unregister = React.useCallback((index: number) => { registry.current.delete(index); timelines.current.delete(index); refreshTimelines((n) => n + 1); }, []);
   const broadcast = React.useCallback((fn: (live: LiveInput) => void) => { for (const live of registry.current.values()) fn(live); }, []);
 
-  const syncDataset = React.useCallback((lvl: Level) => {
+  const applyDataset = React.useCallback((fields: Record<string, string>, options?: { autoPlay?: boolean }) => {
+    currentDataset.current = fields;
+    broadcast((live) => { try { live.applyFields(fields, { announce: false }); } catch { /* incompatible fields keep their own valid input */ } });
+    setClock(0);
+    setPlaying(options?.autoPlay !== false);
+  }, [broadcast]);
+
+  const syncDataset = React.useCallback((lvl: Level, options?: { autoPlay?: boolean }) => {
     if (!referenceModule) return;
     const fields = referenceModule.serializeInput(referenceModule.defaultInput(lvl, createRNG(randomSeed())));
-    broadcast((live) => { try { live.applyFields(fields); } catch { /* incompatible fields keep their own valid input */ } });
-    setClock(0);
-    setPlaying(false);
-  }, [referenceModule, broadcast]);
+    applyDataset(fields, options);
+  }, [referenceModule, applyDataset]);
 
   const changeLevel = React.useCallback((lvl: Level) => { setLevel(lvl); syncDataset(lvl); }, [syncDataset]);
   const reportTimeline = React.useCallback((panel: number, steps: Step[]) => {
@@ -82,8 +94,11 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const reset = React.useCallback(() => goto(0), [goto]);
   const goToEnd = React.useCallback(() => goto(1), [goto]);
   const toggle = React.useCallback(() => { if (clock >= 1) setClock(0); setPlaying((value) => !value); }, [clock]);
+  const play = React.useCallback(() => { if (clock >= 1) setClock(0); setPlaying(true); }, [clock]);
 
-  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, syncDataset, playback, clock, playing, speed, setSpeed, toggle, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, referenceStep, maxLength };
+  const getDatasetFields = React.useCallback(() => currentDataset.current, []);
+
+  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, applyDataset, getDatasetFields, syncDataset, playback, clock, playing, speed, setSpeed, toggle, play, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, referenceStep, maxLength };
 }
 
 export type CompareSession = ReturnType<typeof useCompareSession>;

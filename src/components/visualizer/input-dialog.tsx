@@ -16,7 +16,6 @@ import { Input, Label } from "@/components/ui/input";
 import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { InputField } from "@/lib/engine/types";
-import { ChipListInput, isListValue } from "./chip-list-input";
 
 /**
  * Figures out which field(s) are responsible for a parseInput failure.
@@ -122,30 +121,22 @@ export function InputDialog({
         >
           {fields.map((f) => {
             const raw = values[f.key] ?? "";
-            const asList = isListValue(raw);
             const fieldError = fieldErrors[f.key];
             return (
               <div key={f.key} className="grid gap-1.5">
                 <Label htmlFor={`field-${f.key}`}>{f.label}</Label>
-                {asList ? (
-                  <ChipListInput
-                    value={raw}
-                    onChange={(next) => setField(f.key, next)}
-                    invalid={Boolean(fieldError)}
-                  />
-                ) : (
-                  <Input
-                    id={`field-${f.key}`}
-                    value={raw}
-                    placeholder={f.placeholder}
-                    onChange={(e) => setField(f.key, e.target.value)}
-                    autoComplete="off"
-                    aria-invalid={Boolean(fieldError)}
-                    className={cn(
-                      fieldError && "border-destructive focus-visible:ring-destructive/50",
-                    )}
-                  />
-                )}
+                <Input
+                  id={`field-${f.key}`}
+                  value={raw}
+                  placeholder={f.placeholder}
+                  onChange={(e) => setField(f.key, e.target.value)}
+                  autoComplete="off"
+                  aria-invalid={Boolean(fieldError)}
+                  dir="auto"
+                  className={cn(
+                    fieldError && "border-destructive focus-visible:ring-destructive/50",
+                  )}
+                />
                 {fieldError ? (
                   <p className="flex items-center gap-1 text-xs font-medium text-destructive">
                     <AlertCircle className="size-3 shrink-0" />
@@ -161,7 +152,7 @@ export function InputDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t("shell.cancel")}
             </Button>
-            <Button type="submit">{t("shell.generate")}</Button>
+            <Button type="submit">{t("shell.runInput")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

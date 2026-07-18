@@ -43,8 +43,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useVisualizerPlayer } from "@/lib/engine/player";
-import { LEVELS, MAX_STEPS, type AlgorithmModule, type Level, type Step } from "@/lib/engine/types";
+import { LEVELS, MAX_STEPS, type AlgorithmModule, type ArrayFrame, type Level, type ListFrame, type Step, type TreeFrame } from "@/lib/engine/types";
 import { bridgeIncrementalSteps, enrichSteps } from "@/lib/engine/learning";
+import { buildGenericSearchSteps } from "@/lib/engine/search-steps";
 import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
 import { useLearning } from "@/components/providers/learning-provider";
@@ -82,6 +83,29 @@ const SHORTCUTS: { keys: string[]; labelKey: DictKey }[] = [
   { keys: ["-"], labelKey: "shell.shortcutSlowDown" },
 ];
 
+function visibleListValues(step: Step | undefined, renderer: AlgorithmModule["renderer"]): string[] | undefined {
+  if (!step) return undefined;
+  if (renderer === "array") return (step.frame as ArrayFrame).values.map(String);
+  if (renderer === "list") return (step.frame as ListFrame).nodes.map((node) => String(node.value));
+  if (renderer === "tree") {
+    const frame = step.frame as TreeFrame;
+    const values: string[] = [];
+    const queue = frame.rootId ? [frame.rootId] : [];
+    const visited = new Set<string>();
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const node = frame.nodes[id];
+      if (!node) continue;
+      values.push(String(node.value));
+      for (const child of node.children ?? [node.left, node.right]) if (child) queue.push(child);
+    }
+    return values;
+  }
+  return undefined;
+}
+
 /**
  * Universal interactive visualization shell. Provides the full control
  * surface for any algorithm module: playback, scrubbing, speed, difficulty,
@@ -115,6 +139,7 @@ export function VisualizerShell({
   const { t, locale } = useLocale();
   const [inputOpen, setInputOpen] = React.useState(false);
   const [dialogPreset, setDialogPreset] = React.useState<Record<string, string> | null>(null);
+  const lastVisibleStep = React.useRef<Step | undefined>(undefined);
 
   // Live-input state (level, undo/redo history, insert/delete/edit/search).
   // Standalone pages own a private instance; CompareShell passes a shared one.
@@ -123,11 +148,13 @@ export function VisualizerShell({
       setDialogPreset(fields);
       setInputOpen(true);
     },
+    getCurrentListValues: () => sharedPlayback?.active
+      ? undefined
+      : visibleListValues(lastVisibleStep.current, module.renderer),
   });
   const live = externalLiveInput ?? ownLiveInput;
-  const { level, listFieldKey, searchFieldKey } = live;
+  const { level, listFieldKey, searchFieldKey, canSearch, revision, consumeOperation } = live;
   const input = live.input;
-  const lastVisibleStep = React.useRef<Step | undefined>(undefined);
 
   React.useEffect(() => {
     recordStudy(module.slug, module.category);
@@ -141,18 +168,27 @@ export function VisualizerShell({
   // ---- steps ----
   const { steps, error } = React.useMemo((): { steps: Step[]; error: string | null } => {
     try {
-      const operation = live.consumeOperation();
-      const generated = operation && module.generateOperation
-        ? module.generateOperation(operation)
-        : module.generate(input);
-      const continuous = operation && !module.generateOperation
+      const operation = consumeOperation();
+      const genericSearch = operation?.kind === "search" && !searchFieldKey
+        ? buildGenericSearchSteps(
+            module,
+            lastVisibleStep.current ?? (module.generate(operation.before)[0] as Step | undefined),
+            operation.value ?? "",
+          )
+        : [];
+      const generated = genericSearch.length > 0
+        ? genericSearch
+        : operation && module.generateOperation
+          ? module.generateOperation(operation)
+          : module.generate(input);
+      const continuous = operation && !module.generateOperation && genericSearch.length === 0
         ? bridgeIncrementalSteps(lastVisibleStep.current, generated as Step[], operation.detail ?? operation.kind)
         : generated as Step[];
       return { steps: enrichSteps(continuous.slice(0, MAX_STEPS)), error: null };
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
-  }, [module, input, live, t]);
+  }, [module, input, searchFieldKey, consumeOperation, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);
@@ -187,7 +223,7 @@ export function VisualizerShell({
       if (!sharedPlayback?.active) player.play();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input]);
+  }, [revision]);
 
   // ---- refs ----
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -249,7 +285,7 @@ export function VisualizerShell({
         if (data.slug !== module.slug) {
           throw new Error(`This file belongs to "${data.slug}", not "${module.slug}".`);
         }
-        live.applyFields(data.fields);
+        live.applyFields(data.fields, { announce: false, autoPlay: false });
         toast.success(t("shell.stateImported"));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : t("shell.couldNotImport"));
@@ -276,7 +312,7 @@ export function VisualizerShell({
     }
     try {
       const data = JSON.parse(raw) as SavedState;
-      live.applyFields(data.fields);
+      live.applyFields(data.fields, { announce: false, autoPlay: false });
       toast.success(t("shell.savedStateLoaded"));
     } catch {
       toast.error(t("shell.savedStateCorrupted"));
@@ -644,7 +680,7 @@ export function VisualizerShell({
           <IconBtn label={t("shell.clearValues")} onClick={live.clearInput}>
             <Eraser />
           </IconBtn>
-          {(listFieldKey || searchFieldKey) && (
+          {(listFieldKey || canSearch) && (
             <div className="flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 p-1">
               {listFieldKey && (
                 <ValuePromptButton
@@ -652,7 +688,7 @@ export function VisualizerShell({
                   label={t("shell.insertValue")}
                   placeholder={t("shell.placeholderExample")}
                   confirmLabel={t("shell.confirmInsert")}
-                  onSubmit={live.insertValue}
+                  onSubmit={(value) => live.insertValue(value, { startNewSet: player.atStart && !player.playing })}
                   emphasized
                 />
               )}
@@ -676,7 +712,7 @@ export function VisualizerShell({
                   onSubmit={live.editValue}
                 />
               )}
-              {searchFieldKey && (
+              {canSearch && (
                 <ValuePromptButton
                   icon={<Search />}
                   label={t("shell.searchValue")}
