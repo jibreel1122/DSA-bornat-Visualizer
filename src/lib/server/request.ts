@@ -29,6 +29,7 @@ export async function readJson<T>(request: Request): Promise<T | null> {
 }
 
 export function clientIp(request: Request) {
-  // The reverse proxy must overwrite this header instead of appending untrusted values.
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "local";
+  // Nginx overwrites X-Real-IP with the socket peer. Prefer it over the
+  // append-only X-Forwarded-For chain, whose first value may be client-supplied.
+  return request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
 }

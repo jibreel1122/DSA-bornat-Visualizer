@@ -18,7 +18,11 @@ describe("request guards", () => {
     expect(requireSameOrigin(request)).toBeNull();
   });
 
-  it("uses the first proxy address for rate-limit keys", () => {
+  it("uses the first proxy address when no trusted real-IP header is present", () => {
     expect(clientIp(new Request("https://app.example.test", { headers: { "x-forwarded-for": "198.51.100.7, 10.0.0.2" } }))).toBe("198.51.100.7");
+  });
+
+  it("prefers the reverse proxy's overwritten real IP over a spoofable forwarded chain", () => {
+    expect(clientIp(new Request("https://app.example.test", { headers: { "x-real-ip": "203.0.113.9", "x-forwarded-for": "198.51.100.7, 203.0.113.9" } }))).toBe("203.0.113.9");
   });
 });
