@@ -5,13 +5,14 @@ The application works as a guest-only static learning tool without PostgreSQL. S
 ## PostgreSQL
 
 ```bash
-sudo -u postgres createuser --pwprompt bornat
-sudo -u postgres createdb --owner=bornat bornat_visualizer
+sudo -u postgres createuser --pwprompt bornat_dsa_app
+sudo -u postgres createdb --owner=bornat_dsa_app bornat_dsa_visualizer
 psql "$DATABASE_URL" -f db/migrations/001_accounts.sql
 psql "$DATABASE_URL" -f db/migrations/002_sync_idempotency.sql
+psql "$DATABASE_URL" -f db/migrations/003_user_roles.sql
 ```
 
-Use a strong database password and a non-superuser account. Apply each migration once, in filename order.
+Use a strong database password and a non-superuser account. The normalized database name mirrors the project name while remaining a valid unquoted PostgreSQL identifier. Apply every migration once, in filename order.
 
 ## Environment
 
