@@ -73,7 +73,6 @@ export function bridgeIncrementalSteps<F>(
       description: `Apply ${detail} to the current structure.`,
       why: "This is the requested edit; any required internal transformation is shown next.",
       phase: "edit",
-      transformation: { kind: "other", label: detail },
     },
     ...next.slice(1),
   ];

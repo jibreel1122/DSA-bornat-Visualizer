@@ -7,6 +7,7 @@ import type { AlgorithmModule, Level, LiveOperationKind, OperationRequest } from
 import { useLocale, type DictKey } from "@/lib/i18n";
 import { isListValue } from "@/components/visualizer/chip-list-input";
 import { supportsGenericSearch } from "@/lib/engine/search-steps";
+import { canVisualizeDraft, type DraftMutation } from "@/lib/engine/draft-steps";
 
 const SEARCH_FIELD_KEYS = ["target", "search", "pattern"];
 const LEVEL_LABEL_KEYS: Record<Level, DictKey> = {
@@ -47,6 +48,7 @@ export interface LiveInput<I = unknown> {
   listFieldKey: string | undefined;
   searchFieldKey: string | undefined;
   canSearch: boolean;
+  draftMutation: DraftMutation | undefined;
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
@@ -105,7 +107,7 @@ export function useLiveInput<I>(
 
   const liveActionRef = React.useRef(false);
   const operationRef = React.useRef<OperationRequest<I> | undefined>(undefined);
-  const pendingNewSetRef = React.useRef<string[]>([]);
+  const [draftMutation, setDraftMutation] = React.useState<DraftMutation | undefined>(undefined);
   const consumeLiveActionFlag = React.useCallback(() => {
     const v = liveActionRef.current;
     liveActionRef.current = false;
@@ -127,7 +129,7 @@ export function useLiveInput<I>(
 
   const randomize = React.useCallback(
     (lvl: Level = level, actionOptions?: { announce?: boolean }) => {
-      pendingNewSetRef.current = [];
+      setDraftMutation(undefined);
       operationRef.current = undefined;
       liveActionRef.current = true;
       pushInput(module.defaultInput(lvl, createRNG(randomSeed())) as I);
@@ -142,7 +144,7 @@ export function useLiveInput<I>(
 
   const applyFields = (fields: Record<string, string>, actionOptions?: { announce?: boolean; autoPlay?: boolean }) => {
     const parsed = module.parseInput(fields) as I; // throws friendly errors
-    pendingNewSetRef.current = [];
+    setDraftMutation(undefined);
     operationRef.current = undefined;
     liveActionRef.current = actionOptions?.autoPlay !== false;
     pushInput(parsed);
@@ -169,7 +171,19 @@ export function useLiveInput<I>(
   };
 
   const shuffleInput = () => {
-    pendingNewSetRef.current = [];
+    if (draftMutation) {
+      const shuffled = [...draftMutation.after];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      setDraftMutation({ before: draftMutation.after, after: shuffled, kind: "shuffle", detail: "shuffling the current set" });
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.shuffled"));
+      return;
+    }
     const fields = module.serializeInput(input);
     const next = { ...fields };
     let touched = false;
@@ -196,7 +210,6 @@ export function useLiveInput<I>(
   };
 
   const clearInput = () => {
-    pendingNewSetRef.current = [];
     const fields = module.serializeInput(input);
     const next = { ...fields };
     let touched = false;
@@ -212,10 +225,17 @@ export function useLiveInput<I>(
     }
     try {
       pushInput(module.parseInput(next) as I);
+      setDraftMutation(undefined);
       toast.success(t("shell.cleared"));
     } catch {
-      options?.onClearNeedsManualInput?.(next);
-      toast.info(t("shell.enterNewValues"));
+      const currentValues = draftMutation?.after
+        ?? options?.getCurrentListValues?.()
+        ?? (listFieldKey ? (fields[listFieldKey] ?? "").split(",").map((value) => value.trim()).filter(Boolean) : []);
+      setDraftMutation({ before: currentValues, after: [], kind: "clear", detail: "clearing the current set" });
+      operationRef.current = undefined;
+      liveActionRef.current = true;
+      setRevision((value) => value + 1);
+      toast.success(t("shell.cleared"));
     }
   };
 
@@ -223,20 +243,26 @@ export function useLiveInput<I>(
     if (!listFieldKey) return;
     const fields = module.serializeInput(input);
     const current = fields[listFieldKey] ?? "";
-    const currentTokens = options?.getCurrentListValues?.()
+    const currentTokens = draftMutation?.after
+      ?? options?.getCurrentListValues?.()
       ?? current.split(",").map((token) => token.trim()).filter(Boolean);
     const incoming = raw.split(",").map((token) => token.trim()).filter(Boolean);
-    const startingFresh = Boolean(actionOptions?.startNewSet);
-    const tokens = startingFresh ? [...pendingNewSetRef.current, ...incoming] : [...currentTokens, ...incoming];
+    if (incoming.length === 0) return;
+    const startingFresh = Boolean(actionOptions?.startNewSet) && !draftMutation;
+    const before = startingFresh ? [] : currentTokens;
+    const tokens = [...before, ...incoming];
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("insert", module.parseInput(next) as I, `inserting ${raw}`);
-      pendingNewSetRef.current = [];
+      setDraftMutation(undefined);
       toast.success(t("shell.toastInserted", { value: raw }));
     } catch (e) {
-      if (startingFresh && tokens.length > 0) {
-        pendingNewSetRef.current = tokens;
-        toast.info(t("shell.toastInsertPending", { values: tokens.join(", ") }));
+      if ((startingFresh || draftMutation) && canVisualizeDraft(module.renderer, tokens)) {
+        setDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` });
+        operationRef.current = undefined;
+        liveActionRef.current = true;
+        setRevision((value) => value + 1);
+        toast.success(t("shell.toastInserted", { value: raw }));
         return;
       }
       toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
@@ -245,42 +271,62 @@ export function useLiveInput<I>(
 
   const removeValue = (raw: string) => {
     if (!listFieldKey) return;
-    pendingNewSetRef.current = [];
     const fields = module.serializeInput(input);
-    const tokens = options?.getCurrentListValues?.()
+    const tokens = draftMutation?.after
+      ?? options?.getCurrentListValues?.()
       ?? (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === raw.trim());
     if (idx === -1) {
       toast.info(t("shell.toastNotInValues", { value: raw }));
       return;
     }
+    const before = [...tokens];
     tokens.splice(idx, 1);
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("delete", module.parseInput(next) as I, `removing ${raw}`);
+      setDraftMutation(undefined);
       toast.success(t("shell.toastRemoved", { value: raw }));
     } catch (e) {
+      if (canVisualizeDraft(module.renderer, tokens)) {
+        setDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` });
+        operationRef.current = undefined;
+        liveActionRef.current = true;
+        setRevision((value) => value + 1);
+        toast.success(t("shell.toastRemoved", { value: raw }));
+        return;
+      }
       toast.error(e instanceof Error ? e.message : t("shell.couldNotRemove"));
     }
   };
 
   const editValue = (oldRaw: string, newRaw: string) => {
     if (!listFieldKey) return;
-    pendingNewSetRef.current = [];
     const fields = module.serializeInput(input);
-    const tokens = options?.getCurrentListValues?.()
+    const tokens = draftMutation?.after
+      ?? options?.getCurrentListValues?.()
       ?? (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === oldRaw.trim());
     if (idx === -1) {
       toast.info(t("shell.toastNotInValues", { value: oldRaw }));
       return;
     }
+    const before = [...tokens];
     tokens[idx] = newRaw.trim();
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("update", module.parseInput(next) as I, `changing ${oldRaw} to ${newRaw}`);
+      setDraftMutation(undefined);
       toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
     } catch (e) {
+      if (canVisualizeDraft(module.renderer, tokens)) {
+        setDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` });
+        operationRef.current = undefined;
+        liveActionRef.current = true;
+        setRevision((value) => value + 1);
+        toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
+        return;
+      }
       toast.error(e instanceof Error ? e.message : t("shell.couldNotEdit"));
     }
   };
@@ -305,6 +351,7 @@ export function useLiveInput<I>(
     listFieldKey,
     searchFieldKey,
     canSearch,
+    draftMutation,
     canUndo: hIndex > 0,
     canRedo: hIndex < history.length - 1,
     undo: () => setHIndex((i) => Math.max(0, i - 1)),

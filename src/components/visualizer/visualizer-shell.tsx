@@ -46,6 +46,7 @@ import { useVisualizerPlayer } from "@/lib/engine/player";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type ArrayFrame, type Level, type ListFrame, type Step, type TreeFrame } from "@/lib/engine/types";
 import { bridgeIncrementalSteps, enrichSteps } from "@/lib/engine/learning";
 import { buildGenericSearchSteps } from "@/lib/engine/search-steps";
+import { buildDraftMutationSteps } from "@/lib/engine/draft-steps";
 import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
 import { useLearning } from "@/components/providers/learning-provider";
@@ -155,6 +156,7 @@ export function VisualizerShell({
   const live = externalLiveInput ?? ownLiveInput;
   const { level, listFieldKey, searchFieldKey, canSearch, revision, consumeOperation } = live;
   const input = live.input;
+  const serializedInput = React.useMemo(() => module.serializeInput(input), [module, input]);
 
   React.useEffect(() => {
     recordStudy(module.slug, module.category);
@@ -178,17 +180,19 @@ export function VisualizerShell({
         : [];
       const generated = genericSearch.length > 0
         ? genericSearch
+        : live.draftMutation && !operation
+          ? buildDraftMutationSteps(module.renderer, live.draftMutation)
         : operation && module.generateOperation
           ? module.generateOperation(operation)
           : module.generate(input);
-      const continuous = operation && !module.generateOperation && genericSearch.length === 0
+      const continuous = operation && !module.generateOperation && genericSearch.length === 0 && !live.draftMutation
         ? bridgeIncrementalSteps(lastVisibleStep.current, generated as Step[], operation.detail ?? operation.kind)
         : generated as Step[];
       return { steps: enrichSteps(continuous.slice(0, MAX_STEPS)), error: null };
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
     }
-  }, [module, input, searchFieldKey, consumeOperation, t]);
+  }, [module, input, searchFieldKey, consumeOperation, live.draftMutation, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);
@@ -208,9 +212,15 @@ export function VisualizerShell({
     if (step) lastVisibleStep.current = step;
   }, [step]);
 
+  const playerCursor = player.cursor;
+  const playerPlaying = player.playing;
+  const pausePlayer = player.pause;
+  const previousCursor = React.useRef(playerCursor);
   React.useEffect(() => {
-    if (settings.pauseBeforeTransformations && player.playing && step?.transformation) player.pause();
-  }, [settings.pauseBeforeTransformations, player, step]);
+    const enteredTransformation = playerCursor > previousCursor.current && Boolean(step?.transformation);
+    previousCursor.current = playerCursor;
+    if (settings.pauseBeforeTransformations && playerPlaying && enteredTransformation) pausePlayer();
+  }, [settings.pauseBeforeTransformations, playerCursor, playerPlaying, pausePlayer, step?.transformation]);
 
   // Auto-play through a live insert/delete/edit/search so the user watches
   // the new operation animate instead of landing silently on frame 0.
@@ -219,8 +229,7 @@ export function VisualizerShell({
   // setPlaying(false) wins and playback never starts.
   React.useEffect(() => {
     if (live.consumeLiveActionFlag()) {
-      player.goto(0);
-      if (!sharedPlayback?.active) player.play();
+      if (!sharedPlayback?.active) player.restartAndPlay();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
@@ -788,7 +797,7 @@ export function VisualizerShell({
           if (!o) setDialogPreset(null);
         }}
         fields={module.inputFields}
-        initial={dialogPreset ?? module.serializeInput(input)}
+        initial={dialogPreset ?? serializedInput}
         onSubmit={live.applyFields}
         parseInput={module.parseInput}
       />

@@ -95,10 +95,11 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const goToEnd = React.useCallback(() => goto(1), [goto]);
   const toggle = React.useCallback(() => { if (clock >= 1) setClock(0); setPlaying((value) => !value); }, [clock]);
   const play = React.useCallback(() => { if (clock >= 1) setClock(0); setPlaying(true); }, [clock]);
+  const restartAndPlay = React.useCallback(() => { setClock(0); setPlaying(true); }, []);
 
   const getDatasetFields = React.useCallback(() => currentDataset.current, []);
 
-  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, applyDataset, getDatasetFields, syncDataset, playback, clock, playing, speed, setSpeed, toggle, play, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, referenceStep, maxLength };
+  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, applyDataset, getDatasetFields, syncDataset, playback, clock, playing, speed, setSpeed, toggle, play, restartAndPlay, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, referenceStep, maxLength };
 }
 
 export type CompareSession = ReturnType<typeof useCompareSession>;

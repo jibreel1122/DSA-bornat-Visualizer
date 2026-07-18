@@ -11,6 +11,7 @@ export interface PlayerControls {
   atStart: boolean;
   atEnd: boolean;
   play: () => void;
+  restartAndPlay: () => void;
   pause: () => void;
   toggle: () => void;
   next: () => void;
@@ -58,6 +59,10 @@ export function useVisualizerPlayer(stepCount: number, initialSpeed = 1): Player
     setCursor((c) => (c >= last ? 0 : c));
     setPlaying(true);
   }, [last]);
+  const restartAndPlay = useCallback(() => {
+    setCursor(0);
+    setPlaying(last > 0);
+  }, [last]);
   const pause = useCallback(() => setPlaying(false), []);
   const toggle = useCallback(() => {
     setPlaying((p) => {
@@ -97,6 +102,7 @@ export function useVisualizerPlayer(stepCount: number, initialSpeed = 1): Player
     atStart: cursor === 0,
     atEnd: cursor >= last,
     play,
+    restartAndPlay,
     pause,
     toggle,
     next,

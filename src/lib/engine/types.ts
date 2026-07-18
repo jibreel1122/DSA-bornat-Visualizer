@@ -373,8 +373,12 @@ export type FrameOf<R extends RendererKind> = R extends "array"
 export interface InputField {
   key: string;
   label: string;
+  /** Optional localized label for Arabic UI. */
+  labelAr?: string;
   placeholder: string;
   help?: string;
+  /** Optional localized helper text for Arabic UI. */
+  helpAr?: string;
   /** This field holds a comma-separated collection the live builder can insert/delete/edit into. */
   list?: boolean;
   /** This field is what the live "Search" action sets before re-generating. */

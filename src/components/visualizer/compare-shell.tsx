@@ -226,7 +226,7 @@ function SharedBar({
   const reference = algorithms[0];
   const run = (fn: (live: LiveInput) => void) => {
     session.broadcast(fn);
-    session.play();
+    session.restartAndPlay();
   };
 
   const randomize = () => {

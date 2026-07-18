@@ -17,6 +17,32 @@ import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { InputField } from "@/lib/engine/types";
 
+const ARABIC_FIELD_LABELS: Record<string, string> = {
+  values: "القيم",
+  items: "العناصر",
+  words: "الكلمات",
+  edges: "الحواف",
+  ops: "العمليات",
+  activities: "الأنشطة",
+  jobs: "المهام",
+  coins: "فئات العملات",
+  target: "القيمة المستهدفة",
+  search: "قيمة البحث",
+  pattern: "النمط",
+  text: "النص",
+  start: "نقطة البداية",
+  source: "المصدر",
+  goal: "الوجهة",
+  grid: "الشبكة",
+  capacity: "السعة",
+  size: "الحجم",
+};
+
+function localizedFieldLabel(field: InputField, locale: string) {
+  if (locale !== "ar") return field.label;
+  return field.labelAr ?? ARABIC_FIELD_LABELS[field.key] ?? field.label;
+}
+
 /**
  * Figures out which field(s) are responsible for a parseInput failure.
  *
@@ -67,16 +93,21 @@ export function InputDialog({
   /** Same validation the module uses — enables per-field error localization. */
   parseInput?: (fields: Record<string, string>) => unknown;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [values, setValues] = React.useState<Record<string, string>>(initial);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
 
-  React.useEffect(() => {
-    if (open) {
+  const wasOpen = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (open && !wasOpen.current) {
       setValues(initial);
       setFieldErrors({});
     }
-  }, [open, initial]);
+    wasOpen.current = open;
+    // Capture the current dataset once when the dialog opens. Playback renders
+    // must never replace text the learner is actively typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const setField = (key: string, next: string) => {
     setValues((v) => ({ ...v, [key]: next }));
@@ -111,7 +142,7 @@ export function InputDialog({
               if (Object.keys(localized).length > 0) {
                 setFieldErrors(localized);
                 const first = fields.find((f) => localized[f.key]);
-                toast.error(first ? `${first.label}: ${localized[first.key]}` : message);
+                toast.error(first ? `${localizedFieldLabel(first, locale)}: ${localized[first.key]}` : message);
               } else {
                 // couldn't localize to a specific field — fall back to the banner
                 toast.error(message);
@@ -122,9 +153,13 @@ export function InputDialog({
           {fields.map((f) => {
             const raw = values[f.key] ?? "";
             const fieldError = fieldErrors[f.key];
+            const label = localizedFieldLabel(f, locale);
+            const help = locale === "ar"
+              ? f.helpAr ?? (f.list ? "أدخل العناصر مفصولة بفواصل، ثم شغّل التصور." : f.help)
+              : f.help;
             return (
               <div key={f.key} className="grid gap-1.5">
-                <Label htmlFor={`field-${f.key}`}>{f.label}</Label>
+                <Label htmlFor={`field-${f.key}`}>{label}</Label>
                 <Input
                   id={`field-${f.key}`}
                   value={raw}
@@ -143,7 +178,7 @@ export function InputDialog({
                     {fieldError}
                   </p>
                 ) : (
-                  f.help && <p className="text-xs text-muted-foreground">{f.help}</p>
+                  help && <p className="text-xs text-muted-foreground">{help}</p>
                 )}
               </div>
             );
