@@ -14,11 +14,11 @@ export async function POST(request: Request) {
   const password = body?.password ?? "";
   if (!email || !password) return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   try {
-    const result = await getDb().query<{ id: string; email: string; password_hash: string }>("select id, email, password_hash from users where email = $1", [email]);
+    const result = await getDb().query<{ id: string; email: string; role: "user" | "owner"; password_hash: string }>("select id, email, role, password_hash from users where email = $1", [email]);
     const user = result.rows[0];
     if (!user || !(await verifyPassword(password, user.password_hash))) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     await createSession(user.id);
-    return NextResponse.json({ user: { email: user.email } });
+    return NextResponse.json({ user: { email: user.email, role: user.role } });
   } catch {
     return NextResponse.json({ error: "Account service is unavailable." }, { status: 503 });
   }

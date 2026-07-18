@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const result = await getDb().query<{ id: string }>("insert into users (email, password_hash) values ($1, $2) returning id", [email, await hashPassword(password)]);
     await createSession(result.rows[0].id);
-    return NextResponse.json({ user: { email } }, { status: 201 });
+    return NextResponse.json({ user: { email, role: "user" as const } }, { status: 201 });
   } catch (error) {
     if ((error as { code?: string }).code === "23505") return NextResponse.json({ error: "An account already exists for this email." }, { status: 409 });
     return NextResponse.json({ error: "Account service is unavailable." }, { status: 503 });

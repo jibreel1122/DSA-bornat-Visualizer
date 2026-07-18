@@ -85,7 +85,7 @@ export function useLiveInput<I>(
 
   const searchFieldKey = React.useMemo(() => searchFieldKeyOf(module), [module]);
   const listFieldKey = React.useMemo(() => listFieldKeyOf(module), [module]);
-  const canSearch = Boolean(searchFieldKey || (listFieldKey && supportsGenericSearch(module)));
+  const canSearch = Boolean(searchFieldKey || supportsGenericSearch(module));
 
   const initialInput = React.useMemo(() => {
     if (initialFields) {

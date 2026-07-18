@@ -58,8 +58,8 @@ export async function destroySession() {
 export async function currentUser() {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
-  const result = await getDb().query<{ id: string; email: string; created_at: Date }>(
-    `select users.id, users.email, users.created_at from sessions
+  const result = await getDb().query<{ id: string; email: string; role: "user" | "owner"; created_at: Date }>(
+    `select users.id, users.email, users.role, users.created_at from sessions
      join users on users.id = sessions.user_id
      where sessions.token_hash = $1 and sessions.expires_at > now()`,
     [digest(token)],

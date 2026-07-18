@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/catalog/page-header";
 
-type Account = { email: string; createdAt?: string } | null;
+type Account = { email: string; role?: "user" | "owner"; createdAt?: string } | null;
 
 function readJson<T>(key: string, fallback: T): T {
   try { return JSON.parse(localStorage.getItem(key) ?? "") as T; } catch { return fallback; }
@@ -101,7 +101,13 @@ export default function AccountPage() {
       {message && <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">{message}</p>}
       {!ready ? <Card className="h-40 animate-pulse" /> : account ? (
         <Card>
-          <CardHeader><CardTitle>{account.email}</CardTitle><CardDescription>Your local study tools remain available; an account only adds synchronization and recovery.</CardDescription></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              {account.email}
+              {account.role === "owner" && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Owner</span>}
+            </CardTitle>
+            <CardDescription>Your local study tools remain available; an account only adds synchronization and recovery.</CardDescription>
+          </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => void synchronize()}><RefreshCw /> Sync local data</Button>
             <Button variant="secondary" onClick={exportData}><Download /> Export my data</Button>

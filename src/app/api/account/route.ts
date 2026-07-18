@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const user = await requireUser();
     if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-    return NextResponse.json({ user: { email: user.email, createdAt: user.created_at } });
+    return NextResponse.json({ user: { email: user.email, role: user.role, createdAt: user.created_at } });
   } catch { return NextResponse.json({ accountsEnabled: false }, { status: 200 }); }
 }
 
