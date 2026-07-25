@@ -7,7 +7,7 @@ type Input = { nodes: string[]; edges: CEdge[]; source: string; sink: string };
 /** Parse directed capacity edges "S>A:10". */
 export function parseCapacityEdges(text: string): { nodes: string[]; edges: CEdge[] } {
   const nodes = new Set<string>();
-  const edges: CEdge[] = [];
+  const byDirection = new Map<string, CEdge>();
   const parts = text.split(/[,\n;]+/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) throw new Error("Enter at least one edge, e.g. S>A:10.");
   for (const part of parts) {
@@ -18,10 +18,13 @@ export function parseCapacityEdges(text: string): { nodes: string[]; edges: CEdg
     if (Number(c) < 1) throw new Error(`Capacity in "${part}" must be at least 1.`);
     nodes.add(from);
     nodes.add(to);
-    edges.push({ from, to, cap: Number(c) });
+    const key = `${from}->${to}`;
+    const existing = byDirection.get(key);
+    if (existing) existing.cap += Number(c);
+    else byDirection.set(key, { from, to, cap: Number(c) });
   }
   if (nodes.size > 20) throw new Error("Maximum 20 nodes.");
-  return { nodes: [...nodes].sort(), edges };
+  return { nodes: [...nodes].sort(), edges: [...byDirection.values()] };
 }
 
 function generate(input: Input): Step<GraphFrame>[] {
@@ -29,10 +32,8 @@ function generate(input: Input): Step<GraphFrame>[] {
   const layout = circularLayout(nodes);
   const idx = Object.fromEntries(nodes.map((v, i) => [v, i]));
   const n = nodes.length;
-  const cap: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
   const orig: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
   for (const e of edges) {
-    cap[idx[e.from]][idx[e.to]] += e.cap;
     orig[idx[e.from]][idx[e.to]] += e.cap;
   }
   const flow: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
@@ -88,7 +89,8 @@ function generate(input: Input): Step<GraphFrame>[] {
     while (q.length) {
       const u = q.shift()!;
       for (let v = 0; v < n; v++) {
-        if (parent[v] === -1 && cap[u][v] - flow[u][v] > 0) {
+        const residual = orig[u][v] - flow[u][v] + flow[v][u];
+        if (parent[v] === -1 && residual > 0) {
           parent[v] = u;
           if (v === idx[sink]) return parent;
           q.push(v);
@@ -110,7 +112,7 @@ function generate(input: Input): Step<GraphFrame>[] {
     const pathEdges: string[] = [];
     while (v !== idx[source]) {
       const u = parent[v];
-      bottleneck = Math.min(bottleneck, cap[u][v] - flow[u][v]);
+      bottleneck = Math.min(bottleneck, orig[u][v] - flow[u][v] + flow[v][u]);
       pathNodes.push(nodes[v]);
       pathEdges.push(`${nodes[u]}->${nodes[v]}`);
       v = u;
@@ -127,8 +129,9 @@ function generate(input: Input): Step<GraphFrame>[] {
     v = idx[sink];
     while (v !== idx[source]) {
       const u = parent[v];
-      flow[u][v] += bottleneck;
-      flow[v][u] -= bottleneck; // reverse residual
+      const cancelled = Math.min(bottleneck, flow[v][u]);
+      flow[v][u] -= cancelled;
+      flow[u][v] += bottleneck - cancelled;
       v = u;
     }
     maxFlow += bottleneck;

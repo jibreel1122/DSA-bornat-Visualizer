@@ -56,7 +56,10 @@ function generate(input: Input): Step<ArrayFrame>[] {
     snap({ [i]: "active" }, [countRow(a[i] - min), outRow(pos)], `Place a[${i}] = ${a[i]} at output[${pos}] (stable, back to front).`, 3, `ضع a[${i}] = ${a[i]} عند output[${pos}] (بشكل مستقر، من الخلف إلى الأمام).`);
   }
 
-  for (let i = 0; i < n; i++) a[i] = output[i]!;
+  for (let i = 0; i < n; i++) {
+    a[i] = output[i]!;
+    writes++;
+  }
   const sorted: Record<number, CellState> = {};
   for (let i = 0; i < n; i++) sorted[i] = "sorted";
   snap(sorted, [outRow()], `Copy output back. Sorted in O(n + k) with k = ${range} distinct-value range.`, 4, `انسخ المخرجات إلى المصفوفة. اكتمل الترتيب بزمن O(n + k) حيث k = ${range} مدى القيم المتمايزة.`);

@@ -28,6 +28,7 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const [playing, setPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const registry = React.useRef<Map<number, LiveInput>>(new Map());
+  const historyCapabilities = React.useRef<Map<number, string>>(new Map());
   const timelines = React.useRef<Map<number, Step[]>>(new Map());
   const currentDataset = React.useRef<Record<string, string> | undefined>(undefined);
   const [, refreshTimelines] = React.useState(0);
@@ -47,11 +48,16 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const register = React.useCallback((index: number) => (live: LiveInput) => {
     const firstRegistration = !registry.current.has(index);
     registry.current.set(index, live);
+    const capabilities = `${live.canUndo}:${live.canRedo}`;
+    if (historyCapabilities.current.get(index) !== capabilities) {
+      historyCapabilities.current.set(index, capabilities);
+      refreshTimelines((n) => n + 1);
+    }
     if (firstRegistration && mode === "synced" && currentDataset.current) {
       try { live.applyFields(currentDataset.current, { announce: false, autoPlay: false }); } catch { /* incompatible panels keep their own valid input */ }
     }
   }, [mode]);
-  const unregister = React.useCallback((index: number) => { registry.current.delete(index); timelines.current.delete(index); refreshTimelines((n) => n + 1); }, []);
+  const unregister = React.useCallback((index: number) => { registry.current.delete(index); historyCapabilities.current.delete(index); timelines.current.delete(index); refreshTimelines((n) => n + 1); }, []);
   const broadcast = React.useCallback((fn: (live: LiveInput) => void) => { for (const live of registry.current.values()) fn(live); }, []);
 
   const applyDataset = React.useCallback((fields: Record<string, string>, options?: { autoPlay?: boolean }) => {
@@ -98,8 +104,11 @@ export function useCompareSession(referenceModule: AlgorithmModule | undefined) 
   const restartAndPlay = React.useCallback(() => { setClock(0); setPlaying(true); }, []);
 
   const getDatasetFields = React.useCallback(() => currentDataset.current, []);
+  const registeredInputs = [...registry.current.values()];
+  const canUndo = registeredInputs.length > 0 && registeredInputs.every((live) => live.canUndo);
+  const canRedo = registeredInputs.length > 0 && registeredInputs.every((live) => live.canRedo);
 
-  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, applyDataset, getDatasetFields, syncDataset, playback, clock, playing, speed, setSpeed, toggle, play, restartAndPlay, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, referenceStep, maxLength };
+  return { mode, setMode, strategy, setStrategy, level, setLevel, changeLevel, register, unregister, broadcast, applyDataset, getDatasetFields, syncDataset, playback, clock, playing, speed, setSpeed, toggle, play, restartAndPlay, next, prev, reset, goToEnd, goto, atStart: clock <= 0, atEnd: clock >= 1, canUndo, canRedo, referenceStep, maxLength };
 }
 
 export type CompareSession = ReturnType<typeof useCompareSession>;

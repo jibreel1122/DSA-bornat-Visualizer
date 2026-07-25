@@ -53,12 +53,12 @@ function generate(input: Input): Step<GridFrame>[] {
           state = "active";
           value = String(fScore.get(k) ?? "");
         }
-        if (cur && cur[0] === r && cur[1] === c) {
+        if (cur && cur[0] === r && cur[1] === c && !path.has(k)) {
           state = "swap";
           value = String(fScore.get(k) ?? "") || value;
         }
         if (r === 0 && c === 0) value = "S";
-        if (r === goal[0] && c === goal[1] && !path.has(k)) value = value && value !== "█" ? value : "G";
+        if (r === goal[0] && c === goal[1]) value = "G";
         row.push({ value, state });
       }
       cells.push(row);
@@ -84,7 +84,7 @@ function generate(input: Input): Step<GridFrame>[] {
     let best = Infinity;
     for (const k of open) {
       const f = fScore.get(k) ?? Infinity;
-      if (f < best) {
+      if (f < best || (f === best && (cur < 0 || h(Math.floor(k / m), k % m) < h(Math.floor(cur / m), cur % m)))) {
         best = f;
         cur = k;
       }
@@ -484,6 +484,8 @@ At each step A* expands the open-set node with the smallest f-value — the one 
         return Number(ch);
       });
     });
+    if (grid[0][0] !== 1) throw new Error("Start cell (top-left) must be open (1).");
+    if (grid[grid.length - 1][cols - 1] !== 1) throw new Error("Goal cell (bottom-right) must be open (1).");
     return { grid };
   },
   serializeInput: (input) => ({ grid: input.grid.map((r) => r.join("")).join(" / ") }),

@@ -7,8 +7,8 @@ const BASE = 31;
 const MOD = 1_000_000_007;
 
 function generate(input: Input): Step<StringFrame>[] {
-  const t = input.text;
-  const p = input.pattern;
+  const t = [...input.text];
+  const p = [...input.pattern];
   const n = t.length;
   const m = p.length;
   const steps: Step<StringFrame>[] = [];
@@ -26,8 +26,8 @@ function generate(input: Input): Step<StringFrame>[] {
   ) => {
     steps.push({
       frame: {
-        text: [...t].map((ch, i) => ({ ch, state: textStates[i] })),
-        pattern: [...p].map((ch, i) => ({ ch, state: patStates[i] })),
+        text: t.map((ch, i) => ({ ch, state: textStates[i] })),
+        pattern: p.map((ch, i) => ({ ch, state: patStates[i] })),
         shift: 0,
         aux: [
           { label: "Matches", values: matches.length ? [...matches] : ["—"] },
@@ -45,14 +45,15 @@ function generate(input: Input): Step<StringFrame>[] {
   let h = 1;
   for (let i = 0; i < m - 1; i++) h = (h * BASE) % MOD;
 
+  const code = (ch: string) => ch.codePointAt(0)!;
   let patHash = 0;
-  for (let i = 0; i < m; i++) patHash = (patHash * BASE + p.charCodeAt(i)) % MOD;
-  frame({}, {}, `Compute the pattern's rolling hash once: hash("${p}") = ${patHash} (mod ${MOD}).`, 0, [
+  for (let i = 0; i < m; i++) patHash = (patHash * BASE + code(p[i])) % MOD;
+  frame({}, {}, `Compute the pattern's rolling hash once: hash("${p.join("")}") = ${patHash} (mod ${MOD}).`, 0, [
     { label: "pattern hash", values: [patHash] },
-  ], `احسب تجزئة النمط المتدحرجة مرة واحدة: hash("${p}") = ${patHash} (mod ${MOD}).`);
+  ], `احسب تجزئة النمط المتدحرجة مرة واحدة: hash("${p.join("")}") = ${patHash} (mod ${MOD}).`);
 
   let textHash = 0;
-  for (let i = 0; i < m && i < n; i++) textHash = (textHash * BASE + t.charCodeAt(i)) % MOD;
+  for (let i = 0; i < m && i < n; i++) textHash = (textHash * BASE + code(t[i])) % MOD;
 
   for (let s = 0; s + m <= n; s++) {
     const windowStates: Record<number, CellState> = {};
@@ -101,8 +102,8 @@ function generate(input: Input): Step<StringFrame>[] {
 
     // roll the hash forward
     if (s + m < n) {
-      textHash = ((textHash - t.charCodeAt(s) * h) % MOD + MOD) % MOD;
-      textHash = (textHash * BASE + t.charCodeAt(s + m)) % MOD;
+      textHash = ((textHash - code(t[s]) * h) % MOD + MOD) % MOD;
+      textHash = (textHash * BASE + code(t[s + m])) % MOD;
     }
   }
 
@@ -451,8 +452,8 @@ A hash match doesn't guarantee a real match — different strings can collide to
     const pattern = (fields.pattern ?? "").trim();
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
-    if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 70) throw new Error("Keep the text at most 70 characters.");
+    if ([...pattern].length > [...text].length) throw new Error("Pattern must not be longer than the text.");
+    if ([...text].length > 70) throw new Error("Keep the text at most 70 characters.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

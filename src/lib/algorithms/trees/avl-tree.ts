@@ -21,7 +21,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   const bf = (n: Node | null) => (n ? h(n.left) - h(n.right) : 0);
   const updateHeight = (n: Node) => (n.height = 1 + Math.max(h(n.left), h(n.right)));
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string, transformation?: Step<TreeFrame>["transformation"]): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: Node | null) => {
       if (!n) return;
@@ -43,6 +43,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       descriptionAr,
       codeLine,
       counters: { comparisons, rotations },
+      transformation,
     });
   };
 
@@ -137,7 +138,7 @@ function generate(input: Input): Step<TreeFrame>[] {
           // Left-Left
           toFrame({ [z.id]: "swap", [z.left!.id]: "active" }, `Left-Left case → right-rotate ${z.value}.`, 4, `LL rotation`, `حالة يسار-يسار ← دوران يميني حول ${z.value}.`);
           rotateRight(z);
-          toFrame({}, "Complete the right rotation; inspect the new parent/child links.", 4, "LL rotation applied", "اكتمل الدوران اليميني؛ افحص روابط الأب والابن الجديدة.");
+          toFrame({}, "Complete the right rotation; inspect the new parent/child links.", 4, "LL rotation applied", "اكتمل الدوران اليميني؛ افحص روابط الأب والابن الجديدة.", { kind: "balance", label: "AVL right rotation" });
         } else if (balance > 1) {
           // Left-Right
           toFrame(
@@ -148,14 +149,14 @@ function generate(input: Input): Step<TreeFrame>[] {
             `حالة يسار-يمين ← دوران يساري حول ${z.left!.value}، ثم دوران يميني حول ${z.value}.`,
           );
           rotateLeft(z.left!);
-          toFrame({}, "First half of LR: complete the left rotation; the tree is now ready for the final right rotation.", 5, "LR first rotation", "النصف الأول من حالة LR: اكتمل الدوران اليساري؛ الشجرة جاهزة الآن للدوران اليميني النهائي.");
+          toFrame({}, "First half of LR: complete the left rotation; the tree is now ready for the final right rotation.", 5, "LR first rotation", "النصف الأول من حالة LR: اكتمل الدوران اليساري؛ الشجرة جاهزة الآن للدوران اليميني النهائي.", { kind: "balance", label: "AVL LR first rotation" });
           rotateRight(z);
-          toFrame({}, "Second half of LR: complete the right rotation; the local subtree is balanced.", 5, "LR second rotation", "النصف الثاني من حالة LR: اكتمل الدوران اليميني؛ الشجرة الفرعية المحلية متوازنة.");
+          toFrame({}, "Second half of LR: complete the right rotation; the local subtree is balanced.", 5, "LR second rotation", "النصف الثاني من حالة LR: اكتمل الدوران اليميني؛ الشجرة الفرعية المحلية متوازنة.", { kind: "balance", label: "AVL LR second rotation" });
         } else if (balance < -1 && bf(z.right) <= 0) {
           // Right-Right
           toFrame({ [z.id]: "swap", [z.right!.id]: "active" }, `Right-Right case → left-rotate ${z.value}.`, 6, `RR rotation`, `حالة يمين-يمين ← دوران يساري حول ${z.value}.`);
           rotateLeft(z);
-          toFrame({}, "Complete the left rotation; inspect the new parent/child links.", 6, "RR rotation applied", "اكتمل الدوران اليساري؛ افحص روابط الأب والابن الجديدة.");
+          toFrame({}, "Complete the left rotation; inspect the new parent/child links.", 6, "RR rotation applied", "اكتمل الدوران اليساري؛ افحص روابط الأب والابن الجديدة.", { kind: "balance", label: "AVL left rotation" });
         } else {
           // Right-Left
           toFrame(
@@ -166,9 +167,9 @@ function generate(input: Input): Step<TreeFrame>[] {
             `حالة يمين-يسار ← دوران يميني حول ${z.right!.value}، ثم دوران يساري حول ${z.value}.`,
           );
           rotateRight(z.right!);
-          toFrame({}, "First half of RL: complete the right rotation; the tree is now ready for the final left rotation.", 7, "RL first rotation", "النصف الأول من حالة RL: اكتمل الدوران اليميني؛ الشجرة جاهزة الآن للدوران اليساري النهائي.");
+          toFrame({}, "First half of RL: complete the right rotation; the tree is now ready for the final left rotation.", 7, "RL first rotation", "النصف الأول من حالة RL: اكتمل الدوران اليميني؛ الشجرة جاهزة الآن للدوران اليساري النهائي.", { kind: "balance", label: "AVL RL first rotation" });
           rotateLeft(z);
-          toFrame({}, "Second half of RL: complete the left rotation; the local subtree is balanced.", 7, "RL second rotation", "النصف الثاني من حالة RL: اكتمل الدوران اليساري؛ الشجرة الفرعية المحلية متوازنة.");
+          toFrame({}, "Second half of RL: complete the left rotation; the local subtree is balanced.", 7, "RL second rotation", "النصف الثاني من حالة RL: اكتمل الدوران اليساري؛ الشجرة الفرعية المحلية متوازنة.", { kind: "balance", label: "AVL RL second rotation" });
         }
         toFrame({}, `Rebalanced. Heights are AVL-valid again (all balance factors in {−1,0,+1}).`, 8, `balanced`, `أُعيد التوازن. الارتفاعات صالحة لـAVL مجددًا (كل عوامل التوازن ضمن {−1، 0، +1}).`);
         break; // one rotation suffices for a single insertion

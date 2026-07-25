@@ -3,8 +3,8 @@ import type { AlgorithmModule, CellState, Step, TableFrame } from "@/lib/engine/
 type Input = { a: string; b: string };
 
 function generate(input: Input): Step<TableFrame>[] {
-  const a = input.a;
-  const b = input.b;
+  const a = [...input.a];
+  const b = [...input.b];
   const n = a.length;
   const m = b.length;
   const steps: Step<TableFrame>[] = [];
@@ -15,8 +15,8 @@ function generate(input: Input): Step<TableFrame>[] {
   for (let i = 0; i <= n; i++) dp[i][0] = i;
   for (let j = 0; j <= m; j++) dp[0][j] = j;
 
-  const rowLabels = ["∅", ...a.split("").map((ch, i) => `${ch}${i + 1}`)];
-  const colLabels = ["∅", ...b.split("").map((ch, j) => `${ch}${j + 1}`)];
+  const rowLabels = ["∅", ...a.map((ch, i) => `${ch}${i + 1}`)];
+  const colLabels = ["∅", ...b.map((ch, j) => `${ch}${j + 1}`)];
 
   const frame = (
     filled: number,
@@ -40,17 +40,17 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilled ? val : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a.join("")}"  B = "${b.join("")}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
   frame(
     m + 1,
     null,
     [],
-    `Edit distance from "${a}" to "${b}". Base cases: row 0 = insert j chars, column 0 = delete i chars.`,
+    `Edit distance from "${a.join("")}" to "${b.join("")}". Base cases: row 0 = insert j chars, column 0 = delete i chars.`,
     1,
     undefined,
-    `مسافة التحرير من "${a}" إلى "${b}". الحالات الأساسية: الصف 0 = إدراج j محرفًا، العمود 0 = حذف i محرفًا.`,
+    `مسافة التحرير من "${a.join("")}" إلى "${b.join("")}". الحالات الأساسية: الصف 0 = إدراج j محرفًا، العمود 0 = حذف i محرفًا.`,
   );
 
   let filled = m + 1;
@@ -413,7 +413,7 @@ The dynamic-programming table dp[i][j] holds the edit distance between the first
     const a = (fields.a ?? "").trim();
     const b = (fields.b ?? "").trim();
     if (!a || !b) throw new Error("Enter both strings.");
-    if (a.length > 18 || b.length > 18) throw new Error("Each string must be at most 18 characters.");
+    if ([...a].length > 18 || [...b].length > 18) throw new Error("Each string must be at most 18 characters.");
     return { a, b };
   },
   serializeInput: (input) => ({ a: input.a, b: input.b }),

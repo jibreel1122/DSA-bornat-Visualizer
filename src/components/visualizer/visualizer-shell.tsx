@@ -46,7 +46,7 @@ import { useVisualizerPlayer } from "@/lib/engine/player";
 import { LEVELS, MAX_STEPS, type AlgorithmModule, type ArrayFrame, type Level, type ListFrame, type Step, type TreeFrame } from "@/lib/engine/types";
 import { bridgeIncrementalSteps, enrichSteps } from "@/lib/engine/learning";
 import { buildGenericSearchSteps } from "@/lib/engine/search-steps";
-import { buildDraftMutationSteps, resolveDraftMutationFrames } from "@/lib/engine/draft-steps";
+import { buildDraftMutationTimelineSteps, resolveDraftMutationFrames } from "@/lib/engine/draft-steps";
 import { useLiveInput, type LiveInput } from "@/lib/engine/use-live-input";
 import { useSettings } from "@/components/providers/settings-provider";
 import { useLearning } from "@/components/providers/learning-provider";
@@ -156,7 +156,7 @@ export function VisualizerShell({
   const live = externalLiveInput ?? ownLiveInput;
   const { level, listFieldKey, searchFieldKey, canSearch, revision, consumeOperation } = live;
   const input = live.input;
-  const serializedInput = React.useMemo(() => module.serializeInput(input), [module, input]);
+  const serializedInput = live.currentFields();
 
   React.useEffect(() => {
     recordStudy(module.slug, module.category);
@@ -168,21 +168,29 @@ export function VisualizerShell({
   });
 
   // ---- steps ----
-  const { steps, error } = React.useMemo((): { steps: Step[]; error: string | null } => {
+  const { steps, error, liveStartIndex } = React.useMemo((): { steps: Step[]; error: string | null; liveStartIndex: number } => {
     try {
       const operation = consumeOperation();
       const genericSearch = operation?.kind === "search" && !searchFieldKey
         ? buildGenericSearchSteps(
             module,
-            lastVisibleStep.current ?? (module.generate(operation.before)[0] as Step | undefined),
+            // Search must start from the complete current structure, not
+            // whichever intermediate insertion frame happened to be on screen
+            // when the learner opened the search dialog. Draft sets are the
+            // exception: their timeline is the source of truth until Run.
+            live.draftMutation
+              ? lastVisibleStep.current
+              : (module.generate(input).at(-1) as Step | undefined) ?? lastVisibleStep.current,
             operation.value ?? "",
           )
         : [];
-      const draftSteps = live.draftMutation && !operation
-        ? buildDraftMutationSteps(
+      const draftSteps = live.draftMutations.length > 0 && !operation
+        ? buildDraftMutationTimelineSteps(
             module.renderer,
-            live.draftMutation,
-            resolveDraftMutationFrames(module, input, listFieldKey, live.draftMutation),
+            live.draftMutations,
+            live.draftMutations.map((mutation) =>
+              resolveDraftMutationFrames(module, input, listFieldKey, mutation),
+            ),
           )
         : [];
       const generated = genericSearch.length > 0
@@ -195,17 +203,22 @@ export function VisualizerShell({
       const continuous = operation && !module.generateOperation && genericSearch.length === 0 && !live.draftMutation
         ? bridgeIncrementalSteps(lastVisibleStep.current, generated as Step[], operation.detail ?? operation.kind)
         : generated as Step[];
-      return { steps: enrichSteps(continuous.slice(0, MAX_STEPS)), error: null };
+      return {
+        steps: enrichSteps(continuous.slice(0, MAX_STEPS)),
+        error: null,
+        liveStartIndex: draftSteps.length > 0 ? Math.max(0, draftSteps.length - 2) : 0,
+      };
     } catch (e) {
-      return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate") };
+      return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate"), liveStartIndex: 0 };
     }
-  }, [module, input, listFieldKey, searchFieldKey, consumeOperation, live.draftMutation, t]);
+  }, [module, input, listFieldKey, searchFieldKey, consumeOperation, live.draftMutation, live.draftMutations, t]);
 
   React.useEffect(() => {
     if (error) toast.error(error);
   }, [error]);
 
   const player = useVisualizerPlayer(steps.length, settings.defaultSpeed);
+  const pendingRestoreCursor = React.useRef<number | null>(null);
   const { goto: gotoPlayer } = player;
   const step = steps[player.cursor];
 
@@ -235,11 +248,25 @@ export function VisualizerShell({
   // internal reset-on-stepCount-change effect — otherwise that effect's
   // setPlaying(false) wins and playback never starts.
   React.useEffect(() => {
-    if (live.consumeLiveActionFlag()) {
-      if (!sharedPlayback?.active) player.restartAndPlay();
+    const liveAction = live.consumeLiveActionFlag();
+    const navigation = live.consumeNavigationRequest();
+    if (liveAction) {
+      if (!sharedPlayback?.active) player.playFrom(liveStartIndex);
+    } else if (!sharedPlayback?.active && navigation === "end") {
+      player.goToEnd();
+    } else if (!sharedPlayback?.active && navigation === "start") {
+      player.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
+
+  React.useEffect(() => {
+    if (pendingRestoreCursor.current === null) return;
+    player.goto(pendingRestoreCursor.current);
+    pendingRestoreCursor.current = null;
+    // The restored input and its new step count settle in the same revision.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision, steps.length]);
 
   const draftPlayerAtEnd = player.atEnd;
   const draftPlayerPlaying = player.playing;
@@ -291,7 +318,7 @@ export function VisualizerShell({
   const exportJson = () => {
     const payload: SavedState = {
       slug: module.slug,
-      fields: module.serializeInput(input),
+      fields: live.currentFields(),
       cursor: player.cursor,
     };
     downloadText(`${module.slug}-state.json`, JSON.stringify(payload, null, 2), "application/json");
@@ -310,9 +337,11 @@ export function VisualizerShell({
         if (data.slug !== module.slug) {
           throw new Error(`This file belongs to "${data.slug}", not "${module.slug}".`);
         }
+        pendingRestoreCursor.current = Number.isFinite(data.cursor) ? data.cursor : 0;
         live.applyFields(data.fields, { announce: false, autoPlay: false });
         toast.success(t("shell.stateImported"));
       } catch (e) {
+        pendingRestoreCursor.current = null;
         toast.error(e instanceof Error ? e.message : t("shell.couldNotImport"));
       }
     };
@@ -322,7 +351,7 @@ export function VisualizerShell({
   const saveLocal = () => {
     const payload: SavedState = {
       slug: module.slug,
-      fields: module.serializeInput(input),
+      fields: live.currentFields(),
       cursor: player.cursor,
     };
     localStorage.setItem(`bdsv:save:${module.slug}`, JSON.stringify(payload));
@@ -337,9 +366,11 @@ export function VisualizerShell({
     }
     try {
       const data = JSON.parse(raw) as SavedState;
+      pendingRestoreCursor.current = Number.isFinite(data.cursor) ? data.cursor : 0;
       live.applyFields(data.fields, { announce: false, autoPlay: false });
       toast.success(t("shell.savedStateLoaded"));
     } catch {
+      pendingRestoreCursor.current = null;
       toast.error(t("shell.savedStateCorrupted"));
     }
   };

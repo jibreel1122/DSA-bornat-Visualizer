@@ -358,9 +358,11 @@ Performance hinges on the load factor α = n/m (keys per bucket). With a good ha
     if (parts.length === 0) throw new Error("Enter at least one operation, e.g. insert 21.");
     if (parts.length > 50) throw new Error("Maximum 50 operations.");
     const ops: Op[] = parts.map((p) => {
-      const m = p.match(/^(insert|search|delete)\s+(\d+)$/i);
+      const m = p.match(/^(insert|search|delete)\s+(-?\d+)$/i);
       if (!m) throw new Error(`"${p}" is invalid. Use: insert 21, search 14, or delete 7.`);
-      return { kind: m[1].toLowerCase() as Op["kind"], key: Number(m[2]) };
+      const key = Number(m[2]);
+      if (key < -9999 || key > 9999) throw new Error(`Hash keys must be from -9999 to 9999 (got ${key}).`);
+      return { kind: m[1].toLowerCase() as Op["kind"], key };
     });
     const size = Number((fields.size ?? "7").trim());
     if (!Number.isInteger(size) || size < 3 || size > 20) throw new Error("Table size must be a whole number from 3 to 20.");

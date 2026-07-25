@@ -4,9 +4,9 @@ import { randomString } from "@/lib/engine/random";
 type Input = { text: string; pattern: string };
 
 function generate(input: Input): Step<StringFrame>[] {
-  const t = input.text;
-  const p = input.pattern;
-  const s = p + "$" + t; // concatenated string; Z is computed over this
+  const t = [...input.text];
+  const p = [...input.pattern];
+  const s = [...p, "$", ...t]; // concatenated code-point array; Z is computed over this
   const n = s.length;
   const m = p.length;
   const steps: Step<StringFrame>[] = [];
@@ -29,8 +29,8 @@ function generate(input: Input): Step<StringFrame>[] {
     if (box) aux.push({ label: "Z-box [L,R]", values: [box.l, box.r] });
     steps.push({
       frame: {
-        text: [...s].map((ch, i) => ({ ch, state: concatStates[i] })),
-        pattern: [...p].map((ch) => ({ ch })),
+        text: s.map((ch, i) => ({ ch, state: concatStates[i] })),
+        pattern: p.map((ch) => ({ ch })),
         shift: 0,
         aux,
       },
@@ -41,7 +41,7 @@ function generate(input: Input): Step<StringFrame>[] {
     });
   };
 
-  frame({}, {}, `Concatenate pattern + "$" + text = "${s}". Z[i] = length of the longest substring starting at i that matches a prefix of this string. Z[i] = ${m} ⇒ pattern occurrence.`, 0, undefined, `اربط pattern + "$" + text = "${s}". Z[i] = طول أطول سلسلة جزئية تبدأ عند i وتطابق بادئة هذه السلسلة. Z[i] = ${m} ⇒ تكرار للنمط.`);
+  frame({}, {}, `Concatenate pattern + "$" + text = "${s.join("")}". Z[i] = length of the longest substring starting at i that matches a prefix of this string. Z[i] = ${m} ⇒ pattern occurrence.`, 0, undefined, `اربط pattern + "$" + text = "${s.join("")}". Z[i] = طول أطول سلسلة جزئية تبدأ عند i وتطابق بادئة هذه السلسلة. Z[i] = ${m} ⇒ تكرار للنمط.`);
 
   let L = 0;
   let R = 0;
@@ -59,14 +59,15 @@ function generate(input: Input): Step<StringFrame>[] {
     } else {
       frame({ [i]: "active" }, { [i]: "compare" }, `i=${i} is outside any Z-box: match from scratch.`, 3, undefined, `i=${i} خارج أي صندوق Z: طابِق من الصفر.`);
     }
-    while (i + z[i] < n && s[z[i]] === s[i + z[i]]) {
+    while (i + z[i] < n) {
       comparisons++;
+      if (s[z[i]] !== s[i + z[i]]) break;
       z[i]++;
     }
     if (z[i] > 0) {
       const st: Record<number, CellState> = { [i]: "active" };
       for (let k = 0; k < z[i]; k++) st[i + k] = "compare";
-      frame(st, { [i]: "found" }, `Extended: Z[${i}] = ${z[i]} (matches the prefix "${s.slice(0, z[i])}").`, 4, undefined, `تمدَّد: Z[${i}] = ${z[i]} (يطابق البادئة "${s.slice(0, z[i])}").`);
+      frame(st, { [i]: "found" }, `Extended: Z[${i}] = ${z[i]} (matches the prefix "${s.slice(0, z[i]).join("")}").`, 4, undefined, `تمدَّد: Z[${i}] = ${z[i]} (يطابق البادئة "${s.slice(0, z[i]).join("")}").`);
     }
     if (i + z[i] > R) {
       L = i;
@@ -454,8 +455,8 @@ The linear-time trick is the Z-box [L, R): the rightmost segment found so far th
     const pattern = (fields.pattern ?? "").trim();
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
-    if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 55) throw new Error("Keep the text at most 55 characters (the concatenation is drawn).");
+    if ([...pattern].length > [...text].length) throw new Error("Pattern must not be longer than the text.");
+    if ([...text].length > 55) throw new Error("Keep the text at most 55 characters (the concatenation is drawn).");
     if (text.includes("$") || pattern.includes("$")) throw new Error("'$' is reserved as the separator character.");
     return { text, pattern };
   },

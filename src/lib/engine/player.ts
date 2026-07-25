@@ -11,6 +11,8 @@ export interface PlayerControls {
   atStart: boolean;
   atEnd: boolean;
   play: () => void;
+  /** Start playback at an exact operation boundary without replaying earlier history. */
+  playFrom: (i: number) => void;
   restartAndPlay: () => void;
   pause: () => void;
   toggle: () => void;
@@ -59,6 +61,11 @@ export function useVisualizerPlayer(stepCount: number, initialSpeed = 1): Player
     setCursor((c) => (c >= last ? 0 : c));
     setPlaying(true);
   }, [last]);
+  const playFrom = useCallback((i: number) => {
+    const start = clamp(Math.round(i), 0, last);
+    setCursor(start);
+    setPlaying(start < last);
+  }, [last]);
   const restartAndPlay = useCallback(() => {
     setCursor(0);
     setPlaying(last > 0);
@@ -102,6 +109,7 @@ export function useVisualizerPlayer(stepCount: number, initialSpeed = 1): Player
     atStart: cursor === 0,
     atEnd: cursor >= last,
     play,
+    playFrom,
     restartAndPlay,
     pause,
     toggle,

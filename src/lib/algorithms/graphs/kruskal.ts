@@ -65,7 +65,18 @@ function generate(input: Input): Step<GraphFrame>[] {
       snap({ [e.from]: "discarded", [e.to]: "discarded" }, edgeStatesFor({ [`${e.from}->${e.to}`]: "discarded", [`${e.to}->${e.from}`]: "discarded" }), i, `Same set — adding it would form a cycle. Skip.`, 4, `نفس المجموعة — إضافتها ستُشكِّل دورة. تخطَّها.`);
     }
   }
-  snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStatesFor(), -1, `MST complete with ${mstEdges.size} edges, total weight ${totalWeight}.`, 5, `اكتملت الشجرة الممتدة الصغرى بـ ${mstEdges.size} حافة، الوزن الإجمالي ${totalWeight}.`);
+  if (mstEdges.size === nodes.length - 1) {
+    snap(Object.fromEntries(nodes.map((n) => [n, "sorted" as CellState])), edgeStatesFor(), -1, `MST complete with ${mstEdges.size} edges, total weight ${totalWeight}.`, 5, `اكتملت الشجرة الممتدة الصغرى بـ ${mstEdges.size} حافة، الوزن الإجمالي ${totalWeight}.`);
+  } else {
+    snap(
+      Object.fromEntries(nodes.map((n) => [n, "active" as CellState])),
+      edgeStatesFor(),
+      -1,
+      `Graph is disconnected: the ${mstEdges.size} chosen edges form a minimum spanning forest, not one MST. Forest weight ${totalWeight}.`,
+      5,
+      `الرسم البياني غير متصل: تشكل الحواف المختارة وعددها ${mstEdges.size} غابة ممتدة صغرى، وليست شجرة ممتدة صغرى واحدة. وزن الغابة ${totalWeight}.`,
+    );
+  }
   return steps;
 }
 

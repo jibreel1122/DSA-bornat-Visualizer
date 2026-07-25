@@ -4,8 +4,9 @@ import { randomString } from "@/lib/engine/random";
 type Input = { text: string; pattern: string };
 
 function generate(input: Input): Step<StringFrame>[] {
-  const t = input.text;
-  const p = input.pattern;
+  // Keep algorithm indices aligned with the characters rendered by StringView.
+  const t = [...input.text];
+  const p = [...input.pattern];
   const steps: Step<StringFrame>[] = [];
   let comparisons = 0;
   const matches: number[] = [];
@@ -13,8 +14,8 @@ function generate(input: Input): Step<StringFrame>[] {
   const frame = (shift: number, textStates: Record<number, CellState>, patStates: Record<number, CellState>, description: string, codeLine: number, note?: string, descriptionAr?: string) => {
     steps.push({
       frame: {
-        text: [...t].map((ch, i) => ({ ch, state: textStates[i] })),
-        pattern: [...p].map((ch, i) => ({ ch, state: patStates[i] })),
+        text: t.map((ch, i) => ({ ch, state: textStates[i] })),
+        pattern: p.map((ch, i) => ({ ch, state: patStates[i] })),
         shift,
         aux: [{ label: "Matches at", values: matches.length ? [...matches] : ["—"] }],
         note,
@@ -308,8 +309,8 @@ It requires no preprocessing and is easy to implement, but it can re-examine the
     const pattern = (fields.pattern ?? "").trim();
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
-    if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 90) throw new Error("Keep the text at most 90 characters.");
+    if ([...pattern].length > [...text].length) throw new Error("Pattern must not be longer than the text.");
+    if ([...text].length > 90) throw new Error("Keep the text at most 90 characters.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

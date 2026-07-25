@@ -18,6 +18,20 @@ function generate(input: Input): Step<ArrayFrame>[] {
   let lo = 0;
   let hi = a.length - 1;
   while (lo <= hi && target >= a[lo] && target <= a[hi]) {
+    // A constant-valued range makes the interpolation denominator zero.
+    // The loop guard proves that target equals that constant value.
+    if (a[lo] === a[hi]) {
+      probes++;
+      snap(
+        { [lo]: "found" },
+        { from: lo, to: hi },
+        `All values in [${lo}..${hi}] equal ${a[lo]}; found ${target} at index ${lo}.`,
+        3,
+        undefined,
+        `كل القيم في [${lo}..${hi}] تساوي ${a[lo]}؛ عُثر على ${target} عند الفهرس ${lo}.`,
+      );
+      return steps;
+    }
     if (lo === hi) {
       probes++;
       if (a[lo] === target) { snap({ [lo]: "found" }, { from: lo, to: hi }, `Found ${target} at index ${lo}.`, 3, undefined, `عُثِر على ${target} عند الفهرس ${lo}.`); return steps; }

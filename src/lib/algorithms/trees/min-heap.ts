@@ -66,16 +66,29 @@ function generate(input: Input): Step<TreeFrame>[] {
   const times = Math.min(input.extractCount, heap.length);
   for (let e = 0; e < times; e++) {
     const min = heap[0];
-    const last = heap.pop()!;
-    toFrame({ 0: "swap" }, `extractMin(): remove root ${min}. Move last element ${last} to the root.`, 5, `extract-min`, `extractMin(): احذف الجذر ${min}. انقل العنصر الأخير ${last} إلى الجذر.`);
+    const lastIndex = heap.length - 1;
+    const last = heap[lastIndex];
+    toFrame(
+      lastIndex === 0 ? { 0: "swap" } : { 0: "swap", [lastIndex]: "active" },
+      `extractMin(): select root ${min} for removal and the last element ${last} as its replacement.`,
+      5,
+      `extract-min`,
+      `extractMin(): حدّد الجذر ${min} للحذف والعنصر الأخير ${last} ليحل محله.`,
+    );
+    heap.pop();
     if (heap.length === 0) {
-      steps[steps.length - 1].description = `extractMin(): removed ${min}. The heap is now empty.`;
-      steps[steps.length - 1].descriptionAr = `extractMin(): حُذف ${min}. أصبحت الكومة فارغة الآن.`;
+      toFrame({}, `extractMin(): removed ${min}. The heap is now empty.`, 5, `extract-min complete`, `extractMin(): حُذف ${min}. أصبحت الكومة فارغة الآن.`);
       break;
     }
     heap[0] = last;
     let i = 0;
-    toFrame({ 0: "active" }, `Now sift ${last} down to its correct spot.`, 6, `sift-down`, `الآن أنزل ${last} إلى موضعه الصحيح.`);
+    toFrame(
+      { 0: "active" },
+      `Move ${last} to the root. Now sift it down to its correct spot.`,
+      6,
+      `sift-down`,
+      `انقل ${last} إلى الجذر. الآن أنزله إلى موضعه الصحيح.`,
+    );
     while (true) {
       const l = 2 * i + 1;
       const r = 2 * i + 2;

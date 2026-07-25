@@ -36,6 +36,27 @@ const ARABIC_FIELD_LABELS: Record<string, string> = {
   grid: "الشبكة",
   capacity: "السعة",
   size: "الحجم",
+  k: "عدد العناصر المختارة",
+  n: "القيمة n",
+  amount: "المبلغ المستهدف",
+  sink: "المصب",
+  deleteValue: "قيمة الحذف",
+  insertHead: "قيمة الإدراج في الرأس",
+  cyclePos: "موضع بداية الدورة",
+  base: "الأساس",
+  exp: "الأس",
+  mod: "المعامل الاختياري",
+  disks: "عدد الأقراص",
+  expr: "تعبير الأقواس",
+  popCount: "عدد عمليات السحب",
+  order: "ترتيب الاجتياز",
+  queryIdx: "فهرس الاستعلام",
+  queryL: "بداية نطاق الاستعلام",
+  queryR: "نهاية نطاق الاستعلام",
+  updateIdx: "فهرس التحديث",
+  updateVal: "قيمة التحديث",
+  updateDelta: "مقدار التحديث",
+  extractCount: "عدد عمليات استخراج الحد الأدنى",
 };
 
 function localizedFieldLabel(field: InputField, locale: string) {
@@ -155,7 +176,7 @@ export function InputDialog({
             const fieldError = fieldErrors[f.key];
             const label = localizedFieldLabel(f, locale);
             const help = locale === "ar"
-              ? f.helpAr ?? (f.list ? "أدخل العناصر مفصولة بفواصل، ثم شغّل التصور." : f.help)
+              ? f.helpAr ?? (f.list ? "أدخل العناصر مفصولة بفواصل، ثم شغّل التصور." : "أدخل البيانات المطلوبة ثم شغّل التصور.")
               : f.help;
             return (
               <div key={f.key} className="grid gap-1.5">

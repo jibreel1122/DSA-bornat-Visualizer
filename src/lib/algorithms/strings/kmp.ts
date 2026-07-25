@@ -4,8 +4,8 @@ import { randomString } from "@/lib/engine/random";
 type Input = { text: string; pattern: string };
 
 function generate(input: Input): Step<StringFrame>[] {
-  const t = input.text;
-  const p = input.pattern;
+  const t = [...input.text];
+  const p = [...input.pattern];
   const m = p.length;
   const steps: Step<StringFrame>[] = [];
   let comparisons = 0;
@@ -23,8 +23,8 @@ function generate(input: Input): Step<StringFrame>[] {
   ) => {
     steps.push({
       frame: {
-        text: [...t].map((ch, i) => ({ ch, state: textStates[i] })),
-        pattern: [...p].map((ch, i) => ({ ch, state: patStates[i] })),
+        text: t.map((ch, i) => ({ ch, state: textStates[i] })),
+        pattern: p.map((ch, i) => ({ ch, state: patStates[i] })),
         shift,
         aux: [
           { label: "LPS", values: [...lps], states: lpsStates },
@@ -482,8 +482,8 @@ That knowledge is captured in the LPS ("longest proper prefix which is also a su
     const pattern = (fields.pattern ?? "").trim();
     if (text.length < 1) throw new Error("Enter a text string.");
     if (pattern.length < 1) throw new Error("Enter a pattern.");
-    if (pattern.length > text.length) throw new Error("Pattern must not be longer than the text.");
-    if (text.length > 70) throw new Error("Keep the text at most 70 characters.");
+    if ([...pattern].length > [...text].length) throw new Error("Pattern must not be longer than the text.");
+    if ([...text].length > 70) throw new Error("Keep the text at most 70 characters.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

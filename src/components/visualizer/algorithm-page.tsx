@@ -322,16 +322,17 @@ function ComplexityStat({ label, value }: { label: string; value: string }) {
 
 function NotesPanel({ slug }: { slug: string }) {
   const { notes, setNotes, loaded } = useNotes(slug);
+  const { t } = useLocale();
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your notes</CardTitle>
+        <CardTitle>{t("algo.notesTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder={loaded ? "Write anything you want to remember about this algorithm — saved automatically on this device." : "Loading…"}
+          placeholder={loaded ? t("algo.notesPlaceholder") : t("algo.loading")}
           className="min-h-[180px]"
         />
       </CardContent>

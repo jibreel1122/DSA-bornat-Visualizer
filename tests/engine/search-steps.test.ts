@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildGenericSearchSteps, supportsGenericSearch } from "@/lib/engine/search-steps";
 import type { ArrayFrame, CallStackFrame, GraphFrame, GridFrame, Step, StringFrame, TableFrame, TreeFrame } from "@/lib/engine/types";
+import avlTree from "@/lib/algorithms/trees/avl-tree";
 
 describe("generic renderer search steps", () => {
   it("checks array values in order and stops on the requested value", () => {
@@ -48,6 +49,19 @@ describe("generic renderer search steps", () => {
     expect(steps[0].description).toContain("right");
     expect(steps[1].frame.states).toEqual({ "12": "found" });
     expect(steps.some((step) => step.frame.states?.["4"])).toBe(false);
+  });
+
+  it("routes AVL searches through the balanced final tree, not insertion order", () => {
+    const finalFrame = avlTree.generate({ values: [6, 7, 88, 99] }).at(-1)!.frame;
+    const steps = buildGenericSearchSteps(
+      { slug: "avl-tree", renderer: "tree" },
+      { frame: finalFrame, description: "Balanced AVL tree" },
+      "88",
+    ) as Step<TreeFrame>[];
+
+    expect(finalFrame.nodes[finalFrame.rootId!].value).toBe(7);
+    expect(steps[0].description).toContain("node 7");
+    expect(steps.at(-1)?.phase).toBe("found");
   });
 
   it("finishes with an inspectable not-found step", () => {

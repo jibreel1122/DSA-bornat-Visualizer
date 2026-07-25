@@ -458,7 +458,7 @@ Two indices drive it: front points at the next element to remove, and rear at th
       const em = t.match(/^[eE]\s*(-?\d+)$/);
       if (em) {
         const v = Number(em[1]);
-        if (v < 1 || v > 99) throw new Error(`Enqueue values must be 1–99 (got ${v}).`);
+        if (v < -999 || v > 999) throw new Error(`Enqueue values must be from -999 to 999 (got ${v}).`);
         return { kind: "enqueue", value: v } as Op;
       }
       throw new Error(`"${t}" is invalid. Use 'E n' to enqueue or 'D' to dequeue.`);

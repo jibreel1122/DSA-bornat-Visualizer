@@ -49,19 +49,25 @@ function generate(input: Input): Step<ArrayFrame>[] {
     for (let i = 1; i < buckets[b].length; i++) {
       const key = buckets[b][i];
       let j = i - 1;
-      while (j >= 0 && buckets[b][j] > key) {
+      while (j >= 0) {
         comparisons++;
+        if (buckets[b][j] <= key) break;
         buckets[b][j + 1] = buckets[b][j];
+        writes++;
         j--;
       }
       buckets[b][j + 1] = key;
+      writes++;
     }
     snap({}, bucketRows(buckets, b), `Bucket ${b} sorted: [${buckets[b].join(", ")}].`, 2, `اكتمل ترتيب الدلو ${b}: [${buckets[b].join(", ")}].`);
   }
 
   // gather
   const gathered: number[] = [];
-  for (const b of buckets) for (const v of b) gathered.push(v);
+  for (const b of buckets) for (const v of b) {
+    gathered.push(v);
+    writes++;
+  }
   a = gathered;
   snap({}, bucketRows(buckets), `Concatenate buckets 0…${bucketCount - 1} in order — the array is now fully sorted.`, 3, `اسلسل الدلاء من 0…${bucketCount - 1} بالترتيب — المصفوفة الآن مرتبة بالكامل.`);
 

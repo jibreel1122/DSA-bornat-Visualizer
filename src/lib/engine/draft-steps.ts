@@ -22,6 +22,11 @@ export interface DraftMutation {
   detail: string;
 }
 
+export interface ResolvedDraftMutationFrames {
+  before?: unknown;
+  after?: unknown;
+}
+
 function changedValue(mutation: DraftMutation) {
   if (mutation.kind === "insert") return mutation.after.at(-1);
   if (mutation.kind === "update") {
@@ -191,7 +196,7 @@ function frameFor(renderer: RendererKind, values: string[], activeIndex = -1) {
 export function buildDraftMutationSteps(
   renderer: RendererKind,
   mutation: DraftMutation,
-  resolved?: { before?: unknown; after?: unknown },
+  resolved?: ResolvedDraftMutationFrames,
 ): Step[] {
   const active = highlightedIndex(mutation);
   const action = mutation.kind === "update" ? "edit" : mutation.kind;
@@ -216,6 +221,21 @@ export function buildDraftMutationSteps(
       counters: { items: mutation.after.length },
     },
   ];
+}
+
+/**
+ * Keeps every construction edit on one chronological timeline. Each mutation
+ * contributes a stable before/after pair, so Previous can cross operation
+ * boundaries and inspect how every earlier value entered or left the set.
+ */
+export function buildDraftMutationTimelineSteps(
+  renderer: RendererKind,
+  mutations: readonly DraftMutation[],
+  resolved: readonly (ResolvedDraftMutationFrames | undefined)[] = [],
+): Step[] {
+  return mutations.flatMap((mutation, index) =>
+    buildDraftMutationSteps(renderer, mutation, resolved[index]),
+  );
 }
 
 /** Prevents malformed non-numeric array input from being mistaken for a valid in-progress dataset. */

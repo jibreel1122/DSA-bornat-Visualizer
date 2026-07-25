@@ -21,7 +21,7 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   const isRed = (n: Node | null) => n?.color === "red";
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string, transformation?: Step<TreeFrame>["transformation"]): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: Node | null) => {
       if (!n) return;
@@ -38,6 +38,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       descriptionAr,
       codeLine,
       counters: { comparisons, rotations, recolors },
+      transformation,
     });
   };
 
@@ -113,8 +114,9 @@ function generate(input: Input): Step<TreeFrame>[] {
             { [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" },
             `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`,
             5,
-            `recolor`,
-            `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+              `recolor`,
+              `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+              { kind: "balance", label: "Red-black recolor" },
           );
           z = grand;
         } else {
@@ -128,7 +130,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `العم أسود، ${value} ابن داخلي (LR) ← أجرِ دورانًا يساريًا للأب أولًا.`,
             );
             rotateLeft(parent);
-            toFrame({}, "Complete the left rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليساري عند الأب؛ افحص حالة الخط بعد التحويل.");
+            toFrame({}, "Complete the left rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليساري عند الأب؛ افحص حالة الخط بعد التحويل.", { kind: "balance", label: "Red-black left rotation" });
             z = parent;
           }
           // Case 3: line → recolor + rotate grandparent
@@ -143,7 +145,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يمينيًا للجد.`,
           );
           rotateRight(grand);
-          toFrame({}, "Complete the right rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليميني عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.");
+          toFrame({}, "Complete the right rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليميني عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.", { kind: "balance", label: "Red-black right rotation" });
         }
       } else {
         const uncle = grand.left;
@@ -156,8 +158,9 @@ function generate(input: Input): Step<TreeFrame>[] {
             { [parent.id]: "special", [grand.id]: "special", [uncle!.id]: "special" },
             `Uncle is red → recolor parent & uncle black, grandparent red. Move up to grandparent.`,
             5,
-            `recolor`,
-            `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+              `recolor`,
+              `العم أحمر ← أعِد تلوين الأب والعم أسودين، والجد أحمر. انتقل صعودًا إلى الجد.`,
+              { kind: "balance", label: "Red-black recolor" },
           );
           z = grand;
         } else {
@@ -170,7 +173,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `العم أسود، ${value} ابن داخلي (RL) ← أجرِ دورانًا يمينيًا للأب أولًا.`,
             );
             rotateRight(parent);
-            toFrame({}, "Complete the right rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليميني عند الأب؛ افحص حالة الخط بعد التحويل.");
+            toFrame({}, "Complete the right rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليميني عند الأب؛ افحص حالة الخط بعد التحويل.", { kind: "balance", label: "Red-black right rotation" });
             z = parent;
           }
           z.parent!.color = "black";
@@ -184,7 +187,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يساريًا للجد.`,
           );
           rotateLeft(grand);
-          toFrame({}, "Complete the left rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليساري عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.");
+          toFrame({}, "Complete the left rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليساري عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.", { kind: "balance", label: "Red-black left rotation" });
         }
       }
     }

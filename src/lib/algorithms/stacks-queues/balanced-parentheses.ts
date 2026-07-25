@@ -28,14 +28,13 @@ function generate(input: Input): Step<CallStackFrame>[] {
       detail: `from index ${e.pos}`,
       state: failed ? "discarded" : i === stack.length - 1 ? highlightTop : undefined,
     }));
-    const marker = s
-      .split("")
-      .map((c, i) => (i === pos ? `[${c}]` : c))
-      .join("");
+    const expressionStates = pos >= 0 && pos < s.length
+      ? { [pos]: failed ? "discarded" as const : "active" as const }
+      : undefined;
     steps.push({
       frame: {
         stack: items,
-        aux: [{ label: "expression", values: marker.split("") }],
+        aux: [{ label: "expression", values: s.split(""), states: expressionStates }],
         note: `scanning "${s}"  ·  cursor at index ${pos < 0 ? "—" : pos}`,
       },
       description,

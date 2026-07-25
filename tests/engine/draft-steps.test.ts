@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDraftMutationSteps, canVisualizeDraft, resolveDraftMutationFrames } from "@/lib/engine/draft-steps";
+import { buildDraftMutationSteps, buildDraftMutationTimelineSteps, canVisualizeDraft, resolveDraftMutationFrames } from "@/lib/engine/draft-steps";
 import type { ArrayFrame, ListFrame, TreeFrame } from "@/lib/engine/types";
 import avlTree from "@/lib/algorithms/trees/avl-tree";
 
@@ -31,6 +31,23 @@ describe("draft dataset visualization", () => {
     expect((steps[1].frame as ArrayFrame).values).toEqual([7, 3]);
     expect((steps[1].frame as ArrayFrame).states).toEqual({ 1: "active" });
     expect((steps[1].frame as ArrayFrame).pointers).toEqual([{ index: 1, label: "new" }]);
+  });
+
+  it("retains every insertion on one reversible construction timeline", () => {
+    const mutations = [
+      { before: [], after: ["6"], kind: "insert" as const, detail: "inserting 6" },
+      { before: ["6"], after: ["6", "7"], kind: "insert" as const, detail: "inserting 7" },
+      { before: ["6", "7"], after: ["6", "7", "88"], kind: "insert" as const, detail: "inserting 88" },
+    ];
+    const steps = buildDraftMutationTimelineSteps("array", mutations);
+
+    expect(steps).toHaveLength(6);
+    expect((steps[1].frame as ArrayFrame).values).toEqual([6]);
+    expect((steps[3].frame as ArrayFrame).values).toEqual([6, 7]);
+    expect((steps[5].frame as ArrayFrame).values).toEqual([6, 7, 88]);
+    expect(steps.map((step) => step.phase)).toEqual([
+      "prepare", "insert", "prepare", "insert", "prepare", "insert",
+    ]);
   });
 
   it("preserves list and tree structure while a below-minimum set is edited", () => {
@@ -75,6 +92,26 @@ describe("draft dataset visualization", () => {
     expect(frame.nodes.n2.right).toBe("n3");
     expect(frame.nodes.n3.value).toBe(99);
     expect(frame.states).toEqual({ n3: "active" });
+  });
+
+  it("keeps all earlier AVL insertion results available to Previous", () => {
+    const mutations = [
+      { before: [], after: ["6"], kind: "insert" as const, detail: "inserting 6" },
+      { before: ["6"], after: ["6", "7"], kind: "insert" as const, detail: "inserting 7" },
+      { before: ["6", "7"], after: ["6", "7", "88"], kind: "insert" as const, detail: "inserting 88" },
+      { before: ["6", "7", "88"], after: ["6", "7", "88", "99"], kind: "insert" as const, detail: "inserting 99" },
+    ];
+    const input = avlTree.parseInput({ values: "10, 5" });
+    const resolved = mutations.map((mutation) =>
+      resolveDraftMutationFrames(avlTree, input, "values", mutation),
+    );
+    const steps = buildDraftMutationTimelineSteps("tree", mutations, resolved);
+
+    expect(steps).toHaveLength(8);
+    expect(Object.values((steps[1].frame as TreeFrame).nodes).map((node) => node.value)).toEqual([6]);
+    expect(Object.values((steps[3].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7]);
+    expect(Object.values((steps[5].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7, 88]);
+    expect(Object.values((steps[7].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7, 88, 99]);
   });
 
   it("does not treat malformed numeric arrays as an in-progress valid set", () => {

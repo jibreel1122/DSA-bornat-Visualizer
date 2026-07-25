@@ -20,6 +20,14 @@ const LEVEL_LABEL_KEYS: Record<Level, DictKey> = {
 
 type HasInputFields = Pick<AlgorithmModule, "inputFields">;
 
+function sameDraftDataset(renderer: AlgorithmModule["renderer"], left: readonly string[], right: readonly string[]) {
+  if (left.length !== right.length) return false;
+  if (renderer !== "tree") return left.every((value, index) => value === right[index]);
+  const sortedLeft = [...left].sort();
+  const sortedRight = [...right].sort();
+  return sortedLeft.every((value, index) => value === sortedRight[index]);
+}
+
 /** The list-shaped field a module's Insert/Delete/Edit actions operate on, if any. */
 export function listFieldKeyOf(module: HasInputFields): string | undefined {
   return module.inputFields.find((f) => f.list || f.key === "values")?.key;
@@ -45,9 +53,13 @@ export interface LiveInput<I = unknown> {
   level: Level;
   setLevel: (l: Level) => void;
   input: I;
+  /** Serialized fields for the state currently visible/under construction. */
+  currentFields: () => Record<string, string>;
   listFieldKey: string | undefined;
   searchFieldKey: string | undefined;
   canSearch: boolean;
+  /** Every uncommitted construction edit, in chronological playback order. */
+  draftMutations: readonly DraftMutation[];
   draftMutation: DraftMutation | undefined;
   /** Promotes a set built through repeated Insert actions into the full algorithm timeline. */
   runDraft: () => "none" | "started" | "invalid";
@@ -67,6 +79,8 @@ export interface LiveInput<I = unknown> {
   commitLiveFields: (fields: Record<string, string>) => void;
   /** True immediately after any live action above — read once by the caller's auto-play effect, which resets it back to false. */
   consumeLiveActionFlag: () => boolean;
+  /** One-shot player destination requested by Undo/Redo. */
+  consumeNavigationRequest: () => "start" | "end" | undefined;
   consumeOperation: () => OperationRequest<I> | undefined;
 }
 
@@ -108,12 +122,45 @@ export function useLiveInput<I>(
   const input = history[hIndex];
 
   const liveActionRef = React.useRef(false);
+  const navigationRef = React.useRef<"start" | "end" | undefined>(undefined);
   const operationRef = React.useRef<OperationRequest<I> | undefined>(undefined);
-  const [draftMutation, setDraftMutation] = React.useState<DraftMutation | undefined>(undefined);
+  const [draftMutations, setDraftMutations] = React.useState<DraftMutation[]>([]);
+  const [draftRedoMutations, setDraftRedoMutations] = React.useState<DraftMutation[]>([]);
+  const draftMutation = draftMutations.at(-1);
+  const appendDraftMutation = React.useCallback((mutation: DraftMutation, branchFrom?: readonly string[]) => {
+    setDraftRedoMutations([]);
+    setDraftMutations((current) => {
+      let base = current;
+      if (branchFrom && !sameDraftDataset(module.renderer, current.at(-1)?.after ?? [], branchFrom)) {
+        const branchIndex = current.findLastIndex((item) => sameDraftDataset(module.renderer, item.after, branchFrom));
+        base = branchIndex >= 0 ? current.slice(0, branchIndex + 1) : [];
+      }
+      return [...base, mutation].slice(-50);
+    });
+  }, [module.renderer]);
+  const clearDraftHistory = React.useCallback(() => {
+    setDraftMutations([]);
+    setDraftRedoMutations([]);
+  }, []);
+  const currentDraftValues = () => {
+    const visible = options?.getCurrentListValues?.();
+    // Playback starts every new operation on its "before" frame. While that
+    // short animation is still running the canvas can legitimately be empty
+    // (notably for the first tree node). That is not an instruction to throw
+    // away the pending operation: continue from the latest constructed set.
+    if (!draftMutation || !visible || visible.length === 0) return draftMutation?.after ?? visible;
+    const matchingMutation = draftMutations.findLast((item) => sameDraftDataset(module.renderer, item.after, visible));
+    return matchingMutation?.after ?? draftMutation.after;
+  };
   const consumeLiveActionFlag = React.useCallback(() => {
     const v = liveActionRef.current;
     liveActionRef.current = false;
     return v;
+  }, []);
+  const consumeNavigationRequest = React.useCallback(() => {
+    const request = navigationRef.current;
+    navigationRef.current = undefined;
+    return request;
   }, []);
   const consumeOperation = React.useCallback(() => {
     const operation = operationRef.current;
@@ -131,7 +178,7 @@ export function useLiveInput<I>(
 
   const randomize = React.useCallback(
     (lvl: Level = level, actionOptions?: { announce?: boolean }) => {
-      setDraftMutation(undefined);
+      clearDraftHistory();
       operationRef.current = undefined;
       liveActionRef.current = true;
       pushInput(module.defaultInput(lvl, createRNG(randomSeed())) as I);
@@ -141,12 +188,12 @@ export function useLiveInput<I>(
         toast.success(t("shell.randomInitialized", { algorithm, difficulty: t(LEVEL_LABEL_KEYS[lvl]) }));
       }
     },
-    [module, level, locale, pushInput, t],
+    [module, level, locale, pushInput, t, clearDraftHistory],
   );
 
   const applyFields = (fields: Record<string, string>, actionOptions?: { announce?: boolean; autoPlay?: boolean }) => {
     const parsed = module.parseInput(fields) as I; // throws friendly errors
-    setDraftMutation(undefined);
+    clearDraftHistory();
     operationRef.current = undefined;
     liveActionRef.current = actionOptions?.autoPlay !== false;
     pushInput(parsed);
@@ -174,12 +221,13 @@ export function useLiveInput<I>(
 
   const shuffleInput = () => {
     if (draftMutation) {
-      const shuffled = [...draftMutation.after];
+      const before = currentDraftValues() ?? draftMutation.after;
+      const shuffled = [...before];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
-      setDraftMutation({ before: draftMutation.after, after: shuffled, kind: "shuffle", detail: "shuffling the current set" });
+      appendDraftMutation({ before, after: shuffled, kind: "shuffle", detail: "shuffling the current set" }, before);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);
@@ -227,13 +275,12 @@ export function useLiveInput<I>(
     }
     try {
       pushInput(module.parseInput(next) as I);
-      setDraftMutation(undefined);
+      clearDraftHistory();
       toast.success(t("shell.cleared"));
     } catch {
-      const currentValues = draftMutation?.after
-        ?? options?.getCurrentListValues?.()
+      const currentValues = currentDraftValues()
         ?? (listFieldKey ? (fields[listFieldKey] ?? "").split(",").map((value) => value.trim()).filter(Boolean) : []);
-      setDraftMutation({ before: currentValues, after: [], kind: "clear", detail: "clearing the current set" });
+      appendDraftMutation({ before: currentValues, after: [], kind: "clear", detail: "clearing the current set" }, currentValues);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);
@@ -245,8 +292,7 @@ export function useLiveInput<I>(
     if (!listFieldKey) return;
     const fields = module.serializeInput(input);
     const current = fields[listFieldKey] ?? "";
-    const currentTokens = draftMutation?.after
-      ?? options?.getCurrentListValues?.()
+    const currentTokens = currentDraftValues()
       ?? current.split(",").map((token) => token.trim()).filter(Boolean);
     const incoming = raw.split(",").map((token) => token.trim()).filter(Boolean);
     if (incoming.length === 0) return;
@@ -254,7 +300,7 @@ export function useLiveInput<I>(
     const before = startingFresh ? [] : currentTokens;
     const tokens = [...before, ...incoming];
     if ((startingFresh || draftMutation) && canVisualizeDraft(module.renderer, tokens)) {
-      setDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` });
+      appendDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` }, before);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);
@@ -264,7 +310,7 @@ export function useLiveInput<I>(
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("insert", module.parseInput(next) as I, `inserting ${raw}`);
-      setDraftMutation(undefined);
+      clearDraftHistory();
       toast.success(t("shell.toastInserted", { value: raw }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("shell.couldNotInsert"));
@@ -274,8 +320,7 @@ export function useLiveInput<I>(
   const removeValue = (raw: string) => {
     if (!listFieldKey) return;
     const fields = module.serializeInput(input);
-    const tokens = draftMutation?.after
-      ?? options?.getCurrentListValues?.()
+    const tokens = currentDraftValues()
       ?? (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === raw.trim());
     if (idx === -1) {
@@ -285,7 +330,7 @@ export function useLiveInput<I>(
     const before = [...tokens];
     tokens.splice(idx, 1);
     if (draftMutation && canVisualizeDraft(module.renderer, tokens)) {
-      setDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` });
+      appendDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` }, before);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);
@@ -295,11 +340,11 @@ export function useLiveInput<I>(
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("delete", module.parseInput(next) as I, `removing ${raw}`);
-      setDraftMutation(undefined);
+      clearDraftHistory();
       toast.success(t("shell.toastRemoved", { value: raw }));
     } catch (e) {
       if (canVisualizeDraft(module.renderer, tokens)) {
-        setDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` });
+        appendDraftMutation({ before, after: tokens, kind: "delete", detail: `removing ${raw}` }, before);
         operationRef.current = undefined;
         liveActionRef.current = true;
         setRevision((value) => value + 1);
@@ -313,8 +358,7 @@ export function useLiveInput<I>(
   const editValue = (oldRaw: string, newRaw: string) => {
     if (!listFieldKey) return;
     const fields = module.serializeInput(input);
-    const tokens = draftMutation?.after
-      ?? options?.getCurrentListValues?.()
+    const tokens = currentDraftValues()
       ?? (fields[listFieldKey] ?? "").split(",").map((t) => t.trim()).filter(Boolean);
     const idx = tokens.findIndex((t) => t === oldRaw.trim());
     if (idx === -1) {
@@ -324,7 +368,7 @@ export function useLiveInput<I>(
     const before = [...tokens];
     tokens[idx] = newRaw.trim();
     if (draftMutation && canVisualizeDraft(module.renderer, tokens)) {
-      setDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` });
+      appendDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` }, before);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);
@@ -334,11 +378,11 @@ export function useLiveInput<I>(
     const next = { ...fields, [listFieldKey]: tokens.join(", ") };
     try {
       commitOperation("update", module.parseInput(next) as I, `changing ${oldRaw} to ${newRaw}`);
-      setDraftMutation(undefined);
+      clearDraftHistory();
       toast.success(t("shell.toastChanged", { old: oldRaw, new: newRaw }));
     } catch (e) {
       if (canVisualizeDraft(module.renderer, tokens)) {
-        setDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` });
+        appendDraftMutation({ before, after: tokens, kind: "update", detail: `changing ${oldRaw} to ${newRaw}` }, before);
         operationRef.current = undefined;
         liveActionRef.current = true;
         setRevision((value) => value + 1);
@@ -373,7 +417,7 @@ export function useLiveInput<I>(
     const fields = module.serializeInput(input);
     try {
       const parsed = module.parseInput({ ...fields, [listFieldKey]: draftMutation.after.join(", ") }) as I;
-      setDraftMutation(undefined);
+      clearDraftHistory();
       operationRef.current = undefined;
       liveActionRef.current = true;
       pushInput(parsed);
@@ -387,20 +431,51 @@ export function useLiveInput<I>(
     }
   };
 
+  const currentFields = () => {
+    const fields = module.serializeInput(input);
+    if (!listFieldKey || !draftMutation) return fields;
+    const values = currentDraftValues() ?? draftMutation.after;
+    return { ...fields, [listFieldKey]: values.join(", ") };
+  };
+
   return {
     revision,
     level,
     setLevel,
     input,
+    currentFields,
     listFieldKey,
     searchFieldKey,
     canSearch,
+    draftMutations,
     draftMutation,
     runDraft,
-    canUndo: hIndex > 0,
-    canRedo: hIndex < history.length - 1,
-    undo: () => setHIndex((i) => Math.max(0, i - 1)),
-    redo: () => setHIndex((i) => Math.min(history.length - 1, i + 1)),
+    canUndo: draftMutations.length > 0 || hIndex > 0,
+    canRedo: draftRedoMutations.length > 0 || hIndex < history.length - 1,
+    undo: () => {
+      if (draftMutations.length > 0) {
+        const mutation = draftMutations.at(-1)!;
+        setDraftMutations((current) => current.slice(0, -1));
+        setDraftRedoMutations((current) => [mutation, ...current]);
+        navigationRef.current = "end";
+      } else {
+        setHIndex((i) => Math.max(0, i - 1));
+        navigationRef.current = "start";
+      }
+      setRevision((value) => value + 1);
+    },
+    redo: () => {
+      if (draftRedoMutations.length > 0) {
+        const mutation = draftRedoMutations[0];
+        setDraftRedoMutations((current) => current.slice(1));
+        setDraftMutations((current) => [...current, mutation]);
+        navigationRef.current = "end";
+      } else {
+        setHIndex((i) => Math.min(history.length - 1, i + 1));
+        navigationRef.current = "start";
+      }
+      setRevision((value) => value + 1);
+    },
     randomize,
     applyFields,
     shuffleInput,
@@ -411,6 +486,7 @@ export function useLiveInput<I>(
     searchValue,
     commitLiveFields,
     consumeLiveActionFlag,
+    consumeNavigationRequest,
     consumeOperation,
   };
 }

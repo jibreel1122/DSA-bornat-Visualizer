@@ -3,8 +3,8 @@ import type { AlgorithmModule, CellState, Step, TableFrame } from "@/lib/engine/
 type Input = { a: string; b: string };
 
 function generate(input: Input): Step<TableFrame>[] {
-  const a = input.a;
-  const b = input.b;
+  const a = [...input.a];
+  const b = [...input.b];
   const n = a.length;
   const m = b.length;
   const steps: Step<TableFrame>[] = [];
@@ -13,8 +13,8 @@ function generate(input: Input): Step<TableFrame>[] {
   // dp[i][j] = LCS length of a[0..i) and b[0..j)
   const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
 
-  const rowLabels = ["∅", ...a.split("").map((ch, i) => `${ch}${i + 1}`)];
-  const colLabels = ["∅", ...b.split("").map((ch, j) => `${ch}${j + 1}`)];
+  const rowLabels = ["∅", ...a.map((ch, i) => `${ch}${i + 1}`)];
+  const colLabels = ["∅", ...b.map((ch, j) => `${ch}${j + 1}`)];
 
   const frame = (
     filled: number,
@@ -38,10 +38,10 @@ function generate(input: Input): Step<TableFrame>[] {
         return { value: isFilled ? val : null, state };
       }),
     );
-    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a}"  B = "${b}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
+    steps.push({ frame: { rowLabels, colLabels, cells, note: `A = "${a.join("")}"  B = "${b.join("")}"` }, description, descriptionAr, codeLine, counters: { comparisons } });
   };
 
-  frame(0, null, [], `Longest Common Subsequence of "${a}" and "${b}". Row 0 and column 0 (empty prefixes) are all zeros.`, 0, undefined, `أطول تتابع فرعي مشترك بين "${a}" و"${b}". الصف 0 والعمود 0 (البادئات الفارغة) كلها أصفار.`);
+  frame(0, null, [], `Longest Common Subsequence of "${a.join("")}" and "${b.join("")}". Row 0 and column 0 (empty prefixes) are all zeros.`, 0, undefined, `أطول تتابع فرعي مشترك بين "${a.join("")}" و"${b.join("")}". الصف 0 والعمود 0 (البادئات الفارغة) كلها أصفار.`);
 
   let filled = m + 1; // row 0 done
   for (let i = 1; i <= n; i++) {
@@ -369,7 +369,7 @@ The dynamic-programming solution builds a table dp[i][j] = the LCS length of the
     const a = (fields.a ?? "").trim();
     const b = (fields.b ?? "").trim();
     if (!a || !b) throw new Error("Enter both strings.");
-    if (a.length > 18 || b.length > 18) throw new Error("Each string must be at most 18 characters.");
+    if ([...a].length > 18 || [...b].length > 18) throw new Error("Each string must be at most 18 characters.");
     return { a, b };
   },
   serializeInput: (input) => ({ a: input.a, b: input.b }),

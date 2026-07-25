@@ -3,7 +3,7 @@ import type { AlgorithmModule, CellState, GridFrame, Step } from "@/lib/engine/t
 type Input = { n: number };
 
 function generate(input: Input): Step<GridFrame>[] {
-  const n = Math.max(10, Math.min(3000, input.n));
+  const n = Math.max(2, Math.min(3000, input.n));
   const cols = n <= 30 ? 6 : n <= 60 ? 10 : 12;
   const isPrime = new Array(n + 1).fill(true);
   isPrime[0] = false;
@@ -337,11 +337,11 @@ A key optimization is to start crossing out from p² rather than 2p: any smaller
       { question: "من عيوب الغربال الأساسي…", options: ["يفوّت بعض الأعداد الأولية", "ذاكرة O(n) لـ n الكبير", "لا يجد 2", "يتطلب ترتيبًا"], answer: 1, explanation: "المصفوفة المنطقية بحجم n تحدّ حجم المدى الذي يتّسع في الذاكرة." },
     ],
   },
-  inputFields: [{ key: "n", label: "Upper limit n", placeholder: "50", help: "10–3,000." }],
+  inputFields: [{ key: "n", label: "Upper limit n", placeholder: "50", help: "2–3,000." }],
   defaultInput: (level) => ({ n: [0, 20, 40, 60, 90, 120][level] ?? 50 }),
   parseInput: (fields) => {
     const n = Number((fields.n ?? "").trim());
-    if (!Number.isInteger(n) || n < 10 || n > 3000) throw new Error("Enter a whole number from 10 to 3,000.");
+    if (!Number.isInteger(n) || n < 2 || n > 3000) throw new Error("Enter a whole number from 2 to 3,000.");
     return { n };
   },
   serializeInput: (input) => ({ n: String(input.n) }),

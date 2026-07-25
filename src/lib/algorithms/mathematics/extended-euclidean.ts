@@ -3,12 +3,12 @@ import type { AlgorithmModule, CellState, Step, TableFrame } from "@/lib/engine/
 type Input = { a: number; b: number };
 
 interface Row {
-  a: number;
-  b: number;
-  q: number | null;
-  r: number | null;
-  x: number | null;
-  y: number | null;
+  a: bigint;
+  b: bigint;
+  q: bigint | null;
+  r: bigint | null;
+  x: bigint | null;
+  y: bigint | null;
 }
 
 function generate(input: Input): Step<TableFrame>[] {
@@ -24,7 +24,7 @@ function generate(input: Input): Step<TableFrame>[] {
   ) => {
     const cells = rows.map((r, ri) =>
       [r.a, r.b, r.q, r.r, r.x, r.y].map((v, ci) => ({
-        value: v,
+        value: v === null ? null : v.toString(),
         state: hl && hl.row === ri && hl.cols.includes(ci) ? hl.state : undefined,
       })),
     );
@@ -43,14 +43,18 @@ function generate(input: Input): Step<TableFrame>[] {
   };
 
   // Phase 1: forward divisions
-  let a = input.a;
-  let b = input.b;
+  // Bézout coefficients can make intermediate products much larger than the
+  // inputs. BigInt is required here even though parsed inputs are safe Numbers.
+  const originalA = BigInt(input.a);
+  const originalB = BigInt(input.b);
+  let a = originalA;
+  let b = originalB;
   rows.push({ a, b, q: null, r: null, x: null, y: null });
   snap(`Extended Euclid on (${a}, ${b}): find gcd AND coefficients x, y with ${input.a}·x + ${input.b}·y = gcd.`, 0, undefined, `إقليدس الموسّعة على (${a}, ${b}): جِد القاسم المشترك الأكبر ومعاملَي x، y بحيث ${input.a}·x + ${input.b}·y = gcd.`);
 
-  while (b !== 0) {
+  while (b !== BigInt(0)) {
     iterations++;
-    const q = Math.floor(a / b);
+    const q = a / b;
     const r = a - q * b;
     const i = rows.length - 1;
     rows[i].q = q;
@@ -64,8 +68,8 @@ function generate(input: Input): Step<TableFrame>[] {
 
   const g = a;
   const last = rows.length - 1;
-  rows[last].x = 1;
-  rows[last].y = 0;
+  rows[last].x = BigInt(1);
+  rows[last].y = BigInt(0);
   snap(`b = 0 ⇒ gcd = ${g}. Base coefficients: ${g}·1 + 0·0 = ${g}, so x = 1, y = 0.`, 3, {
     row: last,
     cols: [4, 5],
@@ -88,11 +92,12 @@ function generate(input: Input): Step<TableFrame>[] {
 
   const x = rows[0].x!;
   const y = rows[0].y!;
-  snap(`Done: gcd(${input.a}, ${input.b}) = ${g} and ${input.a}·(${x}) + ${input.b}·(${y}) = ${input.a * x + input.b * y}. ✓ Bézout coefficients found.`, 5, {
+  const identity = originalA * x + originalB * y;
+  snap(`Done: gcd(${input.a}, ${input.b}) = ${g} and ${input.a}·(${x}) + ${input.b}·(${y}) = ${identity}. ✓ Bézout coefficients found.`, 5, {
     row: 0,
     cols: [4, 5],
     state: "found",
-  }, `تم: gcd(${input.a}, ${input.b}) = ${g} و ${input.a}·(${x}) + ${input.b}·(${y}) = ${input.a * x + input.b * y}. ✓ عُثر على معاملات بيزو.`);
+  }, `تم: gcd(${input.a}, ${input.b}) = ${g} و ${input.a}·(${x}) + ${input.b}·(${y}) = ${identity}. ✓ عُثر على معاملات بيزو.`);
   return steps;
 }
 

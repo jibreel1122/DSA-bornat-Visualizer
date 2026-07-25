@@ -63,11 +63,11 @@ function generate(input: Input): Step<ArrayFrame>[] {
       cur = cur + a[i];
       frame(i, curStart, false, `Extend: current = current + a[${i}] = ${cur}.`, 4, false, `مدّد: current = current + a[${i}] = ${cur}.`);
     }
+    comparisons++;
     if (cur > best) {
       best = cur;
       bestStart = curStart;
       bestEnd = i;
-      comparisons++;
       frame(i, curStart, true, `New best! best = ${best}, best subarray = [${bestStart}..${bestEnd}].`, 6, false, `أفضل قيمة جديدة! best = ${best}، أفضل مصفوفة جزئية = [${bestStart}..${bestEnd}].`);
     } else {
       frame(i, curStart, true, `current ${cur} ≤ best ${best}: best unchanged at [${bestStart}..${bestEnd}].`, 5, false, `current ${cur} ≤ best ${best}: تبقى best دون تغيير عند [${bestStart}..${bestEnd}].`);

@@ -106,9 +106,15 @@ export function CompareShell({ category }: { category: CategoryId }) {
 
   const synced = session.mode === "synced";
   const saveComparison = () => {
-    const existing = (() => { try { return JSON.parse(localStorage.getItem("bdsv:saved-comparisons") ?? "[]") as unknown[]; } catch { return []; } })();
-    const key = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    localStorage.setItem("bdsv:saved-comparisons", JSON.stringify([...existing, { key, label: `${info.short}: ${slugs.map((slug) => modules[slug]?.title ?? slug).join(" vs ")}`, payload: { category, slugs, mode: session.mode, strategy: session.strategy, level: session.level, savedAt: Date.now() } }].slice(-30)));
+    try {
+      const parsed = JSON.parse(localStorage.getItem("bdsv:saved-comparisons") ?? "[]") as unknown;
+      const existing = Array.isArray(parsed) ? parsed : [];
+      const key = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("bdsv:saved-comparisons", JSON.stringify([...existing, { key, label: `${info.short}: ${slugs.map((slug) => modules[slug]?.title ?? slug).join(" vs ")}`, payload: { category, slugs, mode: session.mode, strategy: session.strategy, level: session.level, savedAt: Date.now() } }].slice(-30)));
+      toast.success(t("compare.saved"));
+    } catch {
+      toast.error(t("compare.saveFailed"));
+    }
   };
 
   return (
@@ -127,7 +133,9 @@ export function CompareShell({ category }: { category: CategoryId }) {
           {(["synced", "independent"] as const).map((m) => (
             <button
               key={m}
+              type="button"
               onClick={() => session.setMode(m)}
+              aria-pressed={session.mode === m}
               className={`rounded-md px-2.5 py-1.5 font-medium transition-colors ${
                 session.mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -144,7 +152,7 @@ export function CompareShell({ category }: { category: CategoryId }) {
           <div key={i} className="flex items-center gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">{i + 1}</span>
             <Select value={slug} onValueChange={(v) => setSlugAt(i, v)}>
-              <SelectTrigger className="h-9 w-56 text-sm">
+              <SelectTrigger className="h-9 w-56 text-sm" aria-label={t("compare.algorithmPanel", { panel: i + 1 })}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -168,7 +176,7 @@ export function CompareShell({ category }: { category: CategoryId }) {
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={saveComparison}>
-          <Save /> Save comparison
+          <Save /> {t("compare.save")}
         </Button>
       </div>
 
@@ -264,7 +272,7 @@ function SharedBar({
       <span className="me-1 text-xs font-medium text-primary">{t("compare.sharedControls")}</span>
 
       <Select value={String(session.level)} onValueChange={(v) => session.changeLevel(Number(v) as Level)}>
-        <SelectTrigger className="h-8 w-32 text-xs">
+        <SelectTrigger className="h-8 w-32 text-xs" aria-label={t("compare.difficultyLevel")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -277,11 +285,11 @@ function SharedBar({
       </Select>
 
       <Select value={session.strategy} onValueChange={(value) => session.setStrategy(value as "progress" | "phase" | "operation")}>
-        <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="h-8 w-36 text-xs" aria-label={t("compare.syncStrategy")}><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="progress">Relative progress</SelectItem>
-          <SelectItem value="phase">Matching phases</SelectItem>
-          <SelectItem value="operation">Matching operations</SelectItem>
+          <SelectItem value="progress">{t("compare.strategyProgress")}</SelectItem>
+          <SelectItem value="phase">{t("compare.strategyPhase")}</SelectItem>
+          <SelectItem value="operation">{t("compare.strategyOperation")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -344,15 +352,15 @@ function SharedBar({
 
       <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
 
-      <Button variant="ghost" size="sm" onClick={() => run((l) => l.undo())}>
+      <Button variant="ghost" size="sm" onClick={() => run((l) => l.undo())} disabled={!session.canUndo}>
         <Undo2 /> {t("shell.undo")}
       </Button>
-      <Button variant="ghost" size="sm" onClick={() => run((l) => l.redo())}>
+      <Button variant="ghost" size="sm" onClick={() => run((l) => l.redo())} disabled={!session.canRedo}>
         <Redo2 /> {t("shell.redo")}
       </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-primary/15 pt-2">
+      <div dir="ltr" className="flex flex-wrap items-center gap-2 border-t border-primary/15 pt-2">
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.reset")} onClick={session.reset} disabled={session.atStart}><RotateCcw /></Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.firstStep")} onClick={session.reset} disabled={session.atStart}><ChevronFirst /></Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("shell.previous")} onClick={session.prev} disabled={session.atStart}><ChevronLeft /></Button>
@@ -367,13 +375,18 @@ function SharedBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-primary/15 pt-2 text-xs text-muted-foreground">
-        <span><strong className="text-foreground">Step:</strong> {session.referenceStep?.phase ?? "prepare"}</span>
+        <span><strong className="text-foreground">{t("compare.metricStep")}:</strong> {session.referenceStep?.phase ?? "prepare"}</span>
         {Object.entries(session.referenceStep?.counters ?? {}).slice(0, 3).map(([label, value]) => <span key={label}><strong className="text-foreground">{label}:</strong> {value}</span>)}
-        <span><strong className="text-foreground">Alignment:</strong> {session.strategy === "progress" ? "relative timeline" : session.strategy === "phase" ? "semantic phase when available" : "operation marker when available"}</span>
+        <span><strong className="text-foreground">{t("compare.metricAlignment")}:</strong> {t(session.strategy === "progress" ? "compare.alignmentProgress" : session.strategy === "phase" ? "compare.alignmentPhase" : "compare.alignmentOperation")}</span>
       </div>
 
       <div className="border-t border-primary/15 pt-2 text-xs text-muted-foreground">
-        <strong className="text-foreground">Comparison takeaway:</strong> {algorithms.map((algorithm) => `${algorithm.title} (${algorithm.difficulty})`).join(" vs ")}. Use the same input and inspect steps, counters, and the stated trade-offs in each panel; matching phases align conceptually, while relative progress remains the safe fallback.
+        <strong className="text-foreground">{t("compare.takeawayLabel")}:</strong>{" "}
+        {t("compare.takeaway", {
+          algorithms: algorithms
+            .map((algorithm) => locale === "ar" ? algorithm.titleAr ?? algorithm.title : algorithm.title)
+            .join(t("compare.versus")),
+        })}
       </div>
     </div>
     {reference && (

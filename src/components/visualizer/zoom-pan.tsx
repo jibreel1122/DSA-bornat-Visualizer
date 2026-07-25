@@ -34,11 +34,18 @@ export const ZoomPan = React.forwardRef<
     },
   }));
 
-  const zoom = (delta: number) => setScale((s) => clamp(s + delta, 0.4, 3));
+  const zoom = React.useCallback(
+    (delta: number) => setScale((s) => clamp(s + delta, 0.4, 3)),
+    [],
+  );
 
   return (
     <div
       className="relative h-full w-full overflow-hidden"
+      onWheel={(e) => {
+        e.preventDefault();
+        zoom(e.deltaY < 0 ? 0.25 : -0.25);
+      }}
       onPointerDown={(e) => {
         // pan only from the background, not interactive children (graph nodes)
         if ((e.target as Element).closest("[data-viz-interactive]")) return;
@@ -61,10 +68,10 @@ export const ZoomPan = React.forwardRef<
         {children}
       </div>
 
-      <div className="absolute bottom-3 end-3 z-10 flex items-center gap-1 rounded-xl border border-border bg-popover/85 p-1 shadow-sm backdrop-blur">
+      <div data-viz-interactive className="absolute bottom-3 end-3 z-10 flex items-center gap-1 rounded-xl border border-border bg-popover/85 p-1 shadow-sm backdrop-blur">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={() => zoom(-0.25)} aria-label={t("shell.zoomOut")}>
+            <Button variant="ghost" size="icon-sm" onClick={() => zoom(-0.25)} aria-label={t("shell.zoomOut")} disabled={scale <= 0.4}>
               <Minus />
             </Button>
           </TooltipTrigger>
@@ -75,7 +82,7 @@ export const ZoomPan = React.forwardRef<
         </span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={() => zoom(0.25)} aria-label={t("shell.zoomIn")}>
+            <Button variant="ghost" size="icon-sm" onClick={() => zoom(0.25)} aria-label={t("shell.zoomIn")} disabled={scale >= 3}>
               <Plus />
             </Button>
           </TooltipTrigger>

@@ -19,7 +19,7 @@ function generate(input: Input): Step<TreeFrame>[] {
   let splits = 0;
   let inserts = 0;
 
-  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string): void => {
+  const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string, transformation?: Step<TreeFrame>["transformation"]): void => {
     const nodes: Record<string, TreeNodeF> = {};
     const walk = (n: BNode) => {
       nodes[n.id] = {
@@ -36,6 +36,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       descriptionAr,
       codeLine,
       counters: { inserts, splits },
+      transformation,
     });
   };
 
@@ -67,6 +68,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       6,
       `split`,
       `قسّم العقدة الممتلئة [${[...child.keys, upKey, ...z.keys].join(", ")}]: ادفع الوسيط ${upKey} صعودًا إلى الأب، واحتفظ بالباقي في عقدتين.`,
+      { kind: "rebuild", label: "Split full B-tree node" },
     );
   };
 
@@ -100,7 +102,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       const s = mk(false);
       s.children = [root];
       root = s;
-      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 2, `insert ${k}`, `الجذر ممتلئ — نمِّ الشجرة: أنشئ جذرًا فارغًا جديدًا فوق القديم، ثم قسّم.`);
+      toFrame({ [s.id]: "active" }, `Root is full — grow the tree: make a new empty root above the old one, then split.`, 2, `insert ${k}`, `الجذر ممتلئ — نمِّ الشجرة: أنشئ جذرًا فارغًا جديدًا فوق القديم، ثم قسّم.`, { kind: "rebuild", label: "Grow B-tree root" });
       splitChild(s, 0);
       insertNonFull(s, k);
     } else {

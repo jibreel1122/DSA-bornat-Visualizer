@@ -3,7 +3,8 @@ import type { AlgorithmModule, CellState, HashFrame, Step } from "@/lib/engine/t
 export type OAOp = { kind: "insert" | "search" | "delete"; key: number };
 export type OAInput = { ops: OAOp[]; size: number };
 
-export const TOMBSTONE = -1;
+export const TOMBSTONE = Symbol("hash tombstone");
+type HashSlot = number | null | typeof TOMBSTONE;
 
 /** Parse "insert 21, search 14, delete 21" into ops. */
 export function parseOps(text: string): OAOp[] {
@@ -11,9 +12,11 @@ export function parseOps(text: string): OAOp[] {
   if (parts.length === 0) throw new Error("Enter at least one operation, e.g. insert 21.");
   if (parts.length > 40) throw new Error("Maximum 40 operations.");
   return parts.map((part) => {
-    const m = part.match(/^(insert|search|delete)\s+(\d+)$/i);
+    const m = part.match(/^(insert|search|delete)\s+(-?\d+)$/i);
     if (!m) throw new Error(`"${part}" is invalid. Use: insert N, search N, or delete N.`);
-    return { kind: m[1].toLowerCase() as OAOp["kind"], key: Number(m[2]) };
+    const key = Number(m[2]);
+    if (key < -9999 || key > 9999) throw new Error(`Hash keys must be from -9999 to 9999 (got ${key}).`);
+    return { kind: m[1].toLowerCase() as OAOp["kind"], key };
   });
 }
 
@@ -34,7 +37,7 @@ export function makeOpenAddressingGenerate(
 ) {
   return function generate(input: OAInput): Step<HashFrame>[] {
     const m = input.size;
-    const table: (number | null)[] = new Array(m).fill(null);
+    const table: HashSlot[] = new Array(m).fill(null);
     const steps: Step<HashFrame>[] = [];
     let collisions = 0;
     let probes = 0;

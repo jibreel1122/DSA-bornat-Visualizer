@@ -32,8 +32,9 @@ function generate(input: Input): Step<ArrayFrame>[] {
       const key = a[i];
       let j = i - 1;
       snap({ [i]: "active" }, `Insert a[${i}] = ${key} into the sorted part of the run.`, 2, { from: start, to: end }, `أدرج a[${i}] = ${key} في الجزء المرتب من الدفعة.`);
-      while (j >= start && a[j] > key) {
+      while (j >= start) {
         comparisons++;
+        if (a[j] <= key) break;
         a[j + 1] = a[j];
         j--;
         snap({ [j + 1]: "swap" }, `Shift ${a[j + 1]} right.`, 3, { from: start, to: end }, `أزح ${a[j + 1]} يمينًا.`);
