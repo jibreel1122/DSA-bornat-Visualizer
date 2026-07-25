@@ -50,9 +50,30 @@ function generate(input: Input): Step<TreeFrame>[] {
       const parent = (i - 1) >> 1;
       comparisons++;
       if (heap[i] < heap[parent]) {
+        toFrame(
+          { [i]: "compare", [parent]: "compare" },
+          `Compare ${heap[i]} with parent ${heap[parent]}: the child is smaller, so it must move up.`,
+          3,
+          `sift-up compare`,
+          `قارن ${heap[i]} بالأب ${heap[parent]}: الابن أصغر، لذلك يجب أن يصعد.`,
+        );
+        toFrame(
+          { [i]: "swap", [parent]: "active" },
+          `Lift ${heap[i]} toward index ${parent}; ${heap[parent]} will move down into its old slot.`,
+          3,
+          `sift-up transfer`,
+          `ارفع ${heap[i]} باتجاه الفهرس ${parent}؛ وسينزل ${heap[parent]} إلى مكانه السابق.`,
+        );
         toFrame({ [i]: "swap", [parent]: "compare" }, `${heap[i]} < parent ${heap[parent]}: swap up.`, 3, `sift-up`, `${heap[i]} < الأب ${heap[parent]}: بدّل صعودًا.`);
         [heap[i], heap[parent]] = [heap[parent], heap[i]];
         swaps++;
+        toFrame(
+          { [parent]: "found", [i]: "special" },
+          `Complete the upward transfer: ${heap[parent]} now occupies the parent position.`,
+          3,
+          `sift-up complete`,
+          `أكمل النقل إلى الأعلى: أصبحت ${heap[parent]} في موضع الأب.`,
+        );
         i = parent;
       } else {
         toFrame({ [i]: "sorted", [parent]: "compare" }, `${heap[i]} ≥ parent ${heap[parent]}: heap property restored.`, 3, `sift-up`, `${heap[i]} ≥ الأب ${heap[parent]}: استُعيدت خاصية الكومة.`);
@@ -75,11 +96,27 @@ function generate(input: Input): Step<TreeFrame>[] {
       `extract-min`,
       `extractMin(): حدّد الجذر ${min} للحذف والعنصر الأخير ${last} ليحل محله.`,
     );
+    if (lastIndex > 0) {
+      toFrame(
+        { 0: "active", [lastIndex]: "swap" },
+        `Lift the last element ${last} toward the root; the extracted minimum ${min} moves to the removable last slot.`,
+        5,
+        `extract-min transfer`,
+        `ارفع العنصر الأخير ${last} باتجاه الجذر؛ وينتقل الحد الأدنى ${min} إلى الموضع الأخير القابل للإزالة.`,
+      );
+    }
     heap.pop();
     if (heap.length === 0) {
       toFrame({}, `extractMin(): removed ${min}. The heap is now empty.`, 5, `extract-min complete`, `extractMin(): حُذف ${min}. أصبحت الكومة فارغة الآن.`);
       break;
     }
+    toFrame(
+      { 0: "active" },
+      `The last slot is gone. Carry ${last} into the root slot before restoring heap order.`,
+      6,
+      `extract-min gap`,
+      `اختفى الموضع الأخير. انقل ${last} إلى موضع الجذر قبل استعادة ترتيب الكومة.`,
+    );
     heap[0] = last;
     let i = 0;
     toFrame(
@@ -105,9 +142,30 @@ function generate(input: Input): Step<TreeFrame>[] {
         toFrame({ [i]: "sorted" }, `${heap[i]} ≤ both children: heap property restored.`, 7, `sift-down`, `${heap[i]} ≤ كلا الابنين: استُعيدت خاصية الكومة.`);
         break;
       }
+      toFrame(
+        { [i]: "compare", [smallest]: "compare" },
+        `Compare ${heap[i]} with smaller child ${heap[smallest]}: the parent must move down.`,
+        6,
+        `sift-down compare`,
+        `قارن ${heap[i]} بالابن الأصغر ${heap[smallest]}: يجب أن ينزل الأب.`,
+      );
+      toFrame(
+        { [i]: "swap", [smallest]: "active" },
+        `Lower ${heap[i]} toward index ${smallest}; lift ${heap[smallest]} into the parent slot.`,
+        6,
+        `sift-down transfer`,
+        `أنزل ${heap[i]} باتجاه الفهرس ${smallest}؛ وارفع ${heap[smallest]} إلى مكان الأب.`,
+      );
       toFrame({ [i]: "compare", [smallest]: "swap" }, `Swap ${heap[i]} with smaller child ${heap[smallest]}.`, 6, `sift-down`, `بدّل ${heap[i]} مع الابن الأصغر ${heap[smallest]}.`);
       [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
       swaps++;
+      toFrame(
+        { [smallest]: "found", [i]: "special" },
+        `Complete the downward transfer: ${heap[smallest]} now occupies the child position.`,
+        6,
+        `sift-down complete`,
+        `أكمل النقل إلى الأسفل: أصبحت ${heap[smallest]} في موضع الابن.`,
+      );
       i = smallest;
     }
   }

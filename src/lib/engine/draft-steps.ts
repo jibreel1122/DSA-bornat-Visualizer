@@ -25,6 +25,8 @@ export interface DraftMutation {
 export interface ResolvedDraftMutationFrames {
   before?: unknown;
   after?: unknown;
+  /** Real frames for a single tree insertion, including any balancing work. */
+  transition?: Step[];
 }
 
 function changedValue(mutation: DraftMutation) {
@@ -62,6 +64,44 @@ function generatedTreeFrame<F, I>(
   }
 }
 
+function generatedTreeInsertionTrace<F, I>(
+  module: AlgorithmModule<F, I>,
+  input: I,
+  listFieldKey: string,
+  mutation: DraftMutation,
+): Step[] | undefined {
+  // Only one newly appended value can map to one generator operation.
+  if (mutation.kind !== "insert" || mutation.after.length !== mutation.before.length + 1) return undefined;
+  const inserted = changedValue(mutation);
+  if (inserted === undefined) return undefined;
+
+  try {
+    const fields = module.serializeInput(input);
+    const parsed = module.parseInput({ ...fields, [listFieldKey]: mutation.after.join(", ") });
+    const generated = module.generate(parsed) as Step<TreeFrame>[];
+    // Tree generators label the ordinary leaf/root connection `insert <key>`.
+    // Start there so the learner sees: normal insertion -> imbalance/split
+    // diagnosis -> every restructuring frame -> balanced result.
+    const insertionLabel = `insert ${inserted}`.toLowerCase();
+    const start = generated.findLastIndex((step) => {
+      const note = (step.frame as TreeFrame).note?.trim().toLowerCase();
+      const description = step.description.toLowerCase();
+      return note === insertionLabel
+        || description.includes(insertionLabel)
+        || description.includes(`insert(${inserted})`.toLowerCase());
+    });
+    if (start < 0) return undefined;
+    // The final module-wide summary repeats the same result; it belongs to
+    // Run, not an individual construction operation.
+    return generated.slice(start).filter((step) => {
+      const note = (step.frame as TreeFrame).note ?? "";
+      return !/^final\s/i.test(note) && !/^all (operations|values) (complete|inserted)/i.test(step.description);
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 /** Uses the selected tree module's real generator so construction previews preserve its structural invariants and rotations. */
 export function resolveDraftMutationFrames<F, I>(
   module: AlgorithmModule<F, I>,
@@ -73,6 +113,7 @@ export function resolveDraftMutationFrames<F, I>(
   return {
     before: generatedTreeFrame(module, input, listFieldKey, mutation.before),
     after: generatedTreeFrame(module, input, listFieldKey, mutation.after, changedValue(mutation)),
+    transition: generatedTreeInsertionTrace(module, input, listFieldKey, mutation),
   };
 }
 
@@ -111,15 +152,36 @@ function frameFor(renderer: RendererKind, values: string[], activeIndex = -1) {
 
   if (renderer === "tree") {
     const nodes: TreeFrame["nodes"] = {};
+    let rootId: string | null = null;
     values.forEach((value, index) => {
       const id = `n${index}`;
-      const left = index * 2 + 1 < values.length ? `n${index * 2 + 1}` : null;
-      const right = index * 2 + 2 < values.length ? `n${index * 2 + 2}` : null;
-      nodes[id] = { id, value: scalar(value), left, right };
+      const numericValue = scalar(value);
+      nodes[id] = { id, value: numericValue, left: null, right: null };
+      if (!rootId) {
+        rootId = id;
+        return;
+      }
+      // Drafting a binary tree should follow the learner's insertion order,
+      // not draw the values as a complete-tree array.  That makes the visible
+      // pre-insertion state agree with the next real BST/AVL trace.
+      let cursor = rootId;
+      while (cursor) {
+        const current = nodes[cursor];
+        const goesLeft = typeof numericValue === "number" && typeof current.value === "number"
+          ? numericValue < current.value
+          : String(numericValue).localeCompare(String(current.value)) < 0;
+        const next = goesLeft ? current.left : current.right;
+        if (!next) {
+          if (goesLeft) current.left = id;
+          else current.right = id;
+          break;
+        }
+        cursor = next;
+      }
     });
     return {
       nodes,
-      rootId: values.length ? "n0" : null,
+      rootId,
       states: activeIndex >= 0 ? { [`n${activeIndex}`]: "active" as const } : {},
       note: "Building a new set",
     } satisfies TreeFrame;
@@ -198,6 +260,20 @@ export function buildDraftMutationSteps(
   mutation: DraftMutation,
   resolved?: ResolvedDraftMutationFrames,
 ): Step[] {
+  if (resolved?.transition && resolved.transition.length > 0) {
+    return [
+      {
+        frame: resolved.before ?? frameFor(renderer, mutation.before),
+        description: `Current set before ${mutation.detail}.`,
+        descriptionAr: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ© Ù‚Ø¨Ù„ Ø§Ù„ØªØºÙŠÙŠØ±.",
+        phase: "prepare",
+        why: "The requested change starts from the values currently visible on the canvas.",
+        whyAr: "ÙŠØ¨Ø¯Ø£ Ø§Ù„ØªØºÙŠÙŠØ± Ù…Ù† Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ø¸Ø§Ù‡Ø±Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§ ÙÙŠ Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªØµÙˆØ±.",
+        counters: { items: mutation.before.length },
+      },
+      ...resolved.transition,
+    ];
+  }
   const active = highlightedIndex(mutation);
   const action = mutation.kind === "update" ? "edit" : mutation.kind;
   const actionAr = mutation.kind === "insert" ? "الإدراج" : mutation.kind === "delete" ? "الحذف" : mutation.kind === "update" ? "التعديل" : mutation.kind === "clear" ? "المسح" : "الخلط";

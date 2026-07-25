@@ -82,7 +82,8 @@ describe("draft dataset visualization", () => {
     const input = avlTree.parseInput({ values: "10, 5" });
     const resolved = resolveDraftMutationFrames(avlTree, input, "values", mutation);
     const steps = buildDraftMutationSteps("tree", mutation, resolved);
-    const frame = steps[1].frame as TreeFrame;
+    expect(steps).toHaveLength(2);
+    const frame = steps.at(-1)!.frame as TreeFrame;
 
     expect(frame.nodes[frame.rootId!].value).toBe(7);
     expect(frame.nodes[frame.rootId!].left).toBe("n0");
@@ -91,7 +92,7 @@ describe("draft dataset visualization", () => {
     expect(frame.nodes.n2.value).toBe(88);
     expect(frame.nodes.n2.right).toBe("n3");
     expect(frame.nodes.n3.value).toBe(99);
-    expect(frame.states).toEqual({ n3: "active" });
+    expect(frame.states).toEqual({ n3: "found" });
   });
 
   it("keeps all earlier AVL insertion results available to Previous", () => {
@@ -107,11 +108,36 @@ describe("draft dataset visualization", () => {
     );
     const steps = buildDraftMutationTimelineSteps("tree", mutations, resolved);
 
-    expect(steps).toHaveLength(8);
-    expect(Object.values((steps[1].frame as TreeFrame).nodes).map((node) => node.value)).toEqual([6]);
-    expect(Object.values((steps[3].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7]);
-    expect(Object.values((steps[5].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7, 88]);
-    expect(Object.values((steps[7].frame as TreeFrame).nodes).map((node) => node.value).sort((a, b) => Number(a) - Number(b))).toEqual([6, 7, 88, 99]);
+    expect(steps.length).toBeGreaterThan(8);
+    const valuesAt = (index: number) => Object.values((steps[index].frame as TreeFrame).nodes)
+      .map((node) => Number(node.value)).sort((a, b) => a - b);
+    expect(valuesAt(1)).toEqual([6]);
+    expect(steps.some((step) => valuesAt(steps.indexOf(step)).join(",") === "6,7")).toBe(true);
+    expect(steps.some((step) => valuesAt(steps.indexOf(step)).join(",") === "6,7,88")).toBe(true);
+    expect(valuesAt(steps.length - 1)).toEqual([6, 7, 88, 99]);
+  });
+
+  it("shows normal AVL insertion before diagnosing and repairing its imbalance", () => {
+    const mutation = {
+      before: ["3", "4"],
+      after: ["3", "4", "5"],
+      kind: "insert" as const,
+      detail: "inserting 5",
+    };
+    const input = avlTree.parseInput({ values: "10, 5" });
+    const steps = buildDraftMutationSteps("tree", mutation, resolveDraftMutationFrames(avlTree, input, "values", mutation));
+
+    const normalInsert = steps.find((step) => (step.frame as TreeFrame).note === "insert 5");
+    expect(normalInsert).toBeDefined();
+    const inserted = normalInsert!.frame as TreeFrame;
+    expect(inserted.nodes[inserted.rootId!].value).toBe(3);
+    expect(inserted.nodes.n0.right).toBe("n1");
+    expect(inserted.nodes.n1.right).toBe("n2");
+
+    expect(steps.some((step) => (step.frame as TreeFrame).note === "rebalance")).toBe(true);
+    const balanced = steps.at(-1)!.frame as TreeFrame;
+    expect(balanced.nodes[balanced.rootId!].value).toBe(4);
+    expect(Object.values(balanced.nodes).map((node) => Number(node.value)).sort((a, b) => a - b)).toEqual([3, 4, 5]);
   });
 
   it("does not treat malformed numeric arrays as an in-progress valid set", () => {

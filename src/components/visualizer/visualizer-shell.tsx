@@ -206,7 +206,13 @@ export function VisualizerShell({
       return {
         steps: enrichSteps(continuous.slice(0, MAX_STEPS)),
         error: null,
-        liveStartIndex: draftSteps.length > 0 ? Math.max(0, draftSteps.length - 2) : 0,
+        // A tree insertion can now include leaf insertion, imbalance
+        // diagnosis, and several rotations/splits.  Start auto-play at the
+        // latest operation's preparation frame rather than assuming every
+        // operation has exactly two frames.
+        liveStartIndex: draftSteps.length > 0
+          ? Math.max(0, draftSteps.findLastIndex((step) => step.phase === "prepare"))
+          : 0,
       };
     } catch (e) {
       return { steps: [], error: e instanceof Error ? e.message : t("shell.failedToGenerate"), liveStartIndex: 0 };

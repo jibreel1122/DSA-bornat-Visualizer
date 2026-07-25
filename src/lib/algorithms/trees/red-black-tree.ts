@@ -42,8 +42,25 @@ function generate(input: Input): Step<TreeFrame>[] {
     });
   };
 
-  const rotateLeft = (x: Node) => {
+  const rotateLeft = (x: Node, codeLine: number) => {
     const y = x.right!;
+    const middle = y.left;
+    toFrame(
+      { [x.id]: "swap", [y.id]: "active", ...(middle ? { [middle.id]: "compare" as const } : {}) },
+      `Prepare left rotation: pivot ${y.value} will rise above ${x.value}${middle ? ` after moving inner subtree ${middle.value}` : ""}.`,
+      codeLine,
+      "left rotation: prepare pivot",
+      `جهّز الدوران اليساري: سيرتفع المحور ${y.value} فوق ${x.value}${middle ? ` بعد نقل الشجرة الفرعية الداخلية ${middle.value}` : ""}.`,
+      { kind: "balance", label: "Red-black left rotation preparation" },
+    );
+    toFrame(
+      { [x.id]: "swap", [y.id]: "active" },
+      `Move pivot ${y.value} into ${x.value}'s parent position, then connect ${x.value} as its left child.`,
+      codeLine,
+      "left rotation: lift pivot",
+      `انقل المحور ${y.value} إلى موضع أب ${x.value}، ثم صِل ${x.value} بوصفه ابنه الأيسر.`,
+      { kind: "balance", label: "Red-black left rotation pivot move" },
+    );
     x.right = y.left;
     if (y.left) y.left.parent = x;
     y.parent = x.parent;
@@ -54,8 +71,25 @@ function generate(input: Input): Step<TreeFrame>[] {
     x.parent = y;
     rotations++;
   };
-  const rotateRight = (x: Node) => {
+  const rotateRight = (x: Node, codeLine: number) => {
     const y = x.left!;
+    const middle = y.right;
+    toFrame(
+      { [x.id]: "swap", [y.id]: "active", ...(middle ? { [middle.id]: "compare" as const } : {}) },
+      `Prepare right rotation: pivot ${y.value} will rise above ${x.value}${middle ? ` after moving inner subtree ${middle.value}` : ""}.`,
+      codeLine,
+      "right rotation: prepare pivot",
+      `جهّز الدوران اليميني: سيرتفع المحور ${y.value} فوق ${x.value}${middle ? ` بعد نقل الشجرة الفرعية الداخلية ${middle.value}` : ""}.`,
+      { kind: "balance", label: "Red-black right rotation preparation" },
+    );
+    toFrame(
+      { [x.id]: "swap", [y.id]: "active" },
+      `Move pivot ${y.value} into ${x.value}'s parent position, then connect ${x.value} as its right child.`,
+      codeLine,
+      "right rotation: lift pivot",
+      `انقل المحور ${y.value} إلى موضع أب ${x.value}، ثم صِل ${x.value} بوصفه ابنه الأيمن.`,
+      { kind: "balance", label: "Red-black right rotation pivot move" },
+    );
     x.left = y.right;
     if (y.right) y.right.parent = x;
     y.parent = x.parent;
@@ -129,7 +163,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `rotate`,
               `العم أسود، ${value} ابن داخلي (LR) ← أجرِ دورانًا يساريًا للأب أولًا.`,
             );
-            rotateLeft(parent);
+            rotateLeft(parent, 7);
             toFrame({}, "Complete the left rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليساري عند الأب؛ افحص حالة الخط بعد التحويل.", { kind: "balance", label: "Red-black left rotation" });
             z = parent;
           }
@@ -144,7 +178,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `rotate`,
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يمينيًا للجد.`,
           );
-          rotateRight(grand);
+          rotateRight(grand, 8);
           toFrame({}, "Complete the right rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليميني عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.", { kind: "balance", label: "Red-black right rotation" });
         }
       } else {
@@ -172,7 +206,7 @@ function generate(input: Input): Step<TreeFrame>[] {
               `rotate`,
               `العم أسود، ${value} ابن داخلي (RL) ← أجرِ دورانًا يمينيًا للأب أولًا.`,
             );
-            rotateRight(parent);
+            rotateRight(parent, 7);
             toFrame({}, "Complete the right rotation at the parent; inspect the converted line case.", 7, "inner rotation applied", "اكتمل الدوران اليميني عند الأب؛ افحص حالة الخط بعد التحويل.", { kind: "balance", label: "Red-black right rotation" });
             z = parent;
           }
@@ -186,7 +220,7 @@ function generate(input: Input): Step<TreeFrame>[] {
             `rotate`,
             `أعِد تلوين الأب أسود، والجد أحمر، ثم أجرِ دورانًا يساريًا للجد.`,
           );
-          rotateLeft(grand);
+          rotateLeft(grand, 8);
           toFrame({}, "Complete the left rotation at the grandparent; inspect the repaired red-black links.", 8, "grandparent rotation applied", "اكتمل الدوران اليساري عند الجد؛ افحص روابط الأحمر والأسود التي تم إصلاحها.", { kind: "balance", label: "Red-black left rotation" });
         }
       }

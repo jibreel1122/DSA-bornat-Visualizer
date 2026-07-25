@@ -53,14 +53,18 @@ function generate(input: Input): Step<TreeFrame>[] {
     toFrame({ [cur.id]: "active" }, `insert("${word}"): start at the root.`, 2, `insert "${word}"`, `insert("${word}"): ابدأ من الجذر.`);
     for (const ch of word) {
       if (cur.children.has(ch)) {
+        const next = cur.children.get(ch)!;
+        toFrame({ [cur.id]: "compare", [next.id]: "active" }, `'${ch}' already has an edge. Trace that edge before descending.`, 4, `insert "${word}"`, `للحرف '${ch}' حافة موجودة بالفعل. تتبّع الحافة قبل النزول.`);
         cur = cur.children.get(ch)!;
         toFrame({ [cur.id]: "compare" }, `'${ch}' already exists — follow the existing edge.`, 4, `insert "${word}"`, `'${ch}' موجود بالفعل — اتبع الحافة الموجودة.`);
       } else {
+        toFrame({ [cur.id]: "active" }, `No '${ch}' edge exists yet. Reserve a new child slot under '${cur.ch}'.`, 5, `insert "${word}"`, `لا توجد حافة للحرف '${ch}' بعد. احجز مكان ابن جديد تحت '${cur.ch}'.`);
         const node: TNode = { id: `t${idc++}`, ch, children: new Map(), isEnd: false };
         cur.children.set(ch, node);
         nodeCount++;
+        toFrame({ [cur.id]: "special", [node.id]: "active" }, `Create the '${ch}' edge and attach its new node.`, 5, `insert "${word}"`, `أنشئ حافة '${ch}' وألحق عقدتها الجديدة.`);
         cur = node;
-        toFrame({ [cur.id]: "found" }, `'${ch}' is new — create a child node for it.`, 5, `insert "${word}"`, `'${ch}' جديد — أنشئ عقدة ابن له.`);
+        toFrame({ [cur.id]: "found" }, `The new '${ch}' node is now part of the trie.`, 5, `insert "${word}"`, `أصبحت العقدة الجديدة '${ch}' جزءًا من الشجرة.`);
       }
     }
     cur.isEnd = true;
@@ -80,6 +84,8 @@ function generate(input: Input): Step<TreeFrame>[] {
   toFrame({ root: "active" }, `search("${target}"): walk the trie character by character.`, 7, `search "${target}"`, `search("${target}"): اجتز الشجرة حرفًا حرفًا.`);
   for (const ch of target) {
     if (cur && cur.children.has(ch)) {
+      const next = cur.children.get(ch)!;
+      toFrame({ [cur.id]: "compare", [next.id]: "active" }, `Match '${ch}' and trace its edge before descending.`, 7, `search "${target}"`, `طابق '${ch}' وتتبع حافتها قبل النزول.`);
       cur = cur.children.get(ch)!;
       toFrame({ [cur.id]: "compare" }, `Matched '${ch}' — descend.`, 7, `search "${target}"`, `تطابق '${ch}' — انزل إلى الأسفل.`);
     } else {

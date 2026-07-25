@@ -38,6 +38,7 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   const insert = (value: number) => {
     if (!root) {
+      snap({}, `Tree empty: the root slot is ready for ${value}.`, 2, undefined, `الشجرة فارغة: موضع الجذر جاهز للقيمة ${value}.`);
       root = { id: `n${idc++}`, value, left: null, right: null };
       nodeCount++;
       snap({ [root.id]: "found" }, `Tree empty — insert ${value} as the root.`, 2, undefined, `الشجرة فارغة — أدرج ${value} كجذر.`);
@@ -53,18 +54,20 @@ function generate(input: Input): Step<TreeFrame>[] {
       if (value < cur.value) {
         snap({ [cur.id]: "compare" }, `${value} < ${cur.value}: go left.`, 4, undefined, `${value} < ${cur.value}: اتجه يسارًا.`);
         if (!cur.left) {
+          snap({ [cur.id]: "active" }, `The left slot of ${cur.value} is empty. Prepare to attach ${value} there.`, 5, undefined, `موضع الابن الأيسر للعقدة ${cur.value} فارغ. جهّز إلحاق ${value} هنا.`);
           cur.left = { id: `n${idc++}`, value, left: null, right: null };
           nodeCount++;
-          snap({ [cur.left.id]: "found" }, `Insert ${value} as left child of ${cur.value}.`, 5, undefined, `أدرج ${value} كابن أيسر للعقدة ${cur.value}.`);
+          snap({ [cur.id]: "special", [cur.left.id]: "found" }, `Attach ${value} as left child of ${cur.value}.`, 5, undefined, `ألحق ${value} كابن أيسر للعقدة ${cur.value}.`);
           return;
         }
         cur = cur.left;
       } else {
         snap({ [cur.id]: "compare" }, `${value} > ${cur.value}: go right.`, 6, undefined, `${value} > ${cur.value}: اتجه يمينًا.`);
         if (!cur.right) {
+          snap({ [cur.id]: "active" }, `The right slot of ${cur.value} is empty. Prepare to attach ${value} there.`, 7, undefined, `موضع الابن الأيمن للعقدة ${cur.value} فارغ. جهّز إلحاق ${value} هنا.`);
           cur.right = { id: `n${idc++}`, value, left: null, right: null };
           nodeCount++;
-          snap({ [cur.right.id]: "found" }, `Insert ${value} as right child of ${cur.value}.`, 7, undefined, `أدرج ${value} كابن أيمن للعقدة ${cur.value}.`);
+          snap({ [cur.id]: "special", [cur.right.id]: "found" }, `Attach ${value} as right child of ${cur.value}.`, 7, undefined, `ألحق ${value} كابن أيمن للعقدة ${cur.value}.`);
           return;
         }
         cur = cur.right;
@@ -92,22 +95,58 @@ function generate(input: Input): Step<TreeFrame>[] {
     snap({}, `${value} is not in the tree.`, 9, undefined, `${value} غير موجود في الشجرة.`);
   };
 
-  const minNode = (n: BSTNode): BSTNode => (n.left ? minNode(n.left) : n);
+  const remove = (value: number) => {
+    let parent: BSTNode | null = null;
+    let node = root;
 
-  const remove = (node: BSTNode | null, value: number): BSTNode | null => {
-    if (!node) return null;
-    if (value < node.value) node.left = remove(node.left, value);
-    else if (value > node.value) node.right = remove(node.right, value);
-    else {
-      nodeCount--;
-      if (!node.left) return node.right;
-      if (!node.right) return node.left;
-      const succ = minNode(node.right);
-      node.value = succ.value;
-      nodeCount++; // will be decremented by the recursive delete of successor
-      node.right = remove(node.right, succ.value);
+    while (node && node.value !== value) {
+      comparisons++;
+      snap(
+        { [node.id]: "compare" },
+        `${value} ${value < node.value ? "<" : ">"} ${node.value}: continue ${value < node.value ? "left" : "right"} to find the node to delete.`,
+        10,
+        undefined,
+        `${value} ${value < node.value ? "<" : ">"} ${node.value}: تابع ${value < node.value ? "يسارًا" : "يمينًا"} للعثور على العقدة المراد حذفها.`,
+      );
+      parent = node;
+      node = value < node.value ? node.left : node.right;
     }
-    return node;
+    if (!node) {
+      snap({}, `${value} is not in the tree, so nothing is removed.`, 10, undefined, `${value} غير موجودة في الشجرة، لذلك لا يُحذف شيء.`);
+      return;
+    }
+
+    snap({ [node.id]: "found" }, `Found ${value}. Inspect its children before reconnecting the tree.`, 10, undefined, `عُثر على ${value}. افحص أبناءها قبل إعادة وصل الشجرة.`);
+    if (node.left && node.right) {
+      const target = node;
+      let successorParent = node;
+      let successor = node.right;
+      snap({ [target.id]: "active", [successor.id]: "compare" }, `${value} has two children. Start in its right subtree to find the in-order successor.`, 11, undefined, `${value} لها ابنان. ابدأ في فرعها الأيمن لإيجاد الخلف بالترتيب.`);
+      while (successor.left) {
+        comparisons++;
+        successorParent = successor;
+        successor = successor.left;
+        snap({ [successorParent.id]: "compare", [successor.id]: "active" }, `Move left to ${successor.value}: it is a smaller successor candidate.`, 11, undefined, `انتقل يسارًا إلى ${successor.value}: إنها مرشحة أصغر للخلف.`);
+      }
+      snap({ [target.id]: "special", [successor.id]: "found" }, `Successor ${successor.value} is the smallest key in the right subtree. Copy it into ${value}'s position.`, 11, undefined, `الخلف ${successor.value} هو أصغر مفتاح في الفرع الأيمن. انسخه إلى موضع ${value}.`);
+      target.value = successor.value;
+      snap({ [target.id]: "special", [successor.id]: "discarded" }, `The key has moved. Now remove the original successor node ${successor.value}, which has at most one child.`, 11, undefined, `انتقل المفتاح. احذف الآن عقدة الخلف الأصلية ${successor.value}، ولها ابن واحد على الأكثر.`);
+      parent = successorParent;
+      node = successor;
+    }
+
+    const replacement = node.left ?? node.right;
+    if (replacement) {
+      snap({ [node.id]: "active", [replacement.id]: "found" }, `Reconnect ${replacement.value} in place of ${node.value}; this deletion has one child to splice through.`, 11, undefined, `أعد وصل ${replacement.value} مكان ${node.value}; لهذه العملية ابن واحد ليمر عبره الربط.`);
+    } else {
+      snap({ [node.id]: "discarded" }, `Remove leaf ${node.value}; it has no child to reconnect.`, 11, undefined, `احذف الورقة ${node.value}; ليس لها ابن لإعادة وصله.`);
+    }
+
+    if (!parent) root = replacement;
+    else if (parent.left === node) parent.left = replacement;
+    else parent.right = replacement;
+    nodeCount--;
+    snap(replacement ? { [replacement.id]: "found" } : {}, `Reconnect complete: ${value} has been removed while preserving BST order.`, 11, undefined, `اكتملت إعادة الوصل: حُذفت ${value} مع الحفاظ على ترتيب شجرة البحث الثنائية.`);
   };
 
   for (const op of input.ops) {
@@ -119,8 +158,7 @@ function generate(input: Input): Step<TreeFrame>[] {
       search(op.value);
     } else {
       snap({}, `Delete ${op.value}.`, 10, undefined, `احذف ${op.value}.`);
-      root = remove(root, op.value);
-      snap({}, `Deleted ${op.value} (successor promoted if it had two children).`, 11, undefined, `حُذف ${op.value} (تمت ترقية الخَلَف إذا كان للعقدة ابنان).`);
+      remove(op.value);
     }
   }
   snap({}, `All operations complete. In-order traversal yields sorted values.`, 12, undefined, `اكتملت جميع العمليات. الاجتياز الداخلي يُعطي القيم مرتبة.`);

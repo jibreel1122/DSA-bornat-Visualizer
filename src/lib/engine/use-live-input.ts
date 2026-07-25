@@ -138,6 +138,18 @@ export function useLiveInput<I>(
       return [...base, mutation].slice(-50);
     });
   }, [module.renderer]);
+  const appendDraftMutations = React.useCallback((mutations: readonly DraftMutation[], branchFrom?: readonly string[]) => {
+    if (mutations.length === 0) return;
+    setDraftRedoMutations([]);
+    setDraftMutations((current) => {
+      let base = current;
+      if (branchFrom && !sameDraftDataset(module.renderer, current.at(-1)?.after ?? [], branchFrom)) {
+        const branchIndex = current.findLastIndex((item) => sameDraftDataset(module.renderer, item.after, branchFrom));
+        base = branchIndex >= 0 ? current.slice(0, branchIndex + 1) : [];
+      }
+      return [...base, ...mutations].slice(-50);
+    });
+  }, [module.renderer]);
   const clearDraftHistory = React.useCallback(() => {
     setDraftMutations([]);
     setDraftRedoMutations([]);
@@ -300,7 +312,18 @@ export function useLiveInput<I>(
     const before = startingFresh ? [] : currentTokens;
     const tokens = [...before, ...incoming];
     if ((startingFresh || draftMutation) && canVisualizeDraft(module.renderer, tokens)) {
-      appendDraftMutation({ before, after: tokens, kind: "insert", detail: `inserting ${raw}` }, before);
+      // A comma-separated insert is still a series of individual learner
+      // actions.  Keeping one mutation per token lets Previous reveal every
+      // node/element entering the structure and lets a self-balancing tree
+      // animate the balancing caused by each specific key.
+      const mutations: DraftMutation[] = [];
+      let partial = [...before];
+      for (const value of incoming) {
+        const next = [...partial, value];
+        mutations.push({ before: partial, after: next, kind: "insert", detail: `inserting ${value}` });
+        partial = next;
+      }
+      appendDraftMutations(mutations, before);
       operationRef.current = undefined;
       liveActionRef.current = true;
       setRevision((value) => value + 1);

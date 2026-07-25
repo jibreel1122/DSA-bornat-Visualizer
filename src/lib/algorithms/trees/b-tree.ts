@@ -52,19 +52,58 @@ function generate(input: Input): Step<TreeFrame>[] {
     const child = parent.children[i];
     const z = mk(child.leaf);
     const mid = T - 1;
-    const upKey = child.keys[mid];
-    z.keys = child.keys.slice(mid + 1);
-    child.keys = child.keys.slice(0, mid);
+    const originalKeys = [...child.keys];
+    const originalChildren = [...child.children];
+    const upKey = originalKeys[mid];
+    toFrame(
+      { [parent.id]: "special", [child.id]: "swap" },
+      `Child [${originalKeys.join(", ")}] is full. Pause before splitting it: median ${upKey} must move to the parent.`,
+      6,
+      "split: detect full child",
+      `العقدة الابنة [${originalKeys.join(", ")}] ممتلئة. توقّف قبل تقسيمها: يجب أن ينتقل الوسيط ${upKey} إلى الأب.`,
+      { kind: "rebuild", label: "Detect full B-tree child" },
+    );
+
+    // Attach the empty right sibling first so the learner can see where the
+    // values and subtrees will travel, rather than jumping directly to a
+    // completed split.
+    parent.children.splice(i + 1, 0, z);
+    toFrame(
+      { [parent.id]: "special", [child.id]: "swap", [z.id]: "active" },
+      `Create an empty right sibling beside [${originalKeys.join(", ")}]. The median ${upKey} is still waiting to move upward.`,
+      6,
+      "split: create right sibling",
+      `أنشئ شقيقًا أيمن فارغًا بجانب [${originalKeys.join(", ")}]. لا يزال الوسيط ${upKey} بانتظار انتقاله إلى الأعلى.`,
+      { kind: "rebuild", label: "Create B-tree split sibling" },
+    );
+
+    z.keys = originalKeys.slice(mid + 1);
+    child.keys = originalKeys.slice(0, mid);
+    toFrame(
+      { [child.id]: "swap", [z.id]: "active" },
+      `Move keys right of ${upKey} into the new sibling: left [${child.keys.join(", ")}], right [${z.keys.join(", ")}].`,
+      6,
+      "split: move right keys",
+      `انقل المفاتيح الواقعة يمين ${upKey} إلى الشقيق الجديد: اليسار [${child.keys.join(", ")}], واليمين [${z.keys.join(", ")}].`,
+      { kind: "rebuild", label: "Move B-tree split keys" },
+    );
     if (!child.leaf) {
-      z.children = child.children.slice(T);
-      child.children = child.children.slice(0, T);
+      z.children = originalChildren.slice(T);
+      child.children = originalChildren.slice(0, T);
+      toFrame(
+        { [child.id]: "swap", [z.id]: "active" },
+        `Move the ${z.children.length} right-side subtree link${z.children.length === 1 ? "" : "s"} with the keys they contain.`,
+        6,
+        "split: move right subtrees",
+        `انقل رابط الشجرة الفرعية الأيمن وعدده ${z.children.length} مع المفاتيح التي يحتويها.`,
+        { kind: "rebuild", label: "Move B-tree split subtrees" },
+      );
     }
     parent.keys.splice(i, 0, upKey);
-    parent.children.splice(i + 1, 0, z);
     splits++;
     toFrame(
       { [parent.id]: "special", [child.id]: "swap", [z.id]: "found" },
-      `Split full node [${[...child.keys, upKey, ...z.keys].join(", ")}]: push median ${upKey} up to the parent, keep the rest in two children.`,
+      `Promote median ${upKey} to the parent. The split is complete and both children can now be explored independently.`,
       6,
       `split`,
       `قسّم العقدة الممتلئة [${[...child.keys, upKey, ...z.keys].join(", ")}]: ادفع الوسيط ${upKey} صعودًا إلى الأب، واحتفظ بالباقي في عقدتين.`,
