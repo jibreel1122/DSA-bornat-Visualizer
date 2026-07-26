@@ -6,7 +6,13 @@ type Input = { text: string; pattern: string };
 function generate(input: Input): Step<StringFrame>[] {
   const t = [...input.text];
   const p = [...input.pattern];
-  const s = [...p, "$", ...t]; // concatenated code-point array; Z is computed over this
+  // Pick a delimiter absent from the actual input. A hard-coded "$" would make a
+  // perfectly valid search containing "$" ambiguous (and used to reject it).
+  const used = new Set([...t, ...p]);
+  let separatorCode = 0;
+  while (used.has(String.fromCodePoint(separatorCode))) separatorCode++;
+  const separator = String.fromCodePoint(separatorCode);
+  const s = [...p, separator, ...t]; // concatenated code-point array; Z is computed over this
   const n = s.length;
   const m = p.length;
   const steps: Step<StringFrame>[] = [];
@@ -457,7 +463,6 @@ The linear-time trick is the Z-box [L, R): the rightmost segment found so far th
     if (pattern.length < 1) throw new Error("Enter a pattern.");
     if ([...pattern].length > [...text].length) throw new Error("Pattern must not be longer than the text.");
     if ([...text].length > 55) throw new Error("Keep the text at most 55 characters (the concatenation is drawn).");
-    if (text.includes("$") || pattern.includes("$")) throw new Error("'$' is reserved as the separator character.");
     return { text, pattern };
   },
   serializeInput: (input) => ({ text: input.text, pattern: input.pattern }),

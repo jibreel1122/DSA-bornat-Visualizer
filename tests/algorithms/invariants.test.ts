@@ -17,7 +17,10 @@ const SEEDS = [1, 42];
  */
 const GAUGE_COUNTERS: Record<string, string[]> = {
   "a-star": ["open"], // open-set size shrinks as nodes are expanded/closed
+  "alphametic-solver": ["assigned"], // live partial-assignment size shrinks on backtracking
   "binary-search-tree": ["nodes"], // live node count falls on delete
+  "booth-minimum-rotation": ["matchedPrefix"], // current matched prefix resets when a candidate is discarded
+  "dancing-links-exact-cover": ["depth"], // current recursion depth falls while rows/columns are restored
   "double-hashing": ["items"], // live stored-item count falls on delete
   "doubly-linked-list": ["nodes"], // live node count falls on delete
   "euclidean-gcd": ["depth"], // call-stack depth unwinds as recursion returns
@@ -26,10 +29,16 @@ const GAUGE_COUNTERS: Record<string, string[]> = {
   "fibonacci-recursive": ["depth"], // call-stack depth unwinds as recursion returns
   "hash-chaining": ["items"], // live stored-item count falls on delete
   "linear-probing": ["items"], // live stored-item count falls on delete
+  "lfu-cache": ["size"], // live cache occupancy falls during an eviction step
+  "lru-cache": ["size"], // live cache occupancy falls during an eviction step
+  "morris-traversal": ["threads"], // temporary predecessor-thread count falls when threads are removed
   "quadratic-probing": ["items"], // live stored-item count falls on delete
   "queue-operations": ["size"], // live queue size falls on dequeue
+  "priority-queue": ["size"], // live heap size falls when the highest-priority item is served
+  "max-heap": ["size"], // live heap size falls on extract-max
   "sieve-of-eratosthenes": ["candidates"], // numbers still possibly prime — falls as composites are crossed out
   "stack-operations": ["size"], // live stack size falls on pop
+  smoothsort: ["heaps"], // live Leonardo-heap forest size changes during merges and splits
   "topological-sort": ["remaining"], // unprocessed-node count falls as nodes are ordered
 };
 

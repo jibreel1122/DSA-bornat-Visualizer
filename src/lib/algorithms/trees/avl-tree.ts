@@ -23,9 +23,14 @@ function generate(input: Input): Step<TreeFrame>[] {
 
   const toFrame = (states: Record<string, CellState>, description: string, codeLine: number, note: string, descriptionAr?: string, transformation?: Step<TreeFrame>["transformation"]): void => {
     const nodes: Record<string, TreeNodeF> = {};
+    // A frame may be captured immediately after a leaf is linked, before the
+    // upward maintenance loop updates the stored heights.  Derive the display
+    // balance from the visible links instead, so the learner never sees a
+    // balance factor that disagrees with the tree on screen.
+    const visibleHeight = (n: Node | null): number => n ? 1 + Math.max(visibleHeight(n.left), visibleHeight(n.right)) : 0;
     const walk = (n: Node | null) => {
       if (!n) return;
-      const b = bf(n);
+      const b = visibleHeight(n.left) - visibleHeight(n.right);
       nodes[n.id] = {
         id: n.id,
         value: n.value,

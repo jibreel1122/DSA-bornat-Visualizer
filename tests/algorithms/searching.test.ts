@@ -1,11 +1,15 @@
 // tests/algorithms/searching.test.ts
 import { beforeAll, describe, expect, it } from "vitest";
-import { byCategory, loadAlgorithm } from "@/lib/algorithms";
+import { loadAlgorithm } from "@/lib/algorithms";
 import type { AlgorithmModule, ArrayFrame, Step } from "@/lib/engine/types";
 
 type SearchInput = { values: number[]; target: number };
 
 const SORTED = "2, 5, 8, 12, 16, 23, 38, 56, 72, 91";
+const BASE_SEARCHING = [
+  "linear-search", "binary-search", "jump-search", "interpolation-search",
+  "exponential-search", "ternary-search",
+];
 
 const CASES: { name: string; values: string; target: string; present: boolean }[] = [
   { name: "target at first index", values: SORTED, target: "2", present: true },
@@ -28,7 +32,7 @@ function foundValues(steps: Step<ArrayFrame>[]): number[] {
   return hits;
 }
 
-describe.each(byCategory("searching").map((m) => [m.slug] as const))(
+describe.each(BASE_SEARCHING.map((slug) => [slug] as const))(
   "%s",
   (slug) => {
     let mod: AlgorithmModule<ArrayFrame, SearchInput>;

@@ -22,6 +22,14 @@ import * as backtracking from "./backtracking";
 import * as recursion from "./recursion";
 import * as strings from "./strings";
 import * as mathematics from "./mathematics";
+import * as expansionA from "./expansion-a";
+import * as expansionB from "./expansion-b";
+import * as expansionC from "./expansion-c";
+import * as expansionD from "./expansion-d";
+import * as expansionE from "./expansion-e";
+import * as expansionF from "./expansion-f";
+import * as expansionG from "./expansion-g";
+import * as expansionH from "./expansion-h";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ModuleLoader = () => Promise<{ default: AlgorithmModule<any, any> }>;
@@ -40,6 +48,14 @@ const CATS = [
   recursion,
   strings,
   mathematics,
+  expansionA,
+  expansionB,
+  expansionC,
+  expansionD,
+  expansionE,
+  expansionF,
+  expansionG,
+  expansionH,
 ];
 
 export const ALGORITHMS: AlgorithmMeta[] = CATS.flatMap((c) => c.metas);

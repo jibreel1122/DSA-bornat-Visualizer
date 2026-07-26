@@ -7,17 +7,17 @@ Built by **Jibreel Bornat** — Computer Engineering, Birzeit University.
 
 ## What's inside
 
-- **87 algorithm visualizers** across 13 categories:
+- **224 algorithm visualizers** across 13 categories:
 
   | Category | Count | Category | Count |
   |---|---|---|---|
-  | Sorting | 14 | Trees & Heaps | 10 |
-  | Graphs | 13 | Backtracking | 6 |
-  | Searching | 6 | Stacks & Queues | 5 |
-  | Dynamic Programming | 7 | Strings | 5 |
-  | Greedy | 4 | Mathematics | 5 |
-  | Hashing | 4 | Recursion | 4 |
-  | Linked Lists | 4 | | |
+  | Sorting | 32 | Trees & Heaps | 34 |
+  | Graphs | 42 | Backtracking | 13 |
+  | Searching | 14 | Stacks & Queues | 9 |
+  | Dynamic Programming | 22 | Strings | 14 |
+  | Greedy | 11 | Mathematics | 13 |
+  | Hashing | 9 | Recursion | 5 |
+  | Linked Lists | 6 | | |
 
 - **A neural-network visualizer** (`/neural-network`): a mathematically correct
   multilayer perceptron with live training, editable architecture, decision-boundary
@@ -40,17 +40,17 @@ Built by **Jibreel Bornat** — Computer Engineering, Birzeit University.
   JavaScript, TypeScript, C#, Go, Rust, Kotlin, Swift).
 - **Arabic localization**: complete UI translation with RTL layout (buttons, nav,
   toasts, forms, everything) **and** complete per-algorithm content translation —
-  every one of the 87 modules has a fully bilingual title, tags, summary, theory,
+  every one of the 224 modules has a fully bilingual title, tags, summary, theory,
   quiz, and step-by-step narration. Code samples and pseudocode intentionally stay
   English/Latin notation in every language, by design (`translation-brief.md`).
-- Favorites, view history, notes per algorithm, command palette (⌘K), light/dark
-  theme, all persisted to `localStorage` — **no backend, fully static-exportable.**
+- Favorites, view history, notes per algorithm, command palette (⌘K), and
+  light/dark theme. Guest state is persisted locally; optional PostgreSQL-backed
+  accounts add cross-device synchronization, password recovery, export, and deletion.
 
 ## Architecture in one paragraph
 
-Every algorithm is a single self-contained module
-(`src/lib/algorithms/<category>/<slug>.ts`) exporting metadata, educational content,
-and a pure `generate(input) => Step<Frame>[]` function that emits immutable snapshot
+Every algorithm is a self-contained module entry exporting metadata, educational
+content, and a pure `generate(input) => Step<Frame>[]` function that emits immutable snapshot
 frames. One shared `VisualizerShell` plus nine renderers (array, list, tree, graph,
 grid, table, callstack, string, hash) replay those steps — so play/pause/scrub/undo/
 export are correct by construction, and adding an algorithm never touches the engine.
@@ -72,7 +72,8 @@ src/
     providers/                 theme + settings context
     ui/                        shadcn/ui primitives (button, dialog, select, ...)
   lib/
-    algorithms/<category>/     THE algorithm modules — one file per algorithm
+    algorithms/<category>/     core algorithm modules
+    algorithms/expansion-*/    additional catalog modules grouped by domain
     algorithms/index.ts        central registry: ALGORITHMS, loadAlgorithm(), byCategory()
     engine/types.ts            Step, AlgorithmModule, AlgorithmMeta, Frame types, LEVELS
     engine/player.ts           useVisualizerPlayer (play/pause/scrub/speed)
@@ -94,14 +95,14 @@ docs/
   translate-<category>-report.md   per-category translation agent reports
 ```
 
-## Routes (114 static)
+## Routes (272 generated pages)
 
 | Route | Purpose |
 |---|---|
 | `/` | Home |
 | `/algorithms`, `/data-structures` | Full catalog, filterable |
 | `/[category]` (×13) | One category's algorithms |
-| `/visualizer/[slug]` (×87) | One algorithm's visualizer page |
+| `/visualizer/[slug]` (×224) | One algorithm's visualizer page |
 | `/compare` | Comparison-mode category picker |
 | `/compare/[category]` (×13, only categories with 2+ algorithms) | Side-by-side comparison |
 | `/neural-network` | Neural-network visualizer |
@@ -114,7 +115,7 @@ docs/
 ```bash
 npm install
 npm run dev        # local development
-npm run build      # production build (114 static routes)
+npm run build      # production build (272 generated pages)
 npm run check      # typecheck + lint (zero warnings) + all tests
 ```
 
@@ -122,8 +123,9 @@ npm run check      # typecheck + lint (zero warnings) + all tests
 > correctly (a known Next.js + OneDrive file-watcher quirk). If styling looks
 > broken under `npm run dev`, use `npm run build && npm run start` instead.
 
-All state (favorites, notes, saved runs, quiz progress, language) lives in
-`localStorage` — no backend, fully static-exportable.
+Guest state (favorites, notes, saved runs, quiz progress, language) lives in
+`localStorage`. Signed-in users can synchronize supported state through the
+optional PostgreSQL account service.
 
 ### Optional accounts and sync
 
@@ -131,13 +133,13 @@ Guests can use the entire platform without registration. A PostgreSQL-backed acc
 
 ## Testing
 
-`npm test` runs 3,000+ Vitest tests:
+`npm test` runs 8,000+ Vitest tests:
 
 - **Universal invariants** (`tests/algorithms/invariants.test.ts`) over every
   algorithm module: metadata completeness, input round-trips, structural frame
   validity per renderer, determinism, counter semantics (cumulative unless
   explicitly allow-listed as a live gauge) — at three difficulty levels × two RNG
-  seeds, for all 87 modules.
+  seeds, for all 224 modules.
 - **Bilingual content invariants**: for any module with `contentAr`, its Arabic
   theory/quiz must be complete and match the English quiz's option counts and
   answer indices exactly; every step's `descriptionAr` must be present and must
@@ -158,7 +160,7 @@ config) · `@xyflow/react` (graph rendering) · `d3-hierarchy` (tree layout) ·
 
 ## Arabic content translation status
 
-**Complete — 87/87 modules across all 13 categories.** Every algorithm has a fully
+**Complete — 224/224 modules across all 13 categories.** Every algorithm has a fully
 bilingual title, tags, summary, theory/quiz content, and per-step narration,
 verified by the bilingual invariants suite. Confirm any time:
 
@@ -175,7 +177,7 @@ useful reference if new algorithm modules are added later and need Arabic conten
 
 ## Session history (high level)
 
-1. **Foundation** — 79→87 algorithm modules, shared engine, 9 renderers, catalog/nav.
+1. **Foundation and expansion** — 79→224 algorithm modules, shared engine, 9 renderers, catalog/nav.
 2. **Validation infrastructure** — Vitest, ESLint 9, per-renderer frame validators,
    universal invariants suite, 21 bugs found and fixed across 34 modules.
 3. **Interactive builder** — live Insert/Delete/Edit/Search, undo/redo, grid
@@ -183,7 +185,7 @@ useful reference if new algorithm modules are added later and need Arabic conten
 4. **Arabic i18n + RTL** — full UI translation (~420 keys), logical-properties RTL
    sweep, language switcher.
 5. **Comparison mode** — `/compare` routes, synced/independent side-by-side panels.
-6. **Arabic content translation** — per-algorithm bilingual content, in progress
+6. **Arabic content translation** — complete per-algorithm bilingual content
    (see above).
 
 Full plan-by-plan detail with commit hashes: `.superpowers/sdd/progress.md`.

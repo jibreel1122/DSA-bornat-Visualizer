@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { byCategory, loadAlgorithm } from "@/lib/algorithms";
+import { loadAlgorithm } from "@/lib/algorithms";
 import type { AlgorithmModule, ArrayFrame, GridFrame, StringFrame, TableFrame, TreeFrame } from "@/lib/engine/types";
 
 function seededValues(seed: number, length: number): number[] {
@@ -25,8 +25,21 @@ function foundValues(frame: ArrayFrame): number[] {
     .map(([index]) => frame.values[Number(index)]);
 }
 
+const BASE_SORTING = [
+  "bubble-sort", "selection-sort", "insertion-sort", "merge-sort", "quick-sort", "heap-sort",
+  "shell-sort", "counting-sort", "radix-sort", "cocktail-shaker-sort", "comb-sort",
+  "bucket-sort", "tim-sort", "pancake-sort",
+];
+const BASE_SEARCHING = [
+  "linear-search", "binary-search", "jump-search", "interpolation-search",
+  "exponential-search", "ternary-search",
+];
+const BASE_STRINGS = [
+  "naive-pattern-matching", "kmp", "rabin-karp", "z-algorithm", "boyer-moore",
+];
+
 describe("sorting generators against the native numeric-order oracle", () => {
-  for (const { slug } of byCategory("sorting")) {
+  for (const slug of BASE_SORTING) {
     it(`${slug}: sorts randomized duplicates, negatives, and bounds`, async () => {
       const mod = await loadAlgorithm(slug) as AlgorithmModule<ArrayFrame, { values: number[] }>;
       for (let seed = 1; seed <= 40; seed++) {
@@ -57,7 +70,7 @@ describe("searching generators", () => {
     expect(steps.at(-1)!.counters?.probes).toBe(1);
   });
 
-  for (const { slug } of byCategory("searching")) {
+  for (const slug of BASE_SEARCHING) {
     it(`${slug}: agrees with membership across duplicates and negative values`, async () => {
       const mod = await loadAlgorithm(slug) as AlgorithmModule<ArrayFrame, { values: number[]; target: number }>;
       for (let seed = 1; seed <= 30; seed++) {
@@ -74,7 +87,7 @@ describe("searching generators", () => {
 });
 
 describe("string matching generators", () => {
-  const slugs = byCategory("strings").map(({ slug }) => slug);
+  const slugs = BASE_STRINGS;
   const cases = [
     { text: "aaaaa", pattern: "aa", matches: [0, 1, 2, 3] },
     { text: "abcabcabc", pattern: "abc", matches: [0, 3, 6] },

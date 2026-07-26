@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ALGORITHMS, loadAlgorithm } from "@/lib/algorithms";
 
 describe("algorithm registry", () => {
-  it("exposes at least 87 algorithms with unique slugs", () => {
-    expect(ALGORITHMS.length).toBeGreaterThanOrEqual(87);
+  it("exposes at least 224 algorithms with unique slugs", () => {
+    expect(ALGORITHMS.length).toBeGreaterThanOrEqual(224);
     const slugs = new Set(ALGORITHMS.map((a) => a.slug));
     expect(slugs.size).toBe(ALGORITHMS.length);
   });
